@@ -1,28 +1,33 @@
-Instructions
+# Instructions
 
-From a unix command line:
+From a Unix command line:
 
 1.  Navigate to TEWorldSims directory:
-	cd ~/DropBox/TEWorldSims
+	
+`cd ~/DropBox/TEWorldSims`
 
 2.  Create your own subdirectory in which to conduct your experiment:
-	e.g:  mkdir SKExp03
+	e.g:  `mkdir SKExp03`
     Use your own intitials, not mine.  Don't clobber others' work.
 
 3.  Navigate into that directory:
-	e.g. cd SKExp03
+	e.g. `cd SKExp03`
     Change into YOUR (not MY) directory.
 
 4.  Make sure it's empty:
-	ls
+	
+`ls`
 
 5.  Copy parameters file:
-        cp ../../TEWorldCode/parameters.py .
+        
+`cp ../TEWorldCodeV2/parameters.py .`
 
 6.  Edit parameters file.
 
 7.  Run the simulation:
-	python2.7 ../../TEWorldCode/TESim.py 100
-    The number is the number of times you want to run the simulation.
-    If you run it multiple times each set of outputs will clobber the
-    previous...hope you are in your own directory (not MINE)....
+	
+`python2.7 ../TEWorldCodeV2/TESim.py 100`
+    
+    
+> The number is the number of times you want to run the simulation. 
+If you run it multiple times each set of outputs will clobber the previous ... I hope you are in your own directory (not MINE).
