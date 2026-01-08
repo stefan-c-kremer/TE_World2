@@ -2,29 +2,25 @@
 
 From a Unix command line:
 
-1.  Navigate to TEWorldSims directory:
-	
-`cd ~/DropBox/TEWorldSims`
-
-2.  Create your own subdirectory in which to conduct your experiment:
+1.  Create your own subdirectory in which to conduct your experiment:
 	e.g:  `mkdir SKExp03`
     Use your own intitials, not mine.  Don't clobber others' work.
 
-3.  Navigate into that directory:
+2.  Navigate into that directory:
 	e.g. `cd SKExp03`
     Change into YOUR (not MY) directory.
 
-4.  Make sure it's empty:
+3.  Make sure it's empty:
 	
 `ls`
 
-5.  Copy parameters file:
+4.  Copy parameters file:
         
 `cp ../TEWorldCodeV2/parameters.py .`
 
-6.  Edit parameters file.
+5.  Edit parameters file.
 
-7.  Run the simulation:
+6.  Run the simulation:
 	
 `python2.7 ../TEWorldCodeV2/TESim.py 100`
     
