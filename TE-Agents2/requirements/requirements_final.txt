@@ -1,0 +1,31 @@
+# Final requirements file for TE Simulation (ABM2)
+# This file contains only the essential dependencies for the working simulation
+# Created from the working environment to ensure compatibility
+
+# Core scientific computing
+numpy>=1.24.0
+scipy>=1.15.0
+
+# Performance optimization
+numba>=0.61.0
+psutil>=5.9.0
+
+# Data structures
+intervaltree>=3.1.0
+sortedcontainers>=2.4.0
+
+# Configuration and utilities
+pyyaml>=6.0.0
+
+# Optional GPU acceleration (uncomment if not needed)
+cupy-cuda12x>=12.0.0  # For CUDA 12.x
+# torch>=2.0.0  # Alternative GPU framework
+
+# Development and testing (optional)
+# pytest>=8.0.0
+# black>=25.0.0
+# flake8>=7.0.0
+
+# Note: This file is designed for conda environments
+# To install: conda create --name te-sim --file requirements_final.txt
+# Or: pip install -r requirements_final.txt (for pip environments)

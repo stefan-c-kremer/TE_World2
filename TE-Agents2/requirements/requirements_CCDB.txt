@@ -1,0 +1,32 @@
+# Exact requirements from working TE simulation environment on Compute Canada (Also called Alliance Canada or Digital Research Alliance of Canada)
+# Core dependencies with exact versions
+numpy==1.24.4+computecanada
+scipy==1.15.1+computecanada
+numba==0.61.2
+psutil==5.9.0+computecanada
+intervaltree==3.1.0+computecanada
+sortedcontainers==2.4.0
+pyyaml==6.0.2
+
+# Python version requirement
+# python==3.10.13
+
+# Optional dependencies (uncomment if needed)
+# matplotlib==3.10.5  # For plotting
+# pandas==2.3.1      # For data analysis
+# seaborn==0.13.2    # For statistical plotting
+
+# GPU acceleration (uncomment if needed)
+ cupy==13.3.0+computecanada  # For CUDA 12.x
+ torch>=2.0.0          # Alternative GPU framework
+
+# Development tools (uncomment if needed)
+# pytest==8.4.1
+# black==25.1.0
+# flake8==7.3.0
+
+# Installation instructions:
+# 1. Create conda environment: conda create -n te-sim python=3.10
+# 2. Activate environment: conda activate te-sim
+# 3. Install requirements: pip install -r requirements_exact.txt
+# 4. Or use conda: conda install --file requirements_exact.txt
