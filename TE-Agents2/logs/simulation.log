@@ -1,0 +1,34 @@
+# Log file test - 2026-01-26 12:28:28
+2026-01-26 12:30:49,311 - root - INFO - [INITIALIZATION]: Experiment.__init__: pop 300 TEs 1 genes 501
+2026-01-26 12:30:49,311 - root - INFO - [INITIALIZATION]: TE breakdown: 1 live, 0 dead
+2026-01-26 12:30:49,311 - root - INFO - [INITIALIZATION]: Gene subtype ORF: 294
+2026-01-26 12:30:49,312 - root - INFO - [INITIALIZATION]: Gene subtype promoter: 121
+2026-01-26 12:30:49,312 - root - INFO - [INITIALIZATION]: Gene subtype enhancer: 86
+2026-01-26 12:30:49,312 - root - INFO - [INITIALIZATION]: TE type GENERIC: 1
+2026-01-26 12:30:49,489 - root - INFO - [GENERATION]: Generation: 0
+2026-01-26 12:30:49,490 - root - INFO - [PERFORMANCE]: Gen 0: 0.179s/gen, 1042.7MB, 0.0% CPU
+2026-01-26 12:30:49,490 - root - INFO - [GENERATION]: Starting generation 0 with 300 individuals
+# Log file test - 2026-01-26 12:51:45
+2026-01-26 12:53:58,742 - root - INFO - [INITIALIZATION]: Experiment.__init__: pop 300 TEs 1 genes 500
+2026-01-26 12:53:58,743 - root - INFO - [INITIALIZATION]: TE breakdown: 1 live, 0 dead
+2026-01-26 12:53:58,743 - root - INFO - [INITIALIZATION]: Gene subtype ORF: 301
+2026-01-26 12:53:58,743 - root - INFO - [INITIALIZATION]: Gene subtype promoter: 131
+2026-01-26 12:53:58,743 - root - INFO - [INITIALIZATION]: Gene subtype enhancer: 68
+2026-01-26 12:53:58,743 - root - INFO - [INITIALIZATION]: TE type GENERIC: 1
+2026-01-26 12:53:58,912 - root - INFO - [GENERATION]: Generation: 0
+2026-01-26 12:53:58,912 - root - INFO - [PERFORMANCE]: Gen 0: 0.170s/gen, 1040.5MB, 0.0% CPU
+2026-01-26 12:53:58,912 - root - INFO - [GENERATION]: Starting generation 0 with 300 individuals
+2026-01-26 12:54:59,362 - root - WARNING - Invalid interval detected: start=11335348, end=10917837, length=1500
+2026-01-26 12:54:59,428 - root - INFO - Fixed interval: start=11335348, end=11336848, length=1500
+2026-01-26 12:55:24,613 - root - INFO - [GENERATION]: After replication: 600 individuals (was 300)
+# Log file test - 2026-01-26 13:09:10
+2026-01-26 13:11:32,674 - root - INFO - [INITIALIZATION]: Experiment.__init__: pop 300 TEs 1 genes 501
+2026-01-26 13:11:32,675 - root - INFO - [INITIALIZATION]: TE breakdown: 1 live, 0 dead
+2026-01-26 13:11:32,675 - root - INFO - [INITIALIZATION]: Gene subtype ORF: 306
+2026-01-26 13:11:32,675 - root - INFO - [INITIALIZATION]: Gene subtype promoter: 136
+2026-01-26 13:11:32,675 - root - INFO - [INITIALIZATION]: Gene subtype enhancer: 59
+2026-01-26 13:11:32,675 - root - INFO - [INITIALIZATION]: TE type GENERIC: 1
+2026-01-26 13:11:32,837 - root - INFO - [GENERATION]: Generation: 0
+2026-01-26 13:11:32,838 - root - INFO - [PERFORMANCE]: Gen 0: 0.163s/gen, 1048.2MB, 0.0% CPU
+2026-01-26 13:11:32,838 - root - INFO - [GENERATION]: Starting generation 0 with 300 individuals
+2026-01-26 13:12:59,165 - root - INFO - [GENERATION]: After replication: 600 individuals (was 300)

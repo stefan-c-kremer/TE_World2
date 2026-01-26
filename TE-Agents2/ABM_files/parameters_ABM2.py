@@ -212,7 +212,7 @@ te_config = config.get('tes', {})
 TE_TYPES = te_config.get('types', {
     'SINE': {
         'length': 300,
-        'frequency': 0.4,  # 40% of TEs are SINEs
+        'frequency': 0.4,  
         'autonomous': False,  # SINEs are typically non-autonomous
         'parasitizes': ['LINE'],  # SINEs parasitize LINEs specifically
         'death_rate': 0.3,

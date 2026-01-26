@@ -660,8 +660,10 @@ def set_random_seed(seed: Optional[int] = None):
     
     # Set GPU seed if available
     if GPU_AVAILABLE:
+        print(f"GPU detected ({GPU_FRAMEWORK}) - setting GPU seed {seed}")
         try:
             if GPU_FRAMEWORK == "cupy_cuda":
+                print("copy_cuda detected")
                 cp.random.seed(seed)
                 logger.info(f"Set CuPy GPU seed: {seed}")
             elif GPU_FRAMEWORK in ["pytorch_cuda", "pytorch_rocm"]:
@@ -678,6 +680,7 @@ def set_random_seed(seed: Optional[int] = None):
     else:
         logger.info("GPU not available - using CPU-only seeding")
     
+    # FIXME: This error message is not necessarily valid - sometimes GPU seed setting fails silently.
     logger.info(f"Random seed {seed} set successfully for all components")
 
 def is_gpu_available():

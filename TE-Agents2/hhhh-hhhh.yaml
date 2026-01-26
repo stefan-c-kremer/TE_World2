@@ -1,0 +1,93 @@
+# Example configuration for TE-Agents2 simulation
+# Copy this file and modify parameters as needed
+
+# Random seed for reproducibility (None for random, integer for fixed)
+seed: None
+
+# Simulation parameters
+simulation:
+  max_generations: 500
+  carrying_capacity: 300
+  host_start_fitness: 1.0
+  host_mutation_rate: 0.3
+  host_reproduction_rate: 1
+  junk_bp: 14000000  # Genome size in base pairs
+  initial_genes: 500
+  initial_tes: 1
+  save_frequency: 50  # Save checkpoint every N generations
+
+# Gene subtypes with realistic frequencies and properties
+# genes:
+#   subtypes:
+#     ORF:
+#       length: 1500
+#       frequency: 0.6  # 60% of genes are protein-coding
+#       fitness_contribution: 1.0
+#       mutation_sensitivity: 0.8
+#       te_insertion_effect: high  # high, medium, low
+#     promoter:
+#       length: 200
+#       frequency: 0.25  # 25% are promoters
+#       fitness_contribution: 0.3
+#       mutation_sensitivity: 0.9
+#       te_insertion_effect: high
+#     enhancer:
+#       length: 500
+#       frequency: 0.15  # 15% are enhancers
+#       fitness_contribution: 0.5
+#       mutation_sensitivity: 0.7
+#       te_insertion_effect: medium
+
+# TE types with autonomous/non-autonomous dynamics
+tes:
+  types:
+    GENERIC:
+      length: 1000
+      frequency: 1  
+      autonomous: false
+      death_rate: 0.005
+      excision_rate: 0.5  # Retrotransposons don't excise
+      progeny_distribution: [0, 0, 0.55, 1, 0.3, 2, 0.15, 3]  # [prob, min, prob, max, ...]
+
+# Performance optimization settings
+performance:
+  use_parallel: true
+  max_workers: 8  # Adjust based on CPU cores
+  batch_size: 200
+  cache_statistics: true
+  use_intervaltree: true
+  use_bit_arrays: true
+  memory_optimize_freq: 50  # Memory cleanup every N generations
+  trace_frequency: 5  # Collect data every N generations
+  element_pool_size: 2000
+  gene_pool_size: 500
+  random_cache_size: 10000
+  stats_cache_size: 100
+  enable_copy_on_write: true
+
+# Output control - what gets printed during simulation
+output:
+  splat: false  # Detailed TE jump logging
+  splat_fitness: false  # Fitness change logging
+  initialization: true  # Setup messages
+  generation: true  # Generation progress
+  host_extinction: true  # Host extinction events
+  te_extinction: true  # TE extinction events
+  trial_no: true  # Trial numbering
+  gene_init: false  # Gene initialization details
+  te_init: false  # TE initialization details
+  performance: true  # Performance monitoring
+
+# Logging configuration
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+  to_file: true  # Save logs to file
+  file_path: ./logs/simulation.log
+
+# Advanced settings
+advanced:
+  append_gene: true  # Append genes on collision
+  terminate_no_tes: true  # Stop if all TEs extinct
+  gene_insertion_distribution: triangle  # triangle, flat, uniform
+  te_insertion_distribution: triangle
+  host_mutation_distribution: triangle

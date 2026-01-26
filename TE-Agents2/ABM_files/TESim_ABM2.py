@@ -1426,6 +1426,7 @@ class Population:
             # Parallel replication for large populations
             with ThreadPoolExecutor(max_workers=self.n_workers) as executor:
                 for dup in range(parameters.Host_reproduction_rate):
+                    print(f"Replication round {dup+1}, population size: {len(self.individual)}")
                     # Submit cloning tasks in batches
                     batch_size = max(10, len(self.individual) // self.n_workers)
                     futures = []
