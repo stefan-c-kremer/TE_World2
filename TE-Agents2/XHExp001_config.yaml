@@ -1,0 +1,90 @@
+# Configuration matching PaperExperiments/XHExp001/parameters.py
+# Exp 01 - {'Initial_genes':'500','Host_mutation_rate':'0.03','TE_progeny':'0.15,0,0.55,1,0.30,2','TE_Insertion_Distribution':'Flat()','Carrying_capacity':'30','TE_excision_rate':'0.1','Junk_BP':'1.4','Gene_Insertion_Distribution':'Flat()','mutation_effect':'0.01','TE_death_rate':'0.0005'}
+# Random seed for reproducibility (None for random, integer for fixed)
+# Note: Original experiment uses seed=None (random)
+seed: null
+# Simulation parameters matching XHExp001
+simulation:
+  maximum_generations: 1500 # Original: Maximum_generations=1500
+  carrying_capacity: 30 # Original: Carrying_capacity=30
+  host_start_fitness: 1.0 # Original: Host_start_fitness=1.0
+  host_mutation_rate: 0.03 # Original: Host_mutation_rate=0.03
+  host_reproduction_rate: 1 # Original: Host_reproduction_rate=1
+  junk_bp: 1400000 # Original: Junk_BP=1.4*MILLION=1,400,000
+  initial_genes: 500 # Original: Initial_genes=500
+  initial_tes: 1 # Original: Initial_TEs=1
+  save_frequency: 50 # Original: save_frequency=50
+  append_gene: true # Original: Append_gene=True
+  terminate_no_tes: true # Original: Terminate_no_TEs=True
+  te_death_rate: 0.0005 # Original: TE_death_rate=0.0005 (very low!)
+  te_excision_rate: 0.1 # Original: TE_excision_rate=0.1
+  gene_length: 1000 # Original: Gene_length=1000 (used as fallback if no subtypes)
+  te_length: 1000 # Original: TE_length=1000 (used as fallback if no types)
+# Gene subtypes - simplified to single type matching original experiment
+# Original experiment uses single Gene_length=1000
+genes:
+  subtypes:
+    ORF:
+      length: 1000 # Matches original Gene_length=1000
+      frequency: 1.0 # 100% - single gene type in original experiment
+      fitness_contribution: 1.0
+      mutation_sensitivity: 0.8
+      te_insertion_effect: high # high, medium, low
+# TE types - simplified to single generic type matching original experiment
+# Original experiment uses single TE_length=1000, TE_death_rate=0.0005, TE_excision_rate=0.1
+# Note: Original uses Flat() distributions, but parameters_ABM2.py currently hardcodes Triangle distributions
+tes:
+  types:
+    GENERIC_TE:
+      length: 1000 # Matches original TE_length=1000
+      frequency: 1.0 # 100% - single TE type in original experiment
+      autonomous: true # Assumed autonomous (original doesn't specify)
+      parasitizes: [] # No parasitism in original experiment
+      death_rate: 0.0005 # Matches original TE_death_rate=0.0005
+      excision_rate: 0.1 # Matches original TE_excision_rate=0.1
+      progeny_distribution: [0.15,0,0.55,1,0.30,2] # Matches original TE_progeny=ProbabilityTable(0.15,0,0.55,1,0.30,2)
+# Performance optimization settings
+performance:
+  use_parallel: true
+  max_workers: 8 # Adjust based on CPU cores
+  batch_size: 50
+  cache_statistics: true
+  use_intervaltree: true
+  use_bit_arrays: true
+  memory_optimize_freq: 50 # Memory cleanup every N generations
+  trace_frequency: 10 # Collect data every N generations (1=every gen, 10=every 10 gens, etc.)
+  # Note: Setting trace_frequency > 1 significantly speeds up simulation
+  # Statistics are still collected every generation but detailed stats (locations, subtypes) are skipped
+  element_pool_size: 2000
+  gene_pool_size: 500
+  random_cache_size: 10000
+  stats_cache_size: 100
+  enable_copy_on_write: true
+# Output control - matching original experiment output settings
+# Original: output={"SPLAT":False,"SPLAT FITNESS":False,"INITIALIZATION":False,"GENERATION":True,"HOST EXTINCTION":True,"TE EXTINCTION":True,"TRIAL NO":True,"GENE INIT":False,"TE INIT":False}
+output:
+  splat: false # Original: "SPLAT":False
+  splat_fitness: false # Original: "SPLAT FITNESS":False
+  initialization: false # Original: "INITIALIZATION":False
+  generation: true # Original: "GENERATION":True
+  host_extinction: true # Original: "HOST EXTINCTION":True
+  te_extinction: true # Original: "TE EXTINCTION":True
+  trial_no: true # Original: "TRIAL NO":True
+  gene_init: false # Original: "GENE INIT":False
+  te_init: false # Original: "TE INIT":False
+  performance: false # Not in original, added for ABM2
+# Logging configuration
+logging:
+  level: INFO # DEBUG, INFO, WARNING, ERROR
+  to_file: false # Save logs to file
+  file_path: ./logs/simulation.log
+# Advanced settings
+# NOTE: Original experiment uses Flat() distributions for both TE_Insertion_Distribution and Gene_Insertion_Distribution
+advanced:
+  append_gene: true # Already set in simulation section above
+  terminate_no_tes: true # Already set in simulation section above
+  gene_insertion_distribution: flat # Original: Gene_Insertion_Distribution=Flat()
+  te_insertion_distribution: flat # Original: TE_Insertion_Distribution=Flat()
+  host_mutation_distribution: triangle # Original uses lambda-based mutation with 0.01 effect
+  insertion_effect_mode: probabilistic # 'probabilistic' (original system) or 'deterministic' (new system)
+  mutation_effect: 0.01 # Magnitude of mutation effect for probabilistic mode (matches original XHExp001)

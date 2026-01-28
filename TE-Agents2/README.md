@@ -34,7 +34,6 @@ source .venv/bin/activate
 uv pip install -r requirements/requirements_final.txt
 
 # Run quick simulation
-python ABM_files/TESim_ABM2.py
 
 # Check results
 ls -la *.csv  # Look for trace.csv with simulation data

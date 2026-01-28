@@ -9,6 +9,7 @@ import sys
 import math
 import time
 import gzip
+import copy
 import bisect
 import subprocess
 import random
@@ -659,13 +660,19 @@ class SelectiveInsertTE(Element):
         }
         
         # Check if TE is still alive and in chromosome
+        print("Does this chromosome exist?", self.chromosome)
+        
         if self not in self.chromosome.elements or self.dead:
             return jump_effects
+        
+        print("Does this chromosome exist? 1", self.chromosome)
         
         # Check if TE can transpose (autonomous or has autonomous helpers)
         if not self.can_transpose():
             output("SPLAT", f"TE at position {self.start} cannot transpose (autonomous: {self.autonomous}, dead: {self.dead})")
             return jump_effects
+        
+        print("Does this chromosome exist? 2", self.chromosome)
         
         # Import vrng locally to avoid circular import issues
         from TEUtil_ABM2 import vrng
@@ -692,12 +699,17 @@ class SelectiveInsertTE(Element):
             progeny = progeny_dist.generate()
         else:  # DNA transposon no excision
             progeny = 0
+            
+        print("Does this chromosome exist? 3", self.chromosome)
         
         # Batch creation of progeny TEs
         if progeny > 0:
             output("SPLAT", f"TE at position {self.start} creating {progeny} progeny (type: {self.te_type}, autonomous: {self.autonomous})")
             new_tes = self._create_progeny_batch(progeny)
+            print("It appears the chromesome is being removed above here.")
             for te in new_tes:
+                print("Does this chromosome exist? 4", self.chromosome)
+                print("Adding te ", te)
                 result = self.chromosome.insert_optimized(te)
                 jump_effects['TOTAL_JU'] += 1
                 
@@ -722,11 +734,14 @@ class SelectiveInsertTE(Element):
         # Ensure positions is always iterable
         if not hasattr(positions, '__iter__'):
             positions = [positions]
+            
+        print("4.1, does the chromeosome exist", self.chromosome)
         
         progeny = []
         for pos in positions:
             # Inherit autonomous status and TE type from parent TE
             te = te_pool.get(pos, False, element_data.lengths[self.idx], self.autonomous, self.te_type)
+            print("4.2, does the chromeosome exist", self.chromosome)
             
             # Validate that we got the correct type
             if not isinstance(te, SelectiveInsertTE):
@@ -734,7 +749,10 @@ class SelectiveInsertTE(Element):
                 # Create a new TE directly instead of using the pool
                 te = SelectiveInsertTE(pos, False, element_data.lengths[self.idx], self.autonomous, self.te_type)
             
-            te.chromosome = self.chromosome
+            print("4.3, does the chromeosome exist", self.chromosome)
+            
+            # I think it's because this reference is redefined
+            te.chromosome = copy.deepcopy(self.chromosome)
             progeny.append(te)
         
         return progeny
@@ -1426,6 +1444,7 @@ class Population:
             # Parallel replication for large populations
             with ThreadPoolExecutor(max_workers=self.n_workers) as executor:
                 for dup in range(parameters.Host_reproduction_rate):
+                    print(f"Replication round {dup+1}, population size: {len(self.individual)}")
                     # Submit cloning tasks in batches
                     batch_size = max(10, len(self.individual) // self.n_workers)
                     futures = []
