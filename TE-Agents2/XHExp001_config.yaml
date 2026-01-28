@@ -38,7 +38,7 @@ tes:
     GENERIC_TE:
       length: 1000 # Matches original TE_length=1000
       frequency: 1.0 # 100% - single TE type in original experiment
-      autonomous: false # Assumed autonomous (original doesn't specify)
+      autonomous: true # Assumed autonomous (original doesn't specify)
       parasitizes: [] # No parasitism in original experiment
       death_rate: 0.0005 # Matches original TE_death_rate=0.0005
       excision_rate: 0.1 # Matches original TE_excision_rate=0.1
