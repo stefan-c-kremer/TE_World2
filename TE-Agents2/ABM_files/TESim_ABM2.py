@@ -704,13 +704,23 @@ class SelectiveInsertTE(Element):
         
         # Batch creation of progeny TEs
         if progeny > 0:
+            # 2026-01-29, Noah: The problem is that reset() was setting self.chromosome to None *before* we accessed the reference (parent). If Isaiah has time, it may be worth checking the logic in te_pool.get() and reset() to avoid this issue in the first place.
+            # Store chromosome reference before calling _create_progeny_batch()
+            chromosome_ref = self.chromosome
+            
             output("SPLAT", f"TE at position {self.start} creating {progeny} progeny (type: {self.te_type}, autonomous: {self.autonomous})")
             new_tes = self._create_progeny_batch(progeny)
+            
+            # Restore chromosome reference if it was set to None by te_pool.get()
+            if self.chromosome is None:
+                self.chromosome = chromosome_ref
+            
             print("It appears the chromesome is being removed above here.")
             for te in new_tes:
                 print("Does this chromosome exist? 4", self.chromosome)
                 print("Adding te ", te)
-                result = self.chromosome.insert_optimized(te)
+                # Use chromosome_ref instead of self.chromosome to ensure we have the correct reference
+                result = chromosome_ref.insert_optimized(te)
                 jump_effects['TOTAL_JU'] += 1
                 
                 if result.collision_type == InsertResult.COLLISION_GENE:
@@ -727,9 +737,12 @@ class SelectiveInsertTE(Element):
     
     def _create_progeny_batch(self, count: int) -> List['SelectiveInsertTE']:
         """Create multiple progeny TEs efficiently using object pooling."""
+        # Store parent chromosome reference at the start to protect against corruption
+        parent_chromosome = self.chromosome
+        
         # Batch sample insertion positions
         positions = parameters.TE_Insertion_Distribution.sample(size=count)
-        positions = (positions * self.chromosome.length).astype(int)
+        positions = (positions * parent_chromosome.length).astype(int)
         
         # Ensure positions is always iterable
         if not hasattr(positions, '__iter__'):
@@ -743,6 +756,13 @@ class SelectiveInsertTE(Element):
             te = te_pool.get(pos, False, element_data.lengths[self.idx], self.autonomous, self.te_type)
             print("4.2, does the chromeosome exist", self.chromosome)
             
+            # If te_pool.get() returned self (the parent TE), restore chromosome and create a new TE
+            if te is self:
+                # Restore the chromosome reference that was corrupted by reset()
+                self.chromosome = parent_chromosome
+                # Create a new TE directly instead of using the pool
+                te = SelectiveInsertTE(pos, False, element_data.lengths[self.idx], self.autonomous, self.te_type)
+            
             # Validate that we got the correct type
             if not isinstance(te, SelectiveInsertTE):
                 logger.error(f"Wrong object type returned from te_pool: {type(te)} instead of SelectiveInsertTE")
@@ -751,8 +771,8 @@ class SelectiveInsertTE(Element):
             
             print("4.3, does the chromeosome exist", self.chromosome)
             
-            # I think it's because this reference is redefined
-            te.chromosome = copy.deepcopy(self.chromosome)
+            # Use parent_chromosome instead of self.chromosome to ensure we have the correct reference
+            te.chromosome = copy.deepcopy(parent_chromosome)
             progeny.append(te)
         
         return progeny
