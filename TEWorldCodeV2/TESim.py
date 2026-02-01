@@ -166,8 +166,12 @@ class SelectiveInsertTE(Element):
     if self.dead:
       return False
     
-    # Retranposition of TEs is only dependent on if they have a protein
+    # Retranposition of TEs is dependent on if they have a protein
     if self.retrans_protein:
+      # There is a probability that a non-autonomous TE can obtain a protein, and still fail to re-produce (i.e. insert into the genome)
+      if not self.autonomous:
+        return random.random() < parameters.Non_Autonomous_Insertion_Probability
+      
       return True
     
     return False
