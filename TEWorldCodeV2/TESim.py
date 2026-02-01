@@ -152,15 +152,30 @@ class SelectiveInsertTE(Element):
   centred at self.mean, with width self.std and a length of 300 BPs.
   """
   
-  def __init__( self, start, dead=False ):
+  def __init__( self, start, dead=False, autonomous=True, retrans_protein=True ):
     self.dead = dead;
     Element.__init__( self, parameters.TE_length, start );
+    self.autonomous = autonomous
+    self.retrans_protein = retrans_protein # Indicates if TE still has TE for retransposition
+    
+  def can_tranpose(self):
+    """
+    Checks if the TE can transpose based on parasitism rules, and probabilities.
+    Non-autonomous TEs require specific autonomous TEs to be present and active.
+    """
+    if self.dead:
+      return False
+    
+    # Retranposition of TEs is only dependent on if they have a protein
+    if self.retrans_protein:
+      return True
+    
+    return False
     
   def jump( self ):
     """
     This produces 0-3 copies of the TE and inserts them into the same chromosome.
     """
-
     jump_effects = { 'TEDEATH':  0, # death
                      'COLLISIO': 0, # collision
                      'TOTAL_JU': 0, # total
@@ -172,6 +187,11 @@ class SelectiveInsertTE(Element):
     if self not in self.chromosome.elements:	
 					# this happens if another element jumped into this element
       return jump_effects;
+    
+    # If the retrans protein does not exist, than it cannot transpose
+    if not self.can_tranpose():
+        output("SPLAT", "TE at position {} cannot transpose (autonomous: {}, retrans_protein: {}, dead: {})".format(self.start, self.autonomous, self.retrans_protein, self.dead))
+        return jump_effects
 
     if random.random() < parameters.TE_death_rate:    # mutation or host defenses
       self.dead = True;
@@ -179,7 +199,6 @@ class SelectiveInsertTE(Element):
       
     if self.dead:
       return jump_effects;
-      
 
     if parameters.TE_excision_rate==0.0:	# assume retro-transposon
       # orignal element survives and creates progeny
@@ -201,7 +220,7 @@ class SelectiveInsertTE(Element):
       jump_effects['TOTAL_JU'] += 1;
       try:
         jump_effects['COLLISIO'] += self.chromosome.insert( self.birth() );	# record TE collisions
-      # Protein was destroyed, which triggers an ElementDestroyed exception
+      # retrans_protein was destroyed, which triggers an ElementDestroyed exception
       except ElementDestroyed, e:
         output( "SPLAT", "SPLAT!" );
         ind = self.chromosome.host;	# host is None
@@ -236,7 +255,7 @@ class SelectiveInsertTE(Element):
     """
     # compute start location of new TE based on probabilty distro
     start = int(parameters.TE_Insertion_Distribution.sample()*self.chromosome.length);
-    baby = SelectiveInsertTE( start=start);
+    baby = SelectiveInsertTE( start=start, autonomous=self.autonomous, retrans_protein=self.autonomous); # The retrans_protein argument should be true, if autonomous
     baby.chromosome = self.chromosome;
         
     return baby;
@@ -244,11 +263,13 @@ class SelectiveInsertTE(Element):
   def copy( self ):
     te_copy = SelectiveInsertTE( self.start );    
     te_copy.dead = self.dead;
+    te_copy.autonomous = self.autonomous
+    te_copy.retrans_protein = self.retrans_protein # FIXME
     te_copy.chromosome = self.chromosome;
     return te_copy;
 
   def __repr__( self ):
-    return "SelectiveInsertTE( %s, %s )" % ( repr(self.start), repr(self.dead) );
+    return "SelectiveInsertTE( %s, %s, %s, %s )" % ( self.start, self.dead, self.autonomous, self.retrans_protein );
 
 ################################################################################
      
@@ -307,7 +328,7 @@ class Chromosome:
       if isinstance( whats_there, SelectiveInsertTE ):
         self.remove( whats_there );
         collision = 1;
-      else:	# hit a protein
+      else:	# hit a retrans_protein
         if element.start != whats_there.start:
           self.insert_anyway( element );
           element.chromosome = self;	# needs to be here!
@@ -362,8 +383,6 @@ class Chromosome:
 
     self.length -= element.length;  	# update chromosome length
 
-
-
   def __getitem__( self, index ):
     """
     Returns the element at the given index, or Junk if no element exists
@@ -400,13 +419,24 @@ class Chromosome:
     return [ element for element in self.elements \
                      if isinstance(element,ProkGene1)];
     
-  def TEs( self, live=True, dead=True ):
+  def TEs( self, live=True, dead=True, autonomous=None, retrans_protein=None):
     """
-    Return a list of only SelectiveInsertTE class elements.
+    Return a list of only SelectiveInsertTE class elements that match the argument values provided.
     """
-    return [ element for element in self.elements \
-                     if isinstance(element,SelectiveInsertTE) and
-                        (element.dead == dead or element.dead != live) ];
+    alive_tes = [ element for element in self.elements \
+                     if isinstance(element, SelectiveInsertTE) and
+                        (element.dead == dead or element.dead != live) ]
+    
+    filtered_tes = alive_tes
+    
+    # Filtering out TEs, by arguments (if provided)
+    if autonomous is not None:
+      filtered_tes = [te for te in filtered_tes if te.autonomous == autonomous]
+    
+    if retrans_protein is not None:
+      filtered_tes = [te for te in filtered_tes if te.retrans_protein == retrans_protein]
+      
+    return filtered_tes
     
   def junk( self ):
     """
@@ -444,7 +474,8 @@ class TestChromosome2(Chromosome):
   # number of genes to start with
   gene_no = parameters.Initial_genes;
   TE_no = parameters.Initial_TEs;           # number of TEs to start with
-  length = parameters.Junk_BP 
+  length = parameters.Junk_BP
+  last_autonomous_te = parameters.Autonomous_Frequency * TE_no # Creates a split index between autonomous and non-autonomous TEs
   
   def add_elements( self, genes=gene_no, TEs=TE_no ):
     while len( self.genes() ) < genes:
@@ -459,15 +490,26 @@ class TestChromosome2(Chromosome):
         else:
           continue;  # while loop (try again)
     
+    i = 0
+    
     while len( self.TEs() ) < TEs:
+      # Determine if the TE is autonomous or non-autonomous
+      if i < self.last_autonomous_te:
+        autonomous = True
+        retrans_protein = True
+      else:
+        autonomous = False
+        retrans_protein = False
+      
       try:
         start = self.testart();
-        te = SelectiveInsertTE(start=start);
-        self.insert( te );  # insert single TE instance
+        te = SelectiveInsertTE(start=start, dead=False, autonomous=autonomous, retrans_protein=retrans_protein);
+        self.insert(te);  # insert single TE instance
       except ElementDestroyed, e: # most recent if TE is in a gene
         continue;  # while loop (try again)
       output( "TE INIT", "%s" % te );
-
+      
+      i += 1
  
   def genestart( self ):
     """
@@ -479,10 +521,39 @@ class TestChromosome2(Chromosome):
     
   def testart( self ):
     return int(parameters.TE_Insertion_Distribution.sample()*self.length);
+  
+  def retrans_protein_kidnapping(self):
+    """
+    Simulates the 'kidnapping' of retrans proteins.
+    """
+    # Iterate through each TE, and for each one that is autonomous = True and protein = True:
+    # Use a probability that a autonomous = False, protein = False element will take away its protein
+    for te in self.TEs(live=True, dead=False, autonomous=True, retrans_protein=True):
+      # If a kidnapping is triggered, find the first TE that can kidnap this TE
+      if random.random() < self.get_kidnapping_probability():
+        kidnapper_te = self.TEs(live=True, dead=False, autonomous=False, retrans_protein=False)[0]
+        print("Kidnapping occurred", te, kidnapper_te)
+        te.retrans_protein = False
+        kidnapper_te.retrans_protein = True
+  
+  def get_kidnapping_probability(self):
+    """
+    A helper function that computes the probability of a autonomous = True, protein = True element having its
+    retransposition protein taken away. It is dependent on the number of autonomous = False, protein = False elements.
+    It will go to zero, when there are no autonomous = False, protein = False elements left.
+    """
+    # Compute the number of TEs with autonomous = False, protein = False
+    total_tes = len(self.TEs(live=True, dead=False))
+    
+    # Obtain the number of parasitic TEs, to obtain a ratio to be used for kidnapping probability
+    parasitic_tes = len(self.TEs(live=True, dead=False, autonomous=False, retrans_protein=False))
+    parasitic_ratio = float(parasitic_tes) / float(total_tes)
+  
+    
+    # FIXME: The parasitic ratio isn't necessarily an accurate probability that a SINE will take a LINE, but I will leave this here for now (should probably be parameterized)
+    return parasitic_ratio * 0.01
     
   def jump( self ):
-
-
     jump_effects = { 'TEDEATH':  0, 
                      'COLLISIO': 0, 
                      'TOTAL_JU': 0, 
@@ -490,13 +561,14 @@ class TestChromosome2(Chromosome):
                      'DELETE_J': 0, 
                      'NEUTRA_J': 0, 
                      'BENEFI_J': 0 };	
+    
+    # Simulate TE retransposition kidnapping, where non-autonomous TEs attempt to take proteins from autonomous
+    self.retrans_protein_kidnapping()
 
     for te in self.TEs(live=True,dead=False):
       te_jump_effects = te.jump();
       jump_effects = { key: value + te_jump_effects[key] \
                                        for key,value in jump_effects.items() };
-
-
 
     return jump_effects;
  
@@ -609,7 +681,6 @@ class Population:
       self.individual = individual;
         
     self.generation_no = generation_no;
-    #self.fatalities = fatalities;
       
   def replication( self ):
     # clone a copy of each individual add them to the end of the individual 
@@ -640,7 +711,6 @@ class Population:
     if total_fitness > 0.0:
       new_population = [ i for i in self.individual 
                         if random.random() < parameters.Host_survival_rate( i.fitness/total_fitness ) ];
-      #self.fatalities += self.capacity*2 - len( new_population );
     else:
       new_population = [];
 
