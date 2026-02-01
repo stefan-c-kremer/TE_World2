@@ -25,7 +25,7 @@ import parameters;
 
 ################################################################################
       
-Junk = "Junk";
+JUNK = "Junk";
  
 def mean( items ):
   return sum(items)/len(items);
@@ -103,6 +103,7 @@ class Element:
             repr(self.start) );
             
   ########################## Various comparator methods ########################
+  # These redefine existing comparator methods within Python for the Element class instances
   
   def __lt__( self, other ):
     return self.start < other.start;
@@ -129,7 +130,7 @@ class Element:
             
 class ProkGene1(Element):
   """
-  Subclass of Element.  Simple model of a prokaryotic gene which has no 
+  Simple model of a prokaryotic gene which has no 
   introns and a fixed gene length of 1600 BPs.
   """
   length = parameters.Gene_length;
@@ -147,9 +148,8 @@ class ProkGene1(Element):
 
 class SelectiveInsertTE(Element):
   """
-  Subclass of Element.  A transposable element that has a preferred insertion 
-  distribution centred at self.mean, with width self.std and a length of 300 
-  BPs.
+  A transposable element that has a preferred insertion  distribution 
+  centred at self.mean, with width self.std and a length of 300 BPs.
   """
   
   def __init__( self, start, dead=False ):
@@ -158,24 +158,22 @@ class SelectiveInsertTE(Element):
     
   def jump( self ):
     """
-    This produces 0-3 copies of the TE and inserts them into the same 
-    chromosome.
+    This produces 0-3 copies of the TE and inserts them into the same chromosome.
     """
 
-    jump_effects = { 'TEDEATH':  0, 
-                     'COLLISIO': 0, 
-                     'TOTAL_JU': 0, 
-                     'LETHAL_J': 0, 
-                     'DELETE_J': 0, 
-                     'NEUTRA_J': 0, 
-                     'BENEFI_J': 0 };	
-					# death, collision, total, lethal, deleterious, neutral, beneficial
+    jump_effects = { 'TEDEATH':  0, # death
+                     'COLLISIO': 0, # collision
+                     'TOTAL_JU': 0, # total
+                     'LETHAL_J': 0, # lethal
+                     'DELETE_J': 0,  # deleterious
+                     'NEUTRA_J': 0, # neutral
+                     'BENEFI_J': 0 };	# beneficial
 
     if self not in self.chromosome.elements:	
-					# this happens if another element 
-      return jump_effects;		# jumped into this element
+					# this happens if another element jumped into this element
+      return jump_effects;
 
-    if random.random()<parameters.TE_death_rate:    # mutation or host defenses
+    if random.random() < parameters.TE_death_rate:    # mutation or host defenses
       self.dead = True;
       jump_effects['TEDEATH'] += 1;
       
@@ -198,11 +196,13 @@ class SelectiveInsertTE(Element):
       progeny = 0;
 
 
-    for i in range(progeny):
+    # Iterating through progeny count (create offspring)
+    for _ in range(progeny):
       jump_effects['TOTAL_JU'] += 1;
       try:
         jump_effects['COLLISIO'] += self.chromosome.insert( self.birth() );	# record TE collisions
-      except ElementDestroyed, e: # actually protein destoryed
+      # Protein was destroyed, which triggers an ElementDestroyed exception
+      except ElementDestroyed, e:
         output( "SPLAT", "SPLAT!" );
         ind = self.chromosome.host;	# host is None
         new_fitness = parameters.Insertion_effect.generate()(ind.fitness);
@@ -230,16 +230,12 @@ class SelectiveInsertTE(Element):
     """
     Create a copy of this TE.
     The copy will have a starting location in the host chromosome based
-    on the prbability distribution of the parent TE and will have a
+    on the probability distribution of the parent TE and will have a
     mutated probability distribution of its own (to be applied to its
     children).
     """
-    
-   
     # compute start location of new TE based on probabilty distro
     start = int(parameters.TE_Insertion_Distribution.sample()*self.chromosome.length);
-      
-      
     baby = SelectiveInsertTE( start=start);
     baby.chromosome = self.chromosome;
         
@@ -260,8 +256,8 @@ class SelectiveInsertTE(Element):
 class Chromosome:
   """
   Chromosome to hold Elements and junk.
-  elements is a list of the elements in the chromosome
-  length is the total length of the chromosome including elements & junk.
+  `elements` is a list of the elements in the chromosome
+  `length` is the total length of the chromosome including elements and junk.
   """
   def __init__( self, length=parameters.Junk_BP, elements=None ):
     """
@@ -270,7 +266,6 @@ class Chromosome:
     if type( length ) not in [ int, float ]:
       raise Exception, repr(length);
 
-    #self.host = host;
     self.length = length;
     if elements==None:
       self.elements = []; # chromosome containing nothing but junk
@@ -285,9 +280,10 @@ class Chromosome:
     the Chromosome length.
     """
     whats_there = self[ element.start ];
-    if whats_there != Junk:         # Nothing
+    if whats_there != JUNK:         # Nothing
       if isinstance( whats_there, SelectiveInsertTE ):
         self.remove( whats_there );
+      # Raise ElementDestroyed error, if a gene already exists in the location
       else:
         raise ElementDestroyed( element, whats_there );
 
@@ -307,7 +303,7 @@ class Chromosome:
 
     # figure out what's there
     whats_there = self[ element.start ];
-    if whats_there != Junk:         # Nothing
+    if whats_there != JUNK:         # Nothing
       if isinstance( whats_there, SelectiveInsertTE ):
         self.remove( whats_there );
         collision = 1;
@@ -364,7 +360,7 @@ class Chromosome:
       print ">>>325>>>", element;
       raise;
 
-    self.length -= element.length;  	# update chromosome lenght
+    self.length -= element.length;  	# update chromosome length
 
 
 
@@ -378,7 +374,8 @@ class Chromosome:
     for element in self.elements:
       if element.start <= index < element.end: # start of element in region
         return element;
-    return Junk;
+
+    return JUNK;
         
   def remove( self, item ):
     """
@@ -440,13 +437,11 @@ class Chromosome:
 ################################################################################
         
 class TestChromosome2(Chromosome):
-  
   """
   Variation on Chromosome where genes are not evenly distributed,
   instead distributed in a probability distribution.
   """
-  
-  #gene_no = 870;       # number of genes to start with
+  # number of genes to start with
   gene_no = parameters.Initial_genes;
   TE_no = parameters.Initial_TEs;           # number of TEs to start with
   length = parameters.Junk_BP 
