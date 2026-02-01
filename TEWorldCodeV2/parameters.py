@@ -57,6 +57,7 @@ Append_gene = True;	# True: when the intialization routine tries to place
 Initial_TEs = 1;
 Autonomous_Frequency = 0.6 # 60% of the elements are autonomous (i.e. are LINE)
 Kidnapping_Multiplier = 0.01
+Non_Autonomous_Insertion_Probability = 0.9
 
 MILLION = 1000000;
 
