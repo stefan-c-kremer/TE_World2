@@ -59,6 +59,7 @@ Append_gene = True;	# True: when the intialization routine tries to place
 
 Initial_TEs = 1;
 Autonomous_Frequency = 1.0 # 100% of the elements are autonomous (i.e. are LINE)
+Kidnapping_Multiplier = 0.01 # FIXME: Not sure if this should be added to simulations, or if we should use something else
 
 MILLION = 1000000;
 

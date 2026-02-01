@@ -551,7 +551,7 @@ class TestChromosome2(Chromosome):
   
     
     # FIXME: The parasitic ratio isn't necessarily an accurate probability that a SINE will take a LINE, but I will leave this here for now (should probably be parameterized)
-    return parasitic_ratio * 0.01
+    return parasitic_ratio * parameters.Kidnapping_Multiplier
     
   def jump( self ):
     jump_effects = { 'TEDEATH':  0, 
