@@ -456,7 +456,7 @@ class TestChromosome2(Chromosome):
   gene_no = parameters.Initial_genes;
   TE_no = parameters.Initial_TEs;           # number of TEs to start with
   length = parameters.Junk_BP
-  last_autonomous_te = parameters.Autonomous_Frequency * TE_no # Creates a split index between autonomous and non-autonomous TEs
+  last_autonomous_te = int(parameters.Autonomous_Frequency * TE_no) # Creates a split index between autonomous and non-autonomous TEs
   
   def add_elements( self, genes=gene_no, TEs=TE_no ):
     while len( self.genes() ) < genes:
@@ -475,7 +475,7 @@ class TestChromosome2(Chromosome):
     
     while len( self.TEs() ) < TEs:
       # Determine if the TE is autonomous or non-autonomous
-      if i < self.last_autonomous_te:
+      if len(self.TEs()) < self.last_autonomous_te:
         autonomous = True
       else:
         autonomous = False
@@ -487,8 +487,6 @@ class TestChromosome2(Chromosome):
       except ElementDestroyed, e: # most recent if TE is in a gene
         continue;  # while loop (try again)
       output( "TE INIT", "%s" % te );
-      
-      i += 1
  
   def genestart( self ):
     """
@@ -628,6 +626,15 @@ class Population:
     if individual is None: 	# no individuals supplied, create them
       host = Host( species );   # generate a single individual
       host.chromosome[0].add_elements();
+      
+      autonomous_count = 0
+      non_autonomous_count = 0
+      for te in host.chromosome[0].TEs():
+        if te.autonomous:
+          autonomous_count += 1
+        else:
+          non_autonomous_count += 1
+      
       self.individual = [ host.clone() for i in range(0,capacity) ]; 
         # clone it n times
     else:
