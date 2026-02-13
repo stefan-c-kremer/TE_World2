@@ -763,12 +763,16 @@ class Tracefile:
              ("gen","8d"),
              ("pop_size","8d"),
              ("LTETOTAL","8d"),
+             ("LTEAUT","8d"),
+             ("LTENAUT","8d"),
              ("LTE000pe","8d"),
              ("LTE025pe","8d"),
              ("LTE050pe","8d"),
              ("LTE075pe","8d"),
              ("LTE100pe","8d"),
              ("DTETOTAL","8d"),
+             ("DTEAUT","8d"),
+             ("DTENAUT","8d"),
              ("DTE000pe","8d"),
              ("DTE025pe","8d"),
              ("DTE050pe","8d"),
@@ -882,12 +886,14 @@ class Experiment:
     tf.close();
 
   def get_tracedict( self ):
+    # We collect TE data, as well as autonomous/non-autonomous specific data
+    live_tes =[ (len(individual.chromosome[0].TEs(live=True, dead=False))) for individual in self.pop.individual];
+    live_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=True, dead=False, autonomous=True))) for individual in self.pop.individual];
+    live_non_autonomous_tes = [ (len(individual.chromosome[0].TEs(live=True, dead=False, autonomous=False))) for individual in self.pop.individual];
 
-    livetes =[ (len(individual.chromosome[0].TEs(live=True,dead=False))) 
-                                        for individual in self.pop.individual];
-
-    deadtes =[ (len(individual.chromosome[0].TEs(live=False,dead=True))) 
-                                        for individual in self.pop.individual];
+    dead_tes =[ (len(individual.chromosome[0].TEs(live=False,dead=True))) for individual in self.pop.individual];
+    dead_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True, autonomous=True))) for individual in self.pop.individual];
+    dead_non_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True, autonomous=False))) for individual in self.pop.individual];
 
     fitnesses = [ individual.fitness for individual in self.pop.individual ];
 
@@ -895,8 +901,12 @@ class Experiment:
       'time':     time.clock(),
       'gen':      self.pop.generation_no,
       'pop_size': len(self.pop.individual),
-      'LTETOTAL': sum(livetes),
-      'DTETOTAL': sum(deadtes),
+      'LTETOTAL': sum(live_tes),
+      'LTEAUT': sum(live_autonomous_tes),
+      'LTENAUT': sum(live_non_autonomous_tes),
+      'DTETOTAL': sum(dead_tes),
+      'DTEAUT': sum(dead_autonomous_tes),
+      'DTENAUT': sum(dead_non_autonomous_tes),
       'TEDEATH':  0, 	# set effects to zero until we observe them
       'COLLISIO': 0,
       'TOTAL_JU': 0,
@@ -906,11 +916,13 @@ class Experiment:
       'BENEFI_J': 0,
  };
 
-    tracedict.update( Quartiles('LTE%03dpe',livetes) );
-    tracedict.update( Quartiles('DTE%03dpe',deadtes) );
-    tracedict.update( Quartiles('FIT%03dpe',fitnesses) );
-      
-
+    tracedict.update( Quartiles('LTE%03dpe', live_tes) );
+    tracedict.update( Quartiles('LTEAUT%03dpe', live_autonomous_tes) );
+    tracedict.update( Quartiles('LTENAUT%03dpe', live_non_autonomous_tes) );
+    tracedict.update( Quartiles('DTE%03dpe', dead_tes) );
+    tracedict.update( Quartiles('DTEAUT%03dpe', dead_autonomous_tes) );
+    tracedict.update( Quartiles('DTENAUT%03dpe', dead_non_autonomous_tes) );
+    tracedict.update( Quartiles('FIT%03dpe', fitnesses) );
 
     genomesizes = [ individual.chromosome[0].length for individual \
                                 in self.pop.individual ];
