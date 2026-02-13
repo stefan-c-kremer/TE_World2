@@ -410,14 +410,14 @@ class Chromosome:
     """
     Return a list of only SelectiveInsertTE class elements that match the argument values provided.
     """
-    alive_tes = [ element for element in self.elements \
+    filtered_tes = [ element for element in self.elements \
                      if isinstance(element, SelectiveInsertTE) and
                         (element.dead == dead or element.dead != live) ]
     
     if autonomous is None:
-      return alive_tes
+      return filtered_tes
     
-    return [te for te in alive_tes if te.autonomous == autonomous]
+    return [te for te in filtered_tes if te.autonomous == autonomous]
     
   def junk( self ):
     """
