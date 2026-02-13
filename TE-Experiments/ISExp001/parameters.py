@@ -59,8 +59,7 @@ Append_gene = True;	# True: when the intialization routine tries to place
 
 Initial_TEs = 1;
 Autonomous_Frequency = 1.0 # 100% of the elements are autonomous (i.e. are LINE)
-Kidnapping_Multiplier = 0.01 # FIXME: Not sure if this should be added to simulations, or if we should use something else
-Non_Autonomous_Insertion_Probability = 0.9 # Probability that a non-autonomous TE that has kidnapped a retransposon parameter, will actually reproduce itself (FIXME I would like to know if this happens with LINEs as well, not just SINEs)
+Non_Autonomous_Insertion_Probability = 0.9
 
 MILLION = 1000000;
 

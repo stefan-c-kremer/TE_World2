@@ -152,11 +152,10 @@ class SelectiveInsertTE(Element):
   centred at self.mean, with width self.std and a length of 300 BPs.
   """
   
-  def __init__( self, start, dead=False, autonomous=True, retrans_protein=True ):
+  def __init__( self, start, dead=False, autonomous=True):
     self.dead = dead;
     Element.__init__( self, parameters.TE_length, start );
     self.autonomous = autonomous
-    self.retrans_protein = retrans_protein # Indicates if TE still has TE for retransposition
     
   def can_tranpose(self):
     """
@@ -166,15 +165,12 @@ class SelectiveInsertTE(Element):
     if self.dead:
       return False
     
-    # Retranposition of TEs is dependent on if they have a protein
-    if self.retrans_protein:
-      # There is a probability that a non-autonomous TE can obtain a protein, and still fail to re-produce (i.e. insert into the genome)
-      if not self.autonomous:
-        return random.random() < parameters.Non_Autonomous_Insertion_Probability
-      
-      return True
+    # TODO: I need to look into reimplementing this, to ensure that it aligns with the design
+    # There is a probability that a non-autonomous TE can obtain a protein, and still fail to re-produce (i.e. insert into the genome)
+    if not self.autonomous:
+      return random.random() < parameters.Non_Autonomous_Insertion_Probability
     
-    return False
+    return True
     
   def jump( self ):
     """
@@ -194,7 +190,7 @@ class SelectiveInsertTE(Element):
     
     # If the retrans protein does not exist, than it cannot transpose
     if not self.can_tranpose():
-        output("SPLAT", "TE at position {} cannot transpose (autonomous: {}, retrans_protein: {}, dead: {})".format(self.start, self.autonomous, self.retrans_protein, self.dead))
+        output("SPLAT", "TE at position {} cannot transpose (autonomous: {}, dead: {})".format(self.start, self.autonomous, self.dead))
         return jump_effects
 
     if random.random() < parameters.TE_death_rate:    # mutation or host defenses
@@ -224,7 +220,6 @@ class SelectiveInsertTE(Element):
       jump_effects['TOTAL_JU'] += 1;
       try:
         jump_effects['COLLISIO'] += self.chromosome.insert( self.birth() );	# record TE collisions
-      # retrans_protein was destroyed, which triggers an ElementDestroyed exception
       except ElementDestroyed, e:
         output( "SPLAT", "SPLAT!" );
         ind = self.chromosome.host;	# host is None
@@ -259,7 +254,7 @@ class SelectiveInsertTE(Element):
     """
     # compute start location of new TE based on probabilty distro
     start = int(parameters.TE_Insertion_Distribution.sample()*self.chromosome.length);
-    baby = SelectiveInsertTE( start=start, autonomous=self.autonomous, retrans_protein=self.autonomous); # The retrans_protein argument should be true, if autonomous
+    baby = SelectiveInsertTE( start=start, autonomous=self.autonomous)
     baby.chromosome = self.chromosome;
         
     return baby;
@@ -268,12 +263,11 @@ class SelectiveInsertTE(Element):
     te_copy = SelectiveInsertTE( self.start );    
     te_copy.dead = self.dead;
     te_copy.autonomous = self.autonomous
-    te_copy.retrans_protein = self.retrans_protein # FIXME
     te_copy.chromosome = self.chromosome;
     return te_copy;
 
   def __repr__( self ):
-    return "SelectiveInsertTE( %s, %s, %s, %s )" % ( self.start, self.dead, self.autonomous, self.retrans_protein );
+    return "SelectiveInsertTE( %s, %s, %s )" % ( self.start, self.dead, self.autonomous );
 
 ################################################################################
      
@@ -332,7 +326,7 @@ class Chromosome:
       if isinstance( whats_there, SelectiveInsertTE ):
         self.remove( whats_there );
         collision = 1;
-      else:	# hit a retrans_protein
+      else:
         if element.start != whats_there.start:
           self.insert_anyway( element );
           element.chromosome = self;	# needs to be here!
@@ -423,7 +417,7 @@ class Chromosome:
     return [ element for element in self.elements \
                      if isinstance(element,ProkGene1)];
     
-  def TEs( self, live=True, dead=True, autonomous=None, retrans_protein=None):
+  def TEs( self, live=True, dead=True, autonomous=None):
     """
     Return a list of only SelectiveInsertTE class elements that match the argument values provided.
     """
@@ -436,9 +430,6 @@ class Chromosome:
     # Filtering out TEs, by arguments (if provided)
     if autonomous is not None:
       filtered_tes = [te for te in filtered_tes if te.autonomous == autonomous]
-    
-    if retrans_protein is not None:
-      filtered_tes = [te for te in filtered_tes if te.retrans_protein == retrans_protein]
       
     return filtered_tes
     
@@ -500,14 +491,12 @@ class TestChromosome2(Chromosome):
       # Determine if the TE is autonomous or non-autonomous
       if i < self.last_autonomous_te:
         autonomous = True
-        retrans_protein = True
       else:
         autonomous = False
-        retrans_protein = False
       
       try:
         start = self.testart();
-        te = SelectiveInsertTE(start=start, dead=False, autonomous=autonomous, retrans_protein=retrans_protein);
+        te = SelectiveInsertTE(start=start, dead=False, autonomous=autonomous)
         self.insert(te);  # insert single TE instance
       except ElementDestroyed, e: # most recent if TE is in a gene
         continue;  # while loop (try again)
@@ -526,20 +515,6 @@ class TestChromosome2(Chromosome):
   def testart( self ):
     return int(parameters.TE_Insertion_Distribution.sample()*self.length);
   
-  def retrans_protein_kidnapping(self):
-    """
-    Simulates the 'kidnapping' of retrans proteins.
-    """
-    # Iterate through each TE, and for each one that is autonomous = True and protein = True:
-    # Use a probability that a autonomous = False, protein = False element will take away its protein
-    for te in self.TEs(live=True, dead=False, autonomous=True, retrans_protein=True):
-      # If a kidnapping is triggered, find the first TE that can kidnap this TE
-      if random.random() < self.get_kidnapping_probability():
-        kidnapper_te = self.TEs(live=True, dead=False, autonomous=False, retrans_protein=False)[0]
-        print("Kidnapping occurred", te, kidnapper_te)
-        te.retrans_protein = False
-        kidnapper_te.retrans_protein = True
-  
   def get_kidnapping_probability(self):
     """
     A helper function that computes the probability of a autonomous = True, protein = True element having its
@@ -550,12 +525,12 @@ class TestChromosome2(Chromosome):
     total_tes = len(self.TEs(live=True, dead=False))
     
     # Obtain the number of parasitic TEs, to obtain a ratio to be used for kidnapping probability
-    parasitic_tes = len(self.TEs(live=True, dead=False, autonomous=False, retrans_protein=False))
+    parasitic_tes = len(self.TEs(live=True, dead=False, autonomous=False))
     parasitic_ratio = float(parasitic_tes) / float(total_tes)
   
     
     # FIXME: The parasitic ratio isn't necessarily an accurate probability that a SINE will take a LINE, but I will leave this here for now (should probably be parameterized)
-    return parasitic_ratio * parameters.Kidnapping_Multiplier
+    return parasitic_ratio
     
   def jump( self ):
     jump_effects = { 'TEDEATH':  0, 
@@ -565,9 +540,6 @@ class TestChromosome2(Chromosome):
                      'DELETE_J': 0, 
                      'NEUTRA_J': 0, 
                      'BENEFI_J': 0 };	
-    
-    # Simulate TE retransposition kidnapping, where non-autonomous TEs attempt to take proteins from autonomous
-    self.retrans_protein_kidnapping()
 
     for te in self.TEs(live=True,dead=False):
       te_jump_effects = te.jump();
