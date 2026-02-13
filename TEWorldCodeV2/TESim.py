@@ -157,21 +157,6 @@ class SelectiveInsertTE(Element):
     Element.__init__( self, parameters.TE_length, start );
     self.autonomous = autonomous
     
-  def can_tranpose(self):
-    """
-    Checks if the TE can transpose based on parasitism rules, and probabilities.
-    Non-autonomous TEs require specific autonomous TEs to be present and active.
-    """
-    if self.dead:
-      return False
-    
-    # TODO: I need to look into reimplementing this, to ensure that it aligns with the design
-    # There is a probability that a non-autonomous TE can obtain a protein, and still fail to re-produce (i.e. insert into the genome)
-    if not self.autonomous:
-      return random.random() < parameters.Non_Autonomous_Insertion_Probability
-    
-    return True
-    
   def jump( self ):
     """
     This produces 0-3 copies of the TE and inserts them into the same chromosome.
@@ -187,17 +172,15 @@ class SelectiveInsertTE(Element):
     if self not in self.chromosome.elements:	
 					# this happens if another element jumped into this element
       return jump_effects;
-    
-    # If the retrans protein does not exist, than it cannot transpose
-    if not self.can_tranpose():
-        output("SPLAT", "TE at position {} cannot transpose (autonomous: {}, dead: {})".format(self.start, self.autonomous, self.dead))
-        return jump_effects
 
     if random.random() < parameters.TE_death_rate:    # mutation or host defenses
       self.dead = True;
       jump_effects['TEDEATH'] += 1;
       
-    if self.dead:
+    # Should return if the TE is now dead or non-autonomous
+    # The rest of the functionality is not relevant to non-autonomous elements
+    # There should be an early return, if the function has not returned yet, in this case
+    if self.dead and not self.autonomous:
       return jump_effects;
 
     if parameters.TE_excision_rate==0.0:	# assume retro-transposon
@@ -539,10 +522,10 @@ class TestChromosome2(Chromosome):
                      'NEUTRA_J': 0, 
                      'BENEFI_J': 0 };	
 
-    for te in self.TEs(live=True,dead=False):
+    for te in self.TEs(live=True, dead=False):
       te_jump_effects = te.jump();
       jump_effects = { key: value + te_jump_effects[key] \
-                                       for key,value in jump_effects.items() };
+                                      for key,value in jump_effects.items() };
 
     return jump_effects;
  
