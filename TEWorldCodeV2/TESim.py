@@ -601,10 +601,9 @@ class Host:
 
     host = Host( self.species, [], self.fitness );
 
-    chromosome = [c.copy(host) for c in self.chromosome]; 
-      # create new array of new chromosomes
-
-    host.chromosome = chromosome;
+    # Create new array of new chromosomes
+    chromosomes = [c.copy(host) for c in self.chromosome]; 
+    host.chromosome = chromosomes;
 
     for chromosome in host.chromosome:
       chromosome.host = host;
