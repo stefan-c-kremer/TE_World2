@@ -60,7 +60,7 @@ def output( keyword, message ):
   Print outputs.
   """
   if not parameters.output.has_key(keyword) or parameters.output[keyword]:
-    print "[%s]:%s" % (keyword,message);
+    print "[%s]: %s" % (keyword, message);
   
 ################################################################################
   
@@ -414,13 +414,10 @@ class Chromosome:
                      if isinstance(element, SelectiveInsertTE) and
                         (element.dead == dead or element.dead != live) ]
     
-    filtered_tes = alive_tes
+    if autonomous is None:
+      return alive_tes
     
-    # Filtering out TEs, by arguments (if provided)
-    if autonomous is not None:
-      filtered_tes = [te for te in filtered_tes if te.autonomous == autonomous]
-      
-    return filtered_tes
+    return [te for te in alive_tes if te.autonomous == autonomous]
     
   def junk( self ):
     """
@@ -753,6 +750,16 @@ class Tracefile:
              ("LTE050pe","8d"),
              ("LTE075pe","8d"),
              ("LTE100pe","8d"),
+             ("LTEAUT000pe","8d"),
+             ("LTEAUT025pe","8d"),
+             ("LTEAUT050pe","8d"),
+             ("LTEAUT075pe","8d"),
+             ("LTEAUT100pe","8d"),
+             ("LTENAUT000pe","8d"),
+             ("LTENAUT025pe","8d"),
+             ("LTENAUT050pe","8d"),
+             ("LTENAUT075pe","8d"),
+             ("LTENAUT100pe","8d"),
              ("DTETOTAL","8d"),
              ("DTEAUT","8d"),
              ("DTENAUT","8d"),
@@ -761,6 +768,16 @@ class Tracefile:
              ("DTE050pe","8d"),
              ("DTE075pe","8d"),
              ("DTE100pe","8d"),
+             ("DTEAUT000pe","8d"),
+             ("DTEAUT025pe","8d"),
+             ("DTEAUT050pe","8d"),
+             ("DTEAUT075pe","8d"),
+             ("DTEAUT100pe","8d"),
+             ("DTENAUT000pe","8d"),
+             ("DTENAUT025pe","8d"),
+             ("DTENAUT050pe","8d"),
+             ("DTENAUT075pe","8d"),
+             ("DTENAUT100pe","8d"),
              ("FIT000pe","8.6f"),
              ("FIT025pe","8.6f"),
              ("FIT050pe","8.6f"),
@@ -874,7 +891,7 @@ class Experiment:
     live_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=True, dead=False, autonomous=True))) for individual in self.pop.individual];
     live_non_autonomous_tes = [ (len(individual.chromosome[0].TEs(live=True, dead=False, autonomous=False))) for individual in self.pop.individual];
 
-    dead_tes =[ (len(individual.chromosome[0].TEs(live=False,dead=True))) for individual in self.pop.individual];
+    dead_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True))) for individual in self.pop.individual];
     dead_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True, autonomous=True))) for individual in self.pop.individual];
     dead_non_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True, autonomous=False))) for individual in self.pop.individual];
 
