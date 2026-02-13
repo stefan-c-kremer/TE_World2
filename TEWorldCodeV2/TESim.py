@@ -205,7 +205,7 @@ class SelectiveInsertTE(Element):
       progeny = parameters.TE_progeny.generate();
     
     # assume DNA transposon   
-    elif random.random()<parameters.TE_excision_rate:
+    elif random.random() < parameters.TE_excision_rate:
       # excise original element
       self.chromosome.excise( self );
       progeny = parameters.TE_progeny.generate();
@@ -214,12 +214,18 @@ class SelectiveInsertTE(Element):
     else:
       progeny = 0;
 
-
     # Iterating through progeny count (create offspring)
     for _ in range(progeny):
       jump_effects['TOTAL_JU'] += 1;
       try:
-        jump_effects['COLLISIO'] += self.chromosome.insert( self.birth() );	# record TE collisions
+        new_te = self.birth()
+        kidnapping_probability = self.chromosome.get_kidnapping_probability()
+        
+        # Simulate kidnapping on newly created autonomous TE, to convert it to the non-autonomous
+        if random.random() < kidnapping_probability:
+          new_te.autonomous = False
+        
+        jump_effects['COLLISIO'] += self.chromosome.insert( new_te );	# record TE collisions
       except ElementDestroyed, e:
         output( "SPLAT", "SPLAT!" );
         ind = self.chromosome.host;	# host is None
@@ -517,20 +523,12 @@ class TestChromosome2(Chromosome):
   
   def get_kidnapping_probability(self):
     """
-    A helper function that computes the probability of a autonomous = True, protein = True element having its
-    retransposition protein taken away. It is dependent on the number of autonomous = False, protein = False elements.
-    It will go to zero, when there are no autonomous = False, protein = False elements left.
+    Computes the probability that a SINE will kidnap a LINE's retransposition protein, so that it can reproduce.
     """
-    # Compute the number of TEs with autonomous = False, protein = False
-    total_tes = len(self.TEs(live=True, dead=False))
-    
     # Obtain the number of parasitic TEs, to obtain a ratio to be used for kidnapping probability
-    parasitic_tes = len(self.TEs(live=True, dead=False, autonomous=False))
-    parasitic_ratio = float(parasitic_tes) / float(total_tes)
-  
+    n_non_autonomous = len(self.TEs(live=True, dead=False, autonomous=False))
     
-    # FIXME: The parasitic ratio isn't necessarily an accurate probability that a SINE will take a LINE, but I will leave this here for now (should probably be parameterized)
-    return parasitic_ratio
+    return 1 - 1/(1 + parameters.Kidnapping_Effectiveness * n_non_autonomous)
     
   def jump( self ):
     jump_effects = { 'TEDEATH':  0, 
