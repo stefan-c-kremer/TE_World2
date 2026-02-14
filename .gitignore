@@ -1,5 +1,1 @@
 *.pyc
-
-# Ignoring .csv and .gz files within the TE-Experiments folder, to reduce memory usage
-TE-Experiments/**/*.csv
-TE-Experiments/**/*.gz
