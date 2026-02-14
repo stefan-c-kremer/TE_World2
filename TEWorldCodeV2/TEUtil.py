@@ -45,7 +45,7 @@ class ProbabilityTable:
   def generate( self ):
     rnd = random.random();
     for key, value in self.table:
-      if rnd<key:
+      if rnd < key:
         return value;
     raise ProbabilitiesDontAddTo100;
 

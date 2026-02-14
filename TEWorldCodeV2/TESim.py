@@ -25,7 +25,7 @@ import parameters;
 
 ################################################################################
       
-Junk = "Junk";
+JUNK = "Junk";
  
 def mean( items ):
   return sum(items)/len(items);
@@ -60,7 +60,7 @@ def output( keyword, message ):
   Print outputs.
   """
   if not parameters.output.has_key(keyword) or parameters.output[keyword]:
-    print "[%s]:%s" % (keyword,message);
+    print "[%s]: %s" % (keyword, message);
   
 ################################################################################
   
@@ -103,6 +103,7 @@ class Element:
             repr(self.start) );
             
   ########################## Various comparator methods ########################
+  # These redefine existing comparator methods within Python for the Element class instances
   
   def __lt__( self, other ):
     return self.start < other.start;
@@ -129,7 +130,7 @@ class Element:
             
 class ProkGene1(Element):
   """
-  Subclass of Element.  Simple model of a prokaryotic gene which has no 
+  Simple model of a prokaryotic gene which has no 
   introns and a fixed gene length of 1600 BPs.
   """
   length = parameters.Gene_length;
@@ -147,48 +148,47 @@ class ProkGene1(Element):
 
 class SelectiveInsertTE(Element):
   """
-  Subclass of Element.  A transposable element that has a preferred insertion 
-  distribution centred at self.mean, with width self.std and a length of 300 
-  BPs.
+  A transposable element that has a preferred insertion  distribution 
+  centred at self.mean, with width self.std and a length of 300 BPs.
   """
   
-  def __init__( self, start, dead=False ):
+  def __init__( self, start, dead=False, autonomous=True):
     self.dead = dead;
     Element.__init__( self, parameters.TE_length, start );
+    self.autonomous = autonomous
     
   def jump( self ):
     """
-    This produces 0-3 copies of the TE and inserts them into the same 
-    chromosome.
+    This produces 0-3 copies of the TE and inserts them into the same chromosome.
     """
-
-    jump_effects = { 'TEDEATH':  0, 
-                     'COLLISIO': 0, 
-                     'TOTAL_JU': 0, 
-                     'LETHAL_J': 0, 
-                     'DELETE_J': 0, 
-                     'NEUTRA_J': 0, 
-                     'BENEFI_J': 0 };	
-					# death, collision, total, lethal, deleterious, neutral, beneficial
+    jump_effects = { 'TEDEATH':  0, # death
+                     'COLLISIO': 0, # collision
+                     'TOTAL_JU': 0, # total
+                     'LETHAL_J': 0, # lethal
+                     'DELETE_J': 0,  # deleterious
+                     'NEUTRA_J': 0, # neutral
+                     'BENEFI_J': 0 };	# beneficial
 
     if self not in self.chromosome.elements:	
-					# this happens if another element 
-      return jump_effects;		# jumped into this element
+					# this happens if another element jumped into this element
+      return jump_effects;
 
-    if random.random()<parameters.TE_death_rate:    # mutation or host defenses
+    if random.random() < parameters.TE_death_rate:    # mutation or host defenses
       self.dead = True;
       jump_effects['TEDEATH'] += 1;
       
-    if self.dead:
+    # Should return if the TE is now dead or non-autonomous
+    # The rest of the functionality is not relevant to non-autonomous elements
+    # There should be an early return, if the function has not returned yet, in this case
+    if self.dead and not self.autonomous:
       return jump_effects;
-      
 
     if parameters.TE_excision_rate==0.0:	# assume retro-transposon
       # orignal element survives and creates progeny
       progeny = parameters.TE_progeny.generate();
     
     # assume DNA transposon   
-    elif random.random()<parameters.TE_excision_rate:
+    elif random.random() < parameters.TE_excision_rate:
       # excise original element
       self.chromosome.excise( self );
       progeny = parameters.TE_progeny.generate();
@@ -197,12 +197,19 @@ class SelectiveInsertTE(Element):
     else:
       progeny = 0;
 
-
-    for i in range(progeny):
+    # Iterating through progeny count (create offspring)
+    for _ in range(progeny):
       jump_effects['TOTAL_JU'] += 1;
       try:
-        jump_effects['COLLISIO'] += self.chromosome.insert( self.birth() );	# record TE collisions
-      except ElementDestroyed, e: # actually protein destoryed
+        new_te = self.birth()
+        kidnapping_probability = self.chromosome.get_kidnapping_probability()
+        
+        # Simulate kidnapping on newly created autonomous TE, to convert it to the non-autonomous
+        if random.random() < kidnapping_probability:
+          new_te.autonomous = False
+        
+        jump_effects['COLLISIO'] += self.chromosome.insert( new_te );	# record TE collisions
+      except ElementDestroyed, e:
         output( "SPLAT", "SPLAT!" );
         ind = self.chromosome.host;	# host is None
         new_fitness = parameters.Insertion_effect.generate()(ind.fitness);
@@ -230,17 +237,13 @@ class SelectiveInsertTE(Element):
     """
     Create a copy of this TE.
     The copy will have a starting location in the host chromosome based
-    on the prbability distribution of the parent TE and will have a
+    on the probability distribution of the parent TE and will have a
     mutated probability distribution of its own (to be applied to its
     children).
     """
-    
-   
     # compute start location of new TE based on probabilty distro
     start = int(parameters.TE_Insertion_Distribution.sample()*self.chromosome.length);
-      
-      
-    baby = SelectiveInsertTE( start=start);
+    baby = SelectiveInsertTE( start=start, autonomous=self.autonomous)
     baby.chromosome = self.chromosome;
         
     return baby;
@@ -248,11 +251,12 @@ class SelectiveInsertTE(Element):
   def copy( self ):
     te_copy = SelectiveInsertTE( self.start );    
     te_copy.dead = self.dead;
+    te_copy.autonomous = self.autonomous
     te_copy.chromosome = self.chromosome;
     return te_copy;
 
   def __repr__( self ):
-    return "SelectiveInsertTE( %s, %s )" % ( repr(self.start), repr(self.dead) );
+    return "SelectiveInsertTE( %s, %s, %s )" % ( self.start, self.dead, self.autonomous );
 
 ################################################################################
      
@@ -260,8 +264,8 @@ class SelectiveInsertTE(Element):
 class Chromosome:
   """
   Chromosome to hold Elements and junk.
-  elements is a list of the elements in the chromosome
-  length is the total length of the chromosome including elements & junk.
+  `elements` is a list of the elements in the chromosome
+  `length` is the total length of the chromosome including elements and junk.
   """
   def __init__( self, length=parameters.Junk_BP, elements=None ):
     """
@@ -270,7 +274,6 @@ class Chromosome:
     if type( length ) not in [ int, float ]:
       raise Exception, repr(length);
 
-    #self.host = host;
     self.length = length;
     if elements==None:
       self.elements = []; # chromosome containing nothing but junk
@@ -285,9 +288,10 @@ class Chromosome:
     the Chromosome length.
     """
     whats_there = self[ element.start ];
-    if whats_there != Junk:         # Nothing
+    if whats_there != JUNK:         # Nothing
       if isinstance( whats_there, SelectiveInsertTE ):
         self.remove( whats_there );
+      # Raise ElementDestroyed error, if a gene already exists in the location
       else:
         raise ElementDestroyed( element, whats_there );
 
@@ -307,11 +311,11 @@ class Chromosome:
 
     # figure out what's there
     whats_there = self[ element.start ];
-    if whats_there != Junk:         # Nothing
+    if whats_there != JUNK:         # Nothing
       if isinstance( whats_there, SelectiveInsertTE ):
         self.remove( whats_there );
         collision = 1;
-      else:	# hit a protein
+      else:
         if element.start != whats_there.start:
           self.insert_anyway( element );
           element.chromosome = self;	# needs to be here!
@@ -364,9 +368,7 @@ class Chromosome:
       print ">>>325>>>", element;
       raise;
 
-    self.length -= element.length;  	# update chromosome lenght
-
-
+    self.length -= element.length;  	# update chromosome length
 
   def __getitem__( self, index ):
     """
@@ -378,7 +380,8 @@ class Chromosome:
     for element in self.elements:
       if element.start <= index < element.end: # start of element in region
         return element;
-    return Junk;
+
+    return JUNK;
         
   def remove( self, item ):
     """
@@ -403,13 +406,18 @@ class Chromosome:
     return [ element for element in self.elements \
                      if isinstance(element,ProkGene1)];
     
-  def TEs( self, live=True, dead=True ):
+  def TEs( self, live=True, dead=True, autonomous=None):
     """
-    Return a list of only SelectiveInsertTE class elements.
+    Return a list of only SelectiveInsertTE class elements that match the argument values provided.
     """
-    return [ element for element in self.elements \
-                     if isinstance(element,SelectiveInsertTE) and
-                        (element.dead == dead or element.dead != live) ];
+    filtered_tes = [ element for element in self.elements \
+                     if isinstance(element, SelectiveInsertTE) and
+                        (element.dead == dead or element.dead != live) ]
+    
+    if autonomous is None:
+      return filtered_tes
+    
+    return [te for te in filtered_tes if te.autonomous == autonomous]
     
   def junk( self ):
     """
@@ -440,16 +448,15 @@ class Chromosome:
 ################################################################################
         
 class TestChromosome2(Chromosome):
-  
   """
   Variation on Chromosome where genes are not evenly distributed,
   instead distributed in a probability distribution.
   """
-  
-  #gene_no = 870;       # number of genes to start with
+  # number of genes to start with
   gene_no = parameters.Initial_genes;
   TE_no = parameters.Initial_TEs;           # number of TEs to start with
-  length = parameters.Junk_BP 
+  length = parameters.Junk_BP
+  last_autonomous_te = int(parameters.Autonomous_Frequency * TE_no) # Creates a split index between autonomous and non-autonomous TEs
   
   def add_elements( self, genes=gene_no, TEs=TE_no ):
     while len( self.genes() ) < genes:
@@ -464,15 +471,22 @@ class TestChromosome2(Chromosome):
         else:
           continue;  # while loop (try again)
     
+    i = 0
+    
     while len( self.TEs() ) < TEs:
+      # Determine if the TE is autonomous or non-autonomous
+      if len(self.TEs()) < self.last_autonomous_te:
+        autonomous = True
+      else:
+        autonomous = False
+      
       try:
         start = self.testart();
-        te = SelectiveInsertTE(start=start);
-        self.insert( te );  # insert single TE instance
+        te = SelectiveInsertTE(start=start, dead=False, autonomous=autonomous)
+        self.insert(te);  # insert single TE instance
       except ElementDestroyed, e: # most recent if TE is in a gene
         continue;  # while loop (try again)
       output( "TE INIT", "%s" % te );
-
  
   def genestart( self ):
     """
@@ -484,10 +498,17 @@ class TestChromosome2(Chromosome):
     
   def testart( self ):
     return int(parameters.TE_Insertion_Distribution.sample()*self.length);
+  
+  def get_kidnapping_probability(self):
+    """
+    Computes the probability that a SINE will kidnap a LINE's retransposition protein, so that it can reproduce.
+    """
+    # Obtain the number of parasitic TEs, to obtain a ratio to be used for kidnapping probability
+    n_non_autonomous = len(self.TEs(live=True, dead=False, autonomous=False))
+    
+    return 1 - 1/(1 + parameters.Kidnapping_Effectiveness * n_non_autonomous)
     
   def jump( self ):
-
-
     jump_effects = { 'TEDEATH':  0, 
                      'COLLISIO': 0, 
                      'TOTAL_JU': 0, 
@@ -496,12 +517,10 @@ class TestChromosome2(Chromosome):
                      'NEUTRA_J': 0, 
                      'BENEFI_J': 0 };	
 
-    for te in self.TEs(live=True,dead=False):
+    for te in self.TEs(live=True, dead=False):
       te_jump_effects = te.jump();
       jump_effects = { key: value + te_jump_effects[key] \
-                                       for key,value in jump_effects.items() };
-
-
+                                      for key,value in jump_effects.items() };
 
     return jump_effects;
  
@@ -580,10 +599,9 @@ class Host:
 
     host = Host( self.species, [], self.fitness );
 
-    chromosome = [c.copy(host) for c in self.chromosome]; 
-      # create new array of new chromosomes
-
-    host.chromosome = chromosome;
+    # Create new array of new chromosomes
+    chromosomes = [c.copy(host) for c in self.chromosome]; 
+    host.chromosome = chromosomes;
 
     for chromosome in host.chromosome:
       chromosome.host = host;
@@ -608,13 +626,21 @@ class Population:
     if individual is None: 	# no individuals supplied, create them
       host = Host( species );   # generate a single individual
       host.chromosome[0].add_elements();
+      
+      autonomous_count = 0
+      non_autonomous_count = 0
+      for te in host.chromosome[0].TEs():
+        if te.autonomous:
+          autonomous_count += 1
+        else:
+          non_autonomous_count += 1
+      
       self.individual = [ host.clone() for i in range(0,capacity) ]; 
         # clone it n times
     else:
       self.individual = individual;
         
     self.generation_no = generation_no;
-    #self.fatalities = fatalities;
       
   def replication( self ):
     # clone a copy of each individual add them to the end of the individual 
@@ -645,7 +671,6 @@ class Population:
     if total_fitness > 0.0:
       new_population = [ i for i in self.individual 
                         if random.random() < parameters.Host_survival_rate( i.fitness/total_fitness ) ];
-      #self.fatalities += self.capacity*2 - len( new_population );
     else:
       new_population = [];
 
@@ -729,12 +754,36 @@ class Tracefile:
              ("LTE050pe","8d"),
              ("LTE075pe","8d"),
              ("LTE100pe","8d"),
+             ("LTEAUT","8d"),
+             ("LTEAUT000pe","8d"),
+             ("LTEAUT025pe","8d"),
+             ("LTEAUT050pe","8d"),
+             ("LTEAUT075pe","8d"),
+             ("LTEAUT100pe","8d"),
+             ("LTENAUT","8d"),
+             ("LTENAUT000pe","8d"),
+             ("LTENAUT025pe","8d"),
+             ("LTENAUT050pe","8d"),
+             ("LTENAUT075pe","8d"),
+             ("LTENAUT100pe","8d"),
              ("DTETOTAL","8d"),
              ("DTE000pe","8d"),
              ("DTE025pe","8d"),
              ("DTE050pe","8d"),
              ("DTE075pe","8d"),
              ("DTE100pe","8d"),
+             ("DTEAUT","8d"),
+             ("DTEAUT000pe","8d"),
+             ("DTEAUT025pe","8d"),
+             ("DTEAUT050pe","8d"),
+             ("DTEAUT075pe","8d"),
+             ("DTEAUT100pe","8d"),
+             ("DTENAUT","8d"),
+             ("DTENAUT000pe","8d"),
+             ("DTENAUT025pe","8d"),
+             ("DTENAUT050pe","8d"),
+             ("DTENAUT075pe","8d"),
+             ("DTENAUT100pe","8d"),
              ("FIT000pe","8.6f"),
              ("FIT025pe","8.6f"),
              ("FIT050pe","8.6f"),
@@ -843,12 +892,14 @@ class Experiment:
     tf.close();
 
   def get_tracedict( self ):
+    # We collect TE data, as well as autonomous/non-autonomous specific data
+    live_tes =[ (len(individual.chromosome[0].TEs(live=True, dead=False))) for individual in self.pop.individual];
+    live_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=True, dead=False, autonomous=True))) for individual in self.pop.individual];
+    live_non_autonomous_tes = [ (len(individual.chromosome[0].TEs(live=True, dead=False, autonomous=False))) for individual in self.pop.individual];
 
-    livetes =[ (len(individual.chromosome[0].TEs(live=True,dead=False))) 
-                                        for individual in self.pop.individual];
-
-    deadtes =[ (len(individual.chromosome[0].TEs(live=False,dead=True))) 
-                                        for individual in self.pop.individual];
+    dead_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True))) for individual in self.pop.individual];
+    dead_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True, autonomous=True))) for individual in self.pop.individual];
+    dead_non_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True, autonomous=False))) for individual in self.pop.individual];
 
     fitnesses = [ individual.fitness for individual in self.pop.individual ];
 
@@ -856,8 +907,12 @@ class Experiment:
       'time':     time.clock(),
       'gen':      self.pop.generation_no,
       'pop_size': len(self.pop.individual),
-      'LTETOTAL': sum(livetes),
-      'DTETOTAL': sum(deadtes),
+      'LTETOTAL': sum(live_tes),
+      'LTEAUT': sum(live_autonomous_tes),
+      'LTENAUT': sum(live_non_autonomous_tes),
+      'DTETOTAL': sum(dead_tes),
+      'DTEAUT': sum(dead_autonomous_tes),
+      'DTENAUT': sum(dead_non_autonomous_tes),
       'TEDEATH':  0, 	# set effects to zero until we observe them
       'COLLISIO': 0,
       'TOTAL_JU': 0,
@@ -867,11 +922,13 @@ class Experiment:
       'BENEFI_J': 0,
  };
 
-    tracedict.update( Quartiles('LTE%03dpe',livetes) );
-    tracedict.update( Quartiles('DTE%03dpe',deadtes) );
-    tracedict.update( Quartiles('FIT%03dpe',fitnesses) );
-      
-
+    tracedict.update( Quartiles('LTE%03dpe', live_tes) );
+    tracedict.update( Quartiles('LTEAUT%03dpe', live_autonomous_tes) );
+    tracedict.update( Quartiles('LTENAUT%03dpe', live_non_autonomous_tes) );
+    tracedict.update( Quartiles('DTE%03dpe', dead_tes) );
+    tracedict.update( Quartiles('DTEAUT%03dpe', dead_autonomous_tes) );
+    tracedict.update( Quartiles('DTENAUT%03dpe', dead_non_autonomous_tes) );
+    tracedict.update( Quartiles('FIT%03dpe', fitnesses) );
 
     genomesizes = [ individual.chromosome[0].length for individual \
                                 in self.pop.individual ];

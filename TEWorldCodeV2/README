@@ -18,7 +18,7 @@ From a Unix command line:
         
 `cp ../TEWorldCodeV2/parameters.py .`
 
-5.  Edit parameters file.
+5.  Edit the parameters file to align with your experiment's parameters.
 
 6.  Run the simulation:
 	
