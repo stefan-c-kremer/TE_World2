@@ -10,7 +10,7 @@ gnuplot_commands = """
 set size ratio 0.2
 set title "%s"
 set key left
-set terminal svg size 800,200 fname 'Verdana' fsize 10
+set terminal svg size 800,200 font "Verdana,10"
 set output '%s-%03d.svg'
 plot 'trace-%03d.csv' """;
 
