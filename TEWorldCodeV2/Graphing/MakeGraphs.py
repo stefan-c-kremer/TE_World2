@@ -4,7 +4,9 @@ import glob;
 import subprocess;
 
  
-################################################################################
+"""
+MakeGraphs.py implements a quick and easy-to-use graphing tool that quickly creates many pre-defined graphs for any `trace-[0-9]{3}.csv` files that are within the same folder as this file.
+"""
 
 gnuplot_commands = """
 set size ratio 0.2
