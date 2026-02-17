@@ -18,3 +18,5 @@ do
     
     echo Completed simulation for $file.
 done
+
+echo Completed all simulations!
