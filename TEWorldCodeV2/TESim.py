@@ -961,10 +961,18 @@ class Experiment:
 ################################################################################
 
 if __name__=="__main__":
-
-  if len( sys.argv )!=1:
-    sys.stderr.write( "Usage:  python2.7 ../../TEWorldCode/TESim.py\n");
+  if len( sys.argv ) > 2:
+    sys.stderr.write( "You must run it as: python2.7 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the number of runs.\n");
     sys.exit(-1);
 
-  Experiment( parameters.saved ).sim_generations();
+  num_runs = 1
+
+  if len(sys.argv) == 2:
+    num_runs = int(sys.argv[1])
+    
+  # Iterates by the specified number of runs, or once if unspecified
+  for i in range(num_runs):
+    print("Run {} started.".format(i + 1))
+    Experiment( parameters.saved ).sim_generations()
+    print("Run {} completed.".format(i + 1))
 
