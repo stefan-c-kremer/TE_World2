@@ -1,0 +1,36 @@
+# These are changeable configurations, that each have high/low mappings
+configuration_mappings:
+  - TE_progeny:
+      High: ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
+      Low: ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
+  - TE_excision_rate:
+      High: 0.5
+      Low: 0.1
+  - TE_death_rate:
+      High: 0.005
+      Low: 0.0005
+  - Insertion_bias:
+      High: TE_Insertion_Distribution = Triangle( pmax=0, pzero=3.0/3.0 );
+            Gene_Insertion_Distribution = Triangle( pzero=1.0/3.0, pmax=1 );
+      Low: TE_Insertion_Distribution = Flat();
+           Gene_Insertion_Distribution = Flat();
+  - Corrected_mutation_rate:
+      High: 0.3
+      Low: 0.03
+  - NC_BP:
+      High: 14000000
+      Low: 1400000
+  - Mutation_effect:
+      High: 0.1
+      Low: 0.01
+  - Carrying_Capacity:
+      High: 300
+      Low: 30
+
+# TODO: These will be added once the original configurations are written
+# Autonomous_Frequency:
+#   High: 0.8
+#   Low: 0.4
+# Kidnapping_Frequency:
+#   High: Kidnapping_Frequency = lambda live_aut: 1 - 1/(1 + 0.001 * live_aut)
+#   Low: Kidnapping_Frequency = lambda live_aut: 1 - 1/(1 + 0.01 * live_aut)
