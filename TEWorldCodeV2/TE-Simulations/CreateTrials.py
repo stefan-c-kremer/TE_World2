@@ -121,6 +121,8 @@ def generate_configurations():
     # Will use each binary string to turn the respective configuration on/off
     for permutation in permutations:
         configuration_body = unchanged_fields
+        configuration_body += "\n# ********************************************"
+        configuration_body += "\n# TRIAL FIELDS\n"
         
         # Obtain the configuration, and append the corresponding value, based on the flag
         for i, field in enumerate(mappings):
