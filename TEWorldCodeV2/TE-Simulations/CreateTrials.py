@@ -8,6 +8,8 @@ Creates 256 Python configuration files for TE experiments, with high and low par
 
 # These are configurations that stay the same for all trials
 unchanged_fields = """
+from TEUtil import *;
+
 output = {
 	"SPLAT":		False,
 	"SPLAT FITNESS":	False,
@@ -36,6 +38,10 @@ Append_gene = True;	# True: when the intialization routine tries to place
 Initial_TEs = 1;
 
 Host_start_fitness = 1.0;
+
+Host_start_fitness = 1.0;
+Host_mutation_rate = 0.03;
+
 Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0,
                                   0.30, lambda fit: fit - random.random()*0.01,
                                   0.15, lambda fit: fit,
@@ -147,7 +153,7 @@ def create_configuration_files():
         name = configuration["name"]
         print(name)
         body = configuration["body"]
-        dir_path = "../../TE-Experiments/IS-{}-Exp".format(name)
+        dir_path = "../../TE-Experiments/IS-{}-EXP".format(name)
         config_path = "{}/parameters.py".format(dir_path)
         
         print("Writing trial configuration to {}...".format(config_path))

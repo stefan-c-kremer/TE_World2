@@ -15,23 +15,21 @@ configuration_mappings:
   - TE_progeny:
       High: ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
       Low: ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
-  - Carrying_Capacity:
+  - Carrying_capacity:
       High: 300
       Low: 30
   - Mutation_effect:
       High: 0.1
       Low: 0.01
-  - NC_BP:
+  - Junk_BP:
       High: 14000000
       Low: 1400000
   - Corrected_mutation_rate:
       High: 0.3
       Low: 0.03
-
-# TODO: These will be added once the original configurations are written
-# Autonomous_Frequency:
-#   High: 0.8
-#   Low: 0.4
-# Kidnapping_Frequency:
-#   High: Kidnapping_Frequency = lambda live_aut: 1 - 1/(1 + 0.001 * live_aut)
-#   Low: Kidnapping_Frequency = lambda live_aut: 1 - 1/(1 + 0.01 * live_aut)
+  - Autonomous_Frequency:
+      High: 0.8
+      Low: 0.4
+  - Kidnapping_Effectiveness:
+      High: 0.6
+      Low: 0.3
