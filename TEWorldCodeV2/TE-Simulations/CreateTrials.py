@@ -6,17 +6,6 @@ import shutil
 Creates 256 Python configuration files for TE experiments, with high and low parameters.
 """
 
-"""
-TODO: Plan:
-
-1. Set all of the unchangeable parameters in a file, and store them in a literal.
-2.  Create a list of all permutations of 8 1s and 0s, to indicate high and low.
-3.  For each configuration:
-        a. To enable higher configura
-        b. Create a new string that appends the unchanged literal to the list of changeable configurations.
-        c. Write this to a python file.
-"""
-
 # These are configurations that stay the same for all trials
 unchanged_fields = """
 output = {
@@ -92,22 +81,6 @@ def generate_binary_strings(n):
 def is_high(permutation, i):
     return permutation[i] == "1"
 
-def get_configuration_name(binary_string):
-    """
-    Takes a binary string and obtains a name with it, corresponding to high and low fields.
-    TODO: Align this with Dr. Kremer's research paper.
-    """
-    name = ""
-    
-    # First half is for the column values
-    for i in range(len(binary_string)):
-        if is_high(binary_string, i):
-            name += "H"
-        else:
-            name += "L"
-
-    return name
-
 def generate_configurations():
     """
     Generates all configurations and returns them as strings.
@@ -115,11 +88,13 @@ def generate_configurations():
     
     mappings = get_configuration_mappings()["configuration_mappings"]
     n_changeable_configurations = len(mappings)
+    mapping_split = n_changeable_configurations # for the purposes of replicating the graph
     permutations = generate_binary_strings(n_changeable_configurations)
     configurations = []
     
     # Will use each binary string to turn the respective configuration on/off
     for permutation in permutations:
+        configuration_name = ""
         configuration_body = unchanged_fields
         configuration_body += "\n# ********************************************"
         configuration_body += "\n# TRIAL FIELDS\n"
@@ -130,14 +105,24 @@ def generate_configurations():
             configuration_body += "\n\n"
             configuration_body += "{} = ".format(field_name)
             
+            # If halfway through the dictionary, add a hyphen to mark the difference between columns and rows
+            if i == mapping_split:
+                configuration_name += "-"
+            
             # Adding changeable configuration values, based on configured mappings
             if is_high(permutation, i):
                 configuration_body += str(field[field_name]["High"])
+                configuration_name += "H"
             else:
                 configuration_body += str(field[field_name]["Low"])
+                configuration_name += "L"
+                
+        # Add comment about dynamic configuration generation, for debugging purposes
+        configuration_body += "\n\n# This configuration file was programmatically generated."
+        configuration_body += "\n# Used permutation '{}', which corresponds to '{}'. Reference the mappings in the configuration file to determine what is 'high' and what is 'low'".format(permutation, configuration_name)
                 
         configuration = {
-            "name": get_configuration_name(permutation),
+            "name": configuration_name,
             "body": configuration_body
         }
                 
