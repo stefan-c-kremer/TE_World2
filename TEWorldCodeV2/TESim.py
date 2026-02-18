@@ -504,9 +504,10 @@ class TestChromosome2(Chromosome):
     Computes the probability that a SINE will kidnap a LINE's retransposition protein, so that it can reproduce.
     """
     # Obtain the number of parasitic TEs, to obtain a ratio to be used for kidnapping probability
+    n_autonomous = len(self.TEs(live=True, dead=False, autonomous=True))
     n_non_autonomous = len(self.TEs(live=True, dead=False, autonomous=False))
     
-    return 1 - 1/(1 + parameters.Kidnapping_Effectiveness * n_non_autonomous)
+    return parameters.Kidnapping_Frequency(n_autonomous, n_non_autonomous)
     
   def jump( self ):
     jump_effects = { 'TEDEATH':  0, 

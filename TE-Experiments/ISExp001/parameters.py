@@ -59,7 +59,7 @@ Append_gene = True;	# True: when the intialization routine tries to place
 
 Initial_TEs = 1;
 Autonomous_Frequency = 1.0 # 100% of the elements are autonomous (i.e. are LINE)
-Kidnapping_Effectiveness = 0.0 # The larger the number, the higher the probability of non-autonomous kidnapping the autonomous TEs
+Kidnapping_Frequency = lambda live_aut, live_naut: 1 - 1/(1 + 0.001 * live_naut)  # The larger the number, the higher the probability of non-autonomous kidnapping the autonomous TEs
 
 MILLION = 1000000;
 
