@@ -84,7 +84,7 @@ Corrected_mutation_rate = 0.03
 
 Autonomous_Frequency = 0.8
 
-Kidnapping_Frequency = Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)
+Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)
 
 # This configuration file was programmatically generated.
 # Used permutation '1101001011', which corresponds to 'HHLHLLHLHH'. Reference the mappings in the configuration file to determine what is 'high' and what is 'low'

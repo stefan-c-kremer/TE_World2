@@ -31,5 +31,5 @@ configuration_mappings:
       High: 0.8
       Low: 0.4
   - Kidnapping_Frequency:
-      High: "Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)"
-      Low: "Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.001 * live_naut)"
+      High: "lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)"
+      Low: "lambda live_aut, live_naut : 1 - 1/(1 + 0.001 * live_naut)"
