@@ -139,8 +139,6 @@ def generate_configurations():
         
     return configurations
 
-
-
 def create_configuration_files():
     """
     Creates configuration files.

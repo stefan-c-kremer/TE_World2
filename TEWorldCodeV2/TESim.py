@@ -6,6 +6,7 @@ import gzip;
 import random;
 import bisect;
 import subprocess;
+import glob
 
 ################################################################################
 # Launch code
@@ -817,7 +818,7 @@ class Tracefile:
   formatstr = ", ".join( [ "%%(%s)%s" % item for item in values ] ) + '\n';
 
   def __init__( self, run ):
-    file_name = "trace-{}.csv".format(run)
+    file_name = "trace-{:03d}.csv".format(run)
     
     if os.path.exists(file_name):
       self.fp = open(file_name, "a", 1 );	# append
@@ -854,7 +855,7 @@ class Experiment:
                 ( len(self.pop.individual), len( c0.TEs() ), len( c0.genes() ) ) );
 
   def save(self, run):
-    fp = gzip.open( "state-%d-%07d.gz" % (run, self.pop.generation_no), "w" );
+    fp = gzip.open( "state-%03d-%07d.gz" % (run, self.pop.generation_no), "w" );
     fp.write( "random.setstate(%s);\n" % ( repr(random.getstate()), ) );
     fp.write( "self.pop = %s;\n" % (repr(self.pop),) );
     fp.close();
@@ -975,7 +976,11 @@ if __name__=="__main__":
   # Iterates by the specified number of runs, or once if unspecified
   for i in range(num_runs):
     run = i + 1
-    print("Run {} started.".format(run))
-    Experiment( parameters.saved ).sim_generations(run)
-    print("Run {} completed.".format(run))
+    
+    # This ensures that the existing trace files are not overwritten (unless their file name is manually changed)
+    run_number = len(glob.glob("trace-???.csv")) + 1
+    run_explanation = "The results and state files are stored in files denoted by '-{:03d}' (i.e. trace-{:03d}.csv) files.".format(run_number, run_number)
+    print("Run {} started. {}".format(run, run_explanation))
+    Experiment( parameters.saved ).sim_generations(run_number)
+    print("Run {} completed. {}".format(run, run_explanation))
 
