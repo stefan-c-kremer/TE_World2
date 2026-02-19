@@ -12,7 +12,7 @@ do
     # Run the simulation within a subshell
     (
         cd $file
-        python2.7 ../../TEWorldCodeV2/TESim.py 3
+        python2.7 ../../TEWorldCodeV2/TESim.py 1
     )
 
     
