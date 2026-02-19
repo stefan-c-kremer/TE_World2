@@ -107,7 +107,10 @@ def generate_configurations():
         
         # Obtain the configuration, and append the corresponding value, based on the flag
         for i, field in enumerate(mappings):
-            field_name = field.keys()[0]
+            # Should only have 1 key
+            for key in field.keys():
+                field_name = key
+            
             configuration_body += "\n\n"
             configuration_body += "{} = ".format(field_name)
             
