@@ -26,7 +26,7 @@ Append_gene = True;	# True: when the intialization routine tries to place
 			# else again (don't use theis option with samll amounts
 			# of Junk_BP).
 
-Initial_TEs = 1;
+Initial_TEs = 10; # Setting this higher than 1 so that there is always some SINE and LINE TEs
 
 Host_start_fitness = 1.0;
 
