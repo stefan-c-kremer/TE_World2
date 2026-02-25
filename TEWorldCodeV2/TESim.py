@@ -472,8 +472,6 @@ class TestChromosome2(Chromosome):
         else:
           continue;  # while loop (try again)
     
-    i = 0
-    
     while len( self.TEs() ) < TEs:
       # Determine if the TE is autonomous or non-autonomous
       if len(self.TEs()) < self.last_autonomous_te:

@@ -82,7 +82,7 @@ Junk_BP = 1400000
 
 Corrected_mutation_rate = 0.03
 
-Autonomous_Frequency = 0.4
+Autonomous_Frequency = 0.1
 
 Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)
 

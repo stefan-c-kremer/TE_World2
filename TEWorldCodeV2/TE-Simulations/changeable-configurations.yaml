@@ -28,8 +28,8 @@ configuration_mappings:
       High: 0.3
       Low: 0.03
   - Autonomous_Frequency:
-      High: 0.8
-      Low: 0.4
+      High: 0.5
+      Low: 0.1 # there are usually more SINEs than LINEs
   - Kidnapping_Frequency:
       High: "lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)"
       Low: "lambda live_aut, live_naut : 1 - 1/(1 + 0.001 * live_naut)"
