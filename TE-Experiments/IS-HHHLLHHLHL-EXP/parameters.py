@@ -82,7 +82,7 @@ Junk_BP = 14000000
 
 Corrected_mutation_rate = 0.03
 
-Total_NAut_TE = Initial_TEs * Carrying_capacity * 3
+Total_NAut_TE = int(Initial_TEs * Carrying_capacity * 3)
 
 Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.001 * live_naut)
 

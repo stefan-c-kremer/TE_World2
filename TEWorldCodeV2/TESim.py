@@ -626,8 +626,38 @@ class Population:
         else:
           non_autonomous_count += 1
       
-      self.individual = [ host.clone() for i in range(0,capacity) ]; 
-        # clone it n times
+      # Clone hosts n times
+      self.individual = [ host.clone() for _ in range(0,capacity) ]; 
+      
+      # After cloning the hosts we will distribute the non-autonomous TEs evenly
+      non_autonomous_even_count = int(parameters.Total_NAut_TE / parameters.Carrying_capacity)
+      non_autonomous_remainder = parameters.Total_NAut_TE % parameters.Carrying_capacity
+      
+      print("Adding", parameters.Total_NAut_TE, non_autonomous_even_count, non_autonomous_remainder)
+      
+      for host in self.individual:
+        non_autonomous_to_add  = non_autonomous_even_count
+        
+        # Add remainder until there is no more left
+        if non_autonomous_remainder > 0:
+          non_autonomous_to_add += 1
+          non_autonomous_remainder -= 1
+          
+        chromosome = host.chromosome[0]
+        # Create non-autonomous TEs and insert them
+        n_autonomous_tes = len(chromosome.TEs())
+        
+        # Ensuring that non_autonomous_to_add number of TEs were added correctly to the host
+        while (len(chromosome.TEs()) - n_autonomous_tes) < non_autonomous_to_add:
+          try:
+            start = chromosome.testart()
+            
+            te = SelectiveInsertTE(start=start, dead=False, autonomous=False)
+            chromosome.insert(te)
+          except ElementDestroyed:
+            # Try again
+            continue
+      
     else:
       self.individual = individual;
         
