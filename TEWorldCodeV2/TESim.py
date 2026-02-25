@@ -633,8 +633,6 @@ class Population:
       non_autonomous_even_count = int(parameters.Total_NAut_TE / parameters.Carrying_capacity)
       non_autonomous_remainder = parameters.Total_NAut_TE % parameters.Carrying_capacity
       
-      print("Adding", parameters.Total_NAut_TE, non_autonomous_even_count, non_autonomous_remainder)
-      
       for host in self.individual:
         non_autonomous_to_add  = non_autonomous_even_count
         
