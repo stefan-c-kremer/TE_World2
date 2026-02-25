@@ -26,7 +26,7 @@ Append_gene = True;	# True: when the intialization routine tries to place
 			# else again (don't use theis option with samll amounts
 			# of Junk_BP).
 
-Initial_TEs = 10; # Setting this higher than 1 so that there is always some SINE and LINE TEs
+Initial_TEs = 1;
 
 Host_start_fitness = 1.0;
 
@@ -82,7 +82,7 @@ Junk_BP = 1400000
 
 Corrected_mutation_rate = 0.3
 
-Autonomous_Frequency = 0.5
+Total_NAut_TE = Initial_TEs * Carrying_capacity * 3
 
 Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.001 * live_naut)
 

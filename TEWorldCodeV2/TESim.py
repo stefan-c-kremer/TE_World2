@@ -1,11 +1,9 @@
 import os;
 import sys;
-import math;
 import time;
 import gzip;
 import random;
 import bisect;
-import subprocess;
 import glob
 
 ################################################################################
@@ -457,7 +455,6 @@ class TestChromosome2(Chromosome):
   gene_no = parameters.Initial_genes;
   TE_no = parameters.Initial_TEs;           # number of TEs to start with
   length = parameters.Junk_BP
-  last_autonomous_te = int(parameters.Autonomous_Frequency * TE_no) # Creates a split index between autonomous and non-autonomous TEs
   
   def add_elements( self, genes=gene_no, TEs=TE_no ):
     while len( self.genes() ) < genes:
@@ -472,16 +469,10 @@ class TestChromosome2(Chromosome):
         else:
           continue;  # while loop (try again)
     
-    while len( self.TEs() ) < TEs:
-      # Determine if the TE is autonomous or non-autonomous
-      if len(self.TEs()) < self.last_autonomous_te:
-        autonomous = True
-      else:
-        autonomous = False
-      
+    while len( self.TEs() ) < TEs:      
       try:
         start = self.testart();
-        te = SelectiveInsertTE(start=start, dead=False, autonomous=autonomous)
+        te = SelectiveInsertTE(start=start, dead=False, autonomous=True)
         self.insert(te);  # insert single TE instance
       except ElementDestroyed, e: # most recent if TE is in a gene
         continue;  # while loop (try again)
