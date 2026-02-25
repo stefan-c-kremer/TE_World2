@@ -1,11 +1,10 @@
 import os;
 import sys;
-import math;
 import time;
 import gzip;
 import random;
 import bisect;
-import subprocess;
+import glob
 
 ################################################################################
 # Launch code
@@ -456,7 +455,6 @@ class TestChromosome2(Chromosome):
   gene_no = parameters.Initial_genes;
   TE_no = parameters.Initial_TEs;           # number of TEs to start with
   length = parameters.Junk_BP
-  last_autonomous_te = int(parameters.Autonomous_Frequency * TE_no) # Creates a split index between autonomous and non-autonomous TEs
   
   def add_elements( self, genes=gene_no, TEs=TE_no ):
     while len( self.genes() ) < genes:
@@ -471,18 +469,10 @@ class TestChromosome2(Chromosome):
         else:
           continue;  # while loop (try again)
     
-    i = 0
-    
-    while len( self.TEs() ) < TEs:
-      # Determine if the TE is autonomous or non-autonomous
-      if len(self.TEs()) < self.last_autonomous_te:
-        autonomous = True
-      else:
-        autonomous = False
-      
+    while len( self.TEs() ) < TEs:      
       try:
         start = self.testart();
-        te = SelectiveInsertTE(start=start, dead=False, autonomous=autonomous)
+        te = SelectiveInsertTE(start=start, dead=False, autonomous=True)
         self.insert(te);  # insert single TE instance
       except ElementDestroyed, e: # most recent if TE is in a gene
         continue;  # while loop (try again)
@@ -636,8 +626,36 @@ class Population:
         else:
           non_autonomous_count += 1
       
-      self.individual = [ host.clone() for i in range(0,capacity) ]; 
-        # clone it n times
+      # Clone hosts n times
+      self.individual = [ host.clone() for _ in range(0,capacity) ]; 
+      
+      # After cloning the hosts we will distribute the non-autonomous TEs evenly
+      non_autonomous_even_count = int(parameters.Total_NAut_TE / parameters.Carrying_capacity)
+      non_autonomous_remainder = parameters.Total_NAut_TE % parameters.Carrying_capacity
+      
+      for host in self.individual:
+        non_autonomous_to_add  = non_autonomous_even_count
+        
+        # Add remainder until there is no more left
+        if non_autonomous_remainder > 0:
+          non_autonomous_to_add += 1
+          non_autonomous_remainder -= 1
+          
+        chromosome = host.chromosome[0]
+        # Create non-autonomous TEs and insert them
+        n_autonomous_tes = len(chromosome.TEs())
+        
+        # Ensuring that non_autonomous_to_add number of TEs were added correctly to the host
+        while (len(chromosome.TEs()) - n_autonomous_tes) < non_autonomous_to_add:
+          try:
+            start = chromosome.testart()
+            
+            te = SelectiveInsertTE(start=start, dead=False, autonomous=False)
+            chromosome.insert(te)
+          except ElementDestroyed:
+            # Try again
+            continue
+      
     else:
       self.individual = individual;
         
@@ -816,11 +834,13 @@ class Tracefile:
   headerstr = ", ".join( [ "%8s" % item[0] for item in values ] ) + '\n';
   formatstr = ", ".join( [ "%%(%s)%s" % item for item in values ] ) + '\n';
 
-  def __init__( self ):
-    if os.path.exists( "trace.csv" ):
-      self.fp = open( "trace.csv", "a", 1 );	# append
+  def __init__( self, run ):
+    file_name = "trace-{:03d}.csv".format(run)
+    
+    if os.path.exists(file_name):
+      self.fp = open(file_name, "a", 1 );	# append
     else:
-      self.fp = open( "trace.csv", "w", 1 );	# create
+      self.fp = open(file_name, "w", 1 );	# create
       self.fp.write( self.headerstr );
 
 
@@ -851,8 +871,8 @@ class Experiment:
     output( "INITIALIZATION", "Experiment.__init__: pop %d TEs %d genes %d" % \
                 ( len(self.pop.individual), len( c0.TEs() ), len( c0.genes() ) ) );
 
-  def save(self):
-    fp = gzip.open( "state-%07d.gz" % self.pop.generation_no, "w" );
+  def save(self, run):
+    fp = gzip.open( "state-%03d-%07d.gz" % (run, self.pop.generation_no), "w" );
     fp.write( "random.setstate(%s);\n" % ( repr(random.getstate()), ) );
     fp.write( "self.pop = %s;\n" % (repr(self.pop),) );
     fp.close();
@@ -862,9 +882,9 @@ class Experiment:
     exec( fp.read() );
     fp.close();
 
-  def sim_generations( self ):
-    tf = Tracefile();
-    self.save();	# save state and random state
+  def sim_generations( self, run ):
+    tf = Tracefile(run);
+    self.save(run);	# save state and random state
 
     tracedict = self.get_tracedict();	# trace entry for initial conditions
     tf.trace( tracedict );
@@ -888,7 +908,7 @@ class Experiment:
         if hasattr( parameters, "Terminate_no_TEs" ) and parameters.Terminate_no_TEs:
           break;
       if self.pop.generation_no % parameters.save_frequency == 0:
-        self.save();
+        self.save(run);
 
     tf.close();
 
@@ -961,10 +981,23 @@ class Experiment:
 ################################################################################
 
 if __name__=="__main__":
-
-  if len( sys.argv )!=1:
-    sys.stderr.write( "Usage:  python2.7 ../../TEWorldCode/TESim.py\n");
+  if len( sys.argv ) > 2:
+    sys.stderr.write( "You must run it as: python2.7 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the number of runs.\n");
     sys.exit(-1);
 
-  Experiment( parameters.saved ).sim_generations();
+  num_runs = 1
+
+  if len(sys.argv) == 2:
+    num_runs = int(sys.argv[1])
+    
+  # Iterates by the specified number of runs, or once if unspecified
+  for i in range(num_runs):
+    run = i + 1
+    
+    # This ensures that the existing trace files are not overwritten (unless their file name is manually changed)
+    run_number = len(glob.glob("trace-???.csv")) + 1
+    run_explanation = "The results and state files are stored in files denoted by '-{:03d}' (i.e. trace-{:03d}.csv) files.".format(run_number, run_number)
+    print("Run {} started. {}".format(run, run_explanation))
+    Experiment( parameters.saved ).sim_generations(run_number)
+    print("Run {} completed. {}".format(run, run_explanation))
 

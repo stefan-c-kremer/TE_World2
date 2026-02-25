@@ -54,8 +54,6 @@ Append_gene = True;	# True: when the intialization routine tries to place
 			# else again (don't use theis option with samll amounts
 			# of Junk_BP).
 
-Initial_TEs = 1;
-Autonomous_Frequency = 0.6 # 60% of the elements are autonomous (i.e. are LINE)
 Kidnapping_Frequency = lambda live_aut, live_naut: 1 - 1/(1 + 0.001 * live_naut)  # The larger the number, the higher the probability of non-autonomous kidnapping the autonomous TEs
 
 MILLION = 1000000;
@@ -91,6 +89,9 @@ Host_reproduction_rate = 1;  # how many offspring each host has
 
 Host_survival_rate = lambda propfit: min( Carrying_capacity * propfit, 0.95 );
     # propfit = proportion of fitness owned by this individual
+    
+Initial_TEs = 1;
+Total_NAut_TE = int(Initial_TEs * Carrying_capacity * 3)
 
 Maximum_generations = 50;
 Terminate_no_TEs = True;	# end simulation if there are no TEs left
