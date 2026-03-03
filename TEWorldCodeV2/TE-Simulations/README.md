@@ -14,7 +14,7 @@ This is the code to:
 ### Create Trials
 
 ```
-python2.7 CreateTrials.py
+python3 CreateTrials.py
 ```
 
 The files will be subsequently created after running this command.

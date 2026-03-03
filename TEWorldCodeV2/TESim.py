@@ -58,8 +58,8 @@ def output( keyword, message ):
   """
   Print outputs.
   """
-  if not parameters.output.has_key(keyword) or parameters.output[keyword]:
-    print "[%s]: %s" % (keyword, message);
+  if not keyword in parameters.output or parameters.output[keyword]:
+    print("[%s]: %s" % (keyword, message));
   
 ################################################################################
   
@@ -90,7 +90,7 @@ class Element:
   def __init__( self, length, start ):
     self.length = length;
     if type(start)!=int:
-      print start;
+      print(start);
       raise "Error:  TE start location is not an integer";
     self.start = start;
     self.end = self.start + self.length;
@@ -208,7 +208,7 @@ class SelectiveInsertTE(Element):
           new_te.autonomous = False
         
         jump_effects['COLLISIO'] += self.chromosome.insert( new_te );	# record TE collisions
-      except ElementDestroyed, e:
+      except ElementDestroyed as e:
         output( "SPLAT", "SPLAT!" );
         ind = self.chromosome.host;	# host is None
         new_fitness = parameters.Insertion_effect.generate()(ind.fitness);
@@ -271,7 +271,7 @@ class Chromosome:
     Create a chromosome of given length of `junk' DNA.
     """
     if type( length ) not in [ int, float ]:
-      raise Exception, repr(length);
+      raise Exception(repr(length));
 
     self.length = length;
     if elements==None:
@@ -363,8 +363,8 @@ class Chromosome:
 
     try:
       self.elements.remove(element);	# removed the element
-    except ValueError, e:
-      print ">>>325>>>", element;
+    except ValueError as e:
+      print(">>>325>>>", element);
       raise;
 
     self.length -= element.length;  	# update chromosome length
@@ -462,7 +462,7 @@ class TestChromosome2(Chromosome):
         start = self.genestart();      
         gene = ProkGene1(start = start);
         self.insert( gene );
-      except ElementDestroyed, e: # most recent gene overwrote another
+      except ElementDestroyed as e: # most recent gene overwrote another
         if hasattr( parameters, "Append_gene" ) and parameters.Append_gene:
           gene.start = e.whats_there.end;	# move gene to end of previous
           gene.end = gene.start + gene.length;
@@ -474,7 +474,7 @@ class TestChromosome2(Chromosome):
         start = self.testart();
         te = SelectiveInsertTE(start=start, dead=False, autonomous=True)
         self.insert(te);  # insert single TE instance
-      except ElementDestroyed, e: # most recent if TE is in a gene
+      except ElementDestroyed as e: # most recent if TE is in a gene
         continue;  # while loop (try again)
       output( "TE INIT", "%s" % te );
  
@@ -741,7 +741,7 @@ class Population:
 ################################################################################
     
 def test_triangle():
-  print "pbins = triangle(100/3,100)";
+  print("pbins = triangle(100/3,100)");
   pbins = { bin:0 for bin in range(20) };
   for i in range(0,100000):
     x = triangle( 100/3, 100 );
@@ -749,7 +749,7 @@ def test_triangle():
     pbins[bin]+=1;
 
     
-  print "tbins = triangle(0,100*2/3)";
+  print("tbins = triangle(0,100*2/3)");
   tbins = { bin:0 for bin in range(20) };
   for i in range(0,100000):
     x = triangle( 100*2/3, 0 );
@@ -757,8 +757,8 @@ def test_triangle():
     tbins[bin]+=1;
   
   for bin in range(20):
-    print "P"*(pbins[bin]/500);
-    print "T"*(tbins[bin]/500);
+    print("P"*(pbins[bin]/500));
+    print("T"*(tbins[bin]/500));
  
  
 ################################################################################
@@ -848,8 +848,8 @@ class Tracefile:
     try:
       self.fp.write( self.formatstr % valdict );
     except TypeError:
-      print repr( valdict );
-      print repr( self.formatstr );
+      print(repr( valdict ));
+      print(repr( self.formatstr ));
       raise;
 
   def close( self ):
@@ -873,8 +873,8 @@ class Experiment:
 
   def save(self, run):
     fp = gzip.open( "state-%03d-%07d.gz" % (run, self.pop.generation_no), "w" );
-    fp.write( "random.setstate(%s);\n" % ( repr(random.getstate()), ) );
-    fp.write( "self.pop = %s;\n" % (repr(self.pop),) );
+    fp.write( bytes("random.setstate(%s);\n" % ( repr(random.getstate()), ), "utf-8") );
+    fp.write( bytes("self.pop = %s;\n" % (repr(self.pop),), "utf-8") );
     fp.close();
 
   def load( self, statefile ):
@@ -925,7 +925,7 @@ class Experiment:
     fitnesses = [ individual.fitness for individual in self.pop.individual ];
 
     tracedict = {
-      'time':     time.clock(),
+      'time':     time.perf_counter(),
       'gen':      self.pop.generation_no,
       'pop_size': len(self.pop.individual),
       'LTETOTAL': sum(live_tes),
@@ -982,7 +982,7 @@ class Experiment:
 
 if __name__=="__main__":
   if len( sys.argv ) > 2:
-    sys.stderr.write( "You must run it as: python2.7 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the number of runs.\n");
+    sys.stderr.write( "You must run it as: python3 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the number of runs.\n");
     sys.exit(-1);
 
   num_runs = 1

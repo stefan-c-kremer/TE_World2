@@ -16,7 +16,7 @@ e.g. `cd PaperExperiments/XHExp001`
 
 And then, running the `TESim.py` python script from within the experiment's directory.
 
-e.g. `python2.7 ../../TEWorldCodeV2/TESim.py > expG.001.log`
+e.g. `python3 ../../TEWorldCodeV2/TESim.py > expG.001.log`
 
 This will re-run the experiment with the same parameters, but with a different random seed.  It will over-write the log
 file and the `state-0000000.gz file`.  It will also generate a `trace.csv` file, a `\*.pyc` file, and subsequent `state-` files. 

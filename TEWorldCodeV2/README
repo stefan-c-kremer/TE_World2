@@ -22,7 +22,7 @@ From a Unix command line:
 
 6.  Run the simulation:
 	
-`python2.7 ../TEWorldCodeV2/TESim.py 100`
+`python3 ../TEWorldCodeV2/TESim.py 100`
     
     
 > The number is the number of times you want to run the simulation. 

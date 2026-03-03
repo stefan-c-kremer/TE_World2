@@ -17,7 +17,7 @@ do
         # Run the simulation within a subshell
         (
             cd $file
-            python2.7 ../../TEWorldCodeV2/TESim.py 1
+            python3 ../../TEWorldCodeV2/TESim.py 1
         )
 
         # Enables early exit

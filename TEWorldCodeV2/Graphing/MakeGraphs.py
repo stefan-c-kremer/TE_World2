@@ -31,7 +31,7 @@ class Graph:
              for y1 in self.y ) + "\nquit\n";
 
     commands2 = commands % tuple( 2*[self.title] + 2*[self.trial.i] );
-    print repr( commands2 );
+    print(repr( commands2 ));
     gnuplot.communicate( input = commands2 );
     
  
@@ -162,7 +162,7 @@ plots = [
 
 if __name__=="__main__":
   if len( sys.argv )!=1:
-    sys.stderr.write( "Usage:  python2.7 ../../TEWorldCode/MakeGraphs.py\n");
+    sys.stderr.write( "Usage:  python3 ../../TEWorldCode/MakeGraphs.py\n");
     sys.exit(-1);
   
   files = [ int(name[6:9]) for name in glob.glob("trace-???.csv") ];
@@ -173,7 +173,7 @@ if __name__=="__main__":
     for plot in plots:
       try:
         trial.plot( *plot );
-      except ValueError, e:   # accomodate old csv files with less columns
+      except ValueError as e:   # accomodate old csv files with less columns
         pass;
 
 
