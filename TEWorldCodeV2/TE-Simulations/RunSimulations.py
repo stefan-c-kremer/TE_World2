@@ -8,7 +8,7 @@ import subprocess
 
 N_PASS_THROUGHS = 3
 EXPERIMENTS_PATH = "../../TE-Experiments/**"
-MAX_PARALLEL = 1024
+MAX_PARALLEL = 48
 
 def simulate_all_experiments() -> None:
     """
