@@ -8,6 +8,7 @@ import subprocess
 
 N_PASS_THROUGHS = 3
 EXPERIMENTS_PATH = "../../TE-Experiments/**"
+MAX_PARALLEL = 1024
 
 def simulate_all_experiments() -> None:
     """
@@ -15,9 +16,10 @@ def simulate_all_experiments() -> None:
     """
     # Sorting the folders such that "low" folders appear earlier
     folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
-    
-    for name in folder_names:
-        run_experiment(name)
+        
+    # Runs up to MAX_PARALLEL experiments in parallel
+    with ThreadPoolExecutor(max_workers=MAX_PARALLEL) as executor:
+        executor.map(run_experiment, folder_names)
         
 def run_experiment(folder_name: str) -> None:
     """
