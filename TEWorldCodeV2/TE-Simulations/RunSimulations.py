@@ -1,6 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
 from glob import glob
-import os
 import subprocess
 
 # Iterates through each TE configuration folder, running all of the experiments and stores them in trace files.
