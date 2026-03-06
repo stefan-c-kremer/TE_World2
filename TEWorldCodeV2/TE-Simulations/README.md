@@ -22,7 +22,7 @@ The files will be subsequently created after running this command.
 ### Run Simulations
 
 ```
-. ./RunSimulations.sh
+python3 ./RunSimulations.py
 ```
 
 The simulations will be run (all 3072 of them).
