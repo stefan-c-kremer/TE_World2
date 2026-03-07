@@ -25,8 +25,11 @@ class ResultsExtractor:
     def __init__(self):
         pass
     
-    # Analyzes a single file and determines the corresponding result
-    def analyze_file(self, path):
+    def analyze_file(self, path: str) -> TEResult:
+        """
+        Analyzes a given trace (result) file, and returns the corresponding result.
+        """
+        
         # Read CSV into data frame
         df = pd.read_csv(path)
         
@@ -40,34 +43,48 @@ class ResultsExtractor:
         else:
             return TEResult.OTHER
     
-    # Analyzes all files within the given folder and return results
-    def analyze_folder(self, path):
+    def analyze_experiment(self, path: str):
+        """
+        Analyzes an individual experiment and returns a result.
+        """
+        # Obtain all of the CSV files within the folder
+        folder_path = f"{path}/*.csv"
+        files = sorted(glob(folder_path))
+        
+        experiment_results = {
+            "TE_EXTINCTION": 0,
+            "HOST_EXTINCTION": 0,
+            "TE_PERSISTENCE": 0,
+            "OTHER": 0
+        }
+        
+        for file in files:
+            trial_result = self.analyze_file(file)
+            
+            if trial_result == TEResult.TE_EXTINCTION:
+                experiment_results["TE_EXTINCTION"] += 1
+            elif trial_result == TEResult.HOST_EXTINCTION:
+                experiment_results["HOST_EXTINCTION"] += 1
+            elif trial_result == TEResult.TE_PERSISTENCE:
+                experiment_results["TE_PERSISTENCE"] += 1
+            else:
+                experiment_results["OTHER"] += 1
+                
+        return experiment_results
+            
+    def analyze_experiments(self):
+        """
+        Analyzes all experiments, and returns a representation of the results.
+        """
         folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
         
-        # Obtain all of the CSV files within the folder
         for folder in folder_names:
-            folder_path = f"{EXPERIMENTS_PATH_SHORT}/{folder}/*.csv"
-            files = sorted(glob(folder_path))
+            folder_path = f"{EXPERIMENTS_PATH_SHORT}/{folder}"
+            experiment_result = self.analyze_experiment(folder_path)
             
-            experiment_results = [0, 0, 0, 0]
-            
-            for file in files:
-                trial_result = self.analyze_file(file)
-                
-                if trial_result == TEResult.TE_EXTINCTION:
-                    experiment_results[0] += 1
-                elif trial_result == TEResult.HOST_EXTINCTION:
-                    experiment_results[1] += 1
-                elif trial_result == TEResult.TE_PERSISTENCE:
-                    experiment_results[2] += 1
-                else:
-                    experiment_results[3] += 1
-                    
-            # TODO Store 
+            print(f"Result for {folder}: {experiment_result}")
 
     
 if __name__ == "__main__":
     extractor = ResultsExtractor()
-    
-    
-    extractor.analyze_file("../../TE-Experiments/IS-LLLLLLLLLL-EXP/trace-003.csv")
+    extractor.analyze_experiments()
