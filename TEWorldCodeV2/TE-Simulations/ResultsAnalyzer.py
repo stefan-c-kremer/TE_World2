@@ -29,6 +29,8 @@ class TEResult(Enum):
     HOST_EXTINCTION = 2
     TE_PERSISTENCE = 3
     OTHER = 4 # normally the run was cancelled mid-way
+    
+
 
 class ResultsAnalyzer:
     def __init__(self):
@@ -170,15 +172,57 @@ class ResultsAnalyzer:
         """
         # Obtain all results corresonding to the parasitism fields
         # Obtain results with mapped fields
-        matched_results = self.results[self.results.parasitism_names == parasitism_fields]
-        
-        print(matched_results)
+        matched_results = self.results[
+                (self.results.parasitism_names == parasitism_fields) & 
+                (
+                    (self.results.te_extinction_count > 0) | 
+                    (self.results.host_extinction_count > 0) | 
+                    (self.results.te_persistence_count > 0)
+                )
+            ]
         
         # Iterate through each result
-        
-            # Obtain the cell to insert data into
+        for row in matched_results.itertuples():
+            col_name = "Q"
             
-            # Save data into the field
+            parameter_size = MAX_VALUE_LEN // 2
+            
+            # Obtain column by traversing letters in reverse
+            for letter in reversed(row.top_name):
+                if letter == "H":
+                    col_name = chr(ord(col_name) - parameter_size)
+                    
+                parameter_size //= 2
+            
+            parameter_size = MAX_VALUE_LEN // 2
+            
+            # Obtain row by traversing letters in reverse
+            row_name = 20
+            for letter in reversed(row.right_name):
+                if letter == "H":
+                    row_name -= parameter_size
+                    
+                parameter_size //= 2
+                    
+            cell_name = f"{col_name}{str(row_name)}"
+            
+            max_category = None
+            
+            # Determine the most frequent result
+            if row.te_extinction_count > row.host_extinction_count:
+                if row.te_extinction_count > row.te_persistence_count:
+                    max_category = TEResult.TE_EXTINCTION
+                else:
+                    max_category = TEResult.TE_PERSISTENCE
+            else:
+                if row.host_extinction_count > row.te_persistence_count:
+                    max_category = TEResult.HOST_EXTINCTION
+                else:
+                    max_category = TEResult.TE_PERSISTENCE
+                    
+            
+            # Insert data
+            ws[cell_name] = max_category.name
         
     def set_up_worksheet(self, ws, parasitism_fields: str) -> None:
         """
@@ -286,9 +330,5 @@ if __name__ == "__main__":
     extractor = ResultsAnalyzer()
     extractor.analyze_experiments()
     
-    print(f"The results have been obtained:")
-    print(extractor.results)
-    
     # Export results to an excel file
-    extractor.export_results_to_excel(parasitism_fields=None)
-    # extractor.export_results_to_graph()
+    extractor.export_results_to_graph()
