@@ -113,7 +113,7 @@ class ResultsAnalyzer:
             names.append(experiment_name)
             top_names.append(top_name)
             right_names.append(right_name)
-            parasitism_name
+            parasitism_names.append(parasitism_name)
             te_extinction_counts.append(experiment_result["TE_EXTINCTION"])
             host_extinction_counts.append(experiment_result["HOST_EXTINCTION"])
             te_persistence_counts.append(experiment_result["TE_PERSISTENCE"])
@@ -124,6 +124,7 @@ class ResultsAnalyzer:
             "name": names,
             "top_name": top_names,
             "right_name": right_names,
+            "parasitism_names": parasitism_names,
             "te_extinction_count": te_extinction_counts,
             "host_extinction_count": host_extinction_counts,
             "te_persistence_count": te_persistence_counts,
@@ -139,6 +140,35 @@ class ResultsAnalyzer:
         """
         wb = Workbook()
         ws = wb.active
+        
+        # Set up row and column headers of worksheet
+        self.set_up_worksheet(ws, parasitism_fields)
+        self.insert_data_into_worksheet(ws, parasitism_fields)
+        
+        # Insert data into worksheet
+      
+        wb.save(save_path)
+       
+    def insert_data_into_worksheet(self, ws, parasitism_fields: str) -> None:
+        """
+        Inserts data into the worksheet, corresponding to the parasitism fields.
+        """
+        # Obtain all results corresonding to the parasitism fields
+        # Obtain results with mapped fields
+        matched_results = self.results[self.results.parasitism_names == parasitism_fields]
+        
+        print(matched_results)
+        
+        # Iterate through each result
+        
+            # Obtain the cell to insert data into
+            
+            # Save data into the field
+        
+    def set_up_worksheet(self, ws, parasitism_fields: str) -> None:
+        """
+        Sets up column and row headers for a worksheet, and doesn't save the file (to be done in parent function).
+        """
         ws.title = f"Results ({parasitism_fields})"
         center_alignment = Alignment(horizontal="center", vertical="center")
         
@@ -235,8 +265,7 @@ class ResultsAnalyzer:
         for row in ws.iter_rows(1, 20, 18, 21):
             for cell in row:
                 cell.alignment = Alignment(horizontal="center", vertical="center", text_rotation=180)
-        
-        wb.save(save_path)
+  
             
 if __name__ == "__main__":
     extractor = ResultsAnalyzer()
