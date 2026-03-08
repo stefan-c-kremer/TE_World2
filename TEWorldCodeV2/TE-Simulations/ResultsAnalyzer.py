@@ -1,13 +1,18 @@
 import pandas as pd
+import re
 from glob import glob
 from RunSimulations import EXPERIMENTS_PATH
 from enum import Enum
 
-# Extracts results from all of the TE-Experiments folders, reporting the following results:
-#   - TE extinction
-#   - Host extinction
-#   - TE peristence
-#   - Cancelled early
+"""
+Extracts results from all of the TE-Experiments folders, reporting the following results:
+  - TE extinction
+  - Host extinction
+  - TE peristence
+  - Cancelled early
+  
+Additionally, it creates an Excel graph for this data.
+"""
 
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
 TE_EXTINCT_COL = " LTETOTAL"
@@ -21,7 +26,7 @@ class TEResult(Enum):
     TE_PERSISTENCE = 3
     OTHER = 4 # normally the run was cancelled mid-way
 
-class ResultsExtractor:
+class ResultsAnalyzer:
     def __init__(self):
         pass
     
@@ -74,17 +79,55 @@ class ResultsExtractor:
             
     def analyze_experiments(self):
         """
-        Analyzes all experiments, and returns a representation of the results.
+        Analyzes all experiments, and stores a representation of the results.
         """
+        # These correspond to the graph names
+        names = []
+        top_names = []
+        right_names = []
+        te_extinction_counts = []
+        host_extinction_counts = []
+        te_persistence_counts = []
+        other_counts = []
+        
+        name_pattern = re.compile('[HL]{10}')
+        
         folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
         
         for folder in folder_names:
             folder_path = f"{EXPERIMENTS_PATH_SHORT}/{folder}"
             experiment_result = self.analyze_experiment(folder_path)
             
-            print(f"Result for {folder}: {experiment_result}")
+            # Obtain names of experiments, corresponding to graph
+            experiment_name = name_pattern.findall(folder)[0]
+            top_name = experiment_name[0:5]
+            right_name = experiment_name[5:10]
+            
+            # Data storage mechanisms
+            names.append(experiment_name)
+            top_names.append(top_name)
+            right_names.append(right_name)
+            te_extinction_counts.append(experiment_result["TE_EXTINCTION"])
+            host_extinction_counts.append(experiment_result["HOST_EXTINCTION"])
+            te_persistence_counts.append(experiment_result["TE_PERSISTENCE"])
+            other_counts.append(experiment_result["OTHER"])
 
-    
+        # Storage in data frame
+        data = {
+            "name": names,
+            "top_name": top_names,
+            "right_name": right_names,
+            "te_extinction_count": te_extinction_counts,
+            "host_extinction_count": host_extinction_counts,
+            "te_persistence_count": te_persistence_counts,
+            "other_count": other_counts
+        }
+        
+        return pd.DataFrame(data) 
+            
 if __name__ == "__main__":
-    extractor = ResultsExtractor()
-    extractor.analyze_experiments()
+    extractor = ResultsAnalyzer()
+    results = extractor.analyze_experiments()
+    
+    print(f"The results have been obtained:")
+    print(results)
