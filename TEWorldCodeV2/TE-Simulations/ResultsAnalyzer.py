@@ -2,7 +2,7 @@ import yaml
 import re
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, PatternFill
 from glob import glob
 from RunSimulations import EXPERIMENTS_PATH
 from enum import Enum
@@ -29,8 +29,10 @@ class TEResult(Enum):
     HOST_EXTINCTION = 2
     TE_PERSISTENCE = 3
     OTHER = 4 # normally the run was cancelled mid-way
-    
 
+TE_EXTINCTION_COLOUR = "FFFF00"
+HOST_EXTINCTION_COLOUR = "A02B93"
+TE_PERSISTENCE_COLOUR = "00B0F0"
 
 class ResultsAnalyzer:
     def __init__(self):
@@ -165,6 +167,31 @@ class ResultsAnalyzer:
         # Insert data into worksheet
       
         wb.save(save_path)
+        
+    def get_result_fill(self, row):
+        """
+        Computes and returns a cell fill type based on the most frequent results.
+        """
+        max_category = None
+            
+        # Determine the most frequent result
+        if row.te_extinction_count > row.host_extinction_count:
+            if row.te_extinction_count > row.te_persistence_count:
+                max_category = TEResult.TE_EXTINCTION
+            else:
+                max_category = TEResult.TE_PERSISTENCE
+        else:
+            if row.host_extinction_count > row.te_persistence_count:
+                max_category = TEResult.HOST_EXTINCTION
+            else:
+                max_category = TEResult.TE_PERSISTENCE
+                
+        if max_category == TEResult.TE_EXTINCTION:
+            return PatternFill(start_color=TE_EXTINCTION_COLOUR, end_color=TE_EXTINCTION_COLOUR, fill_type='solid')
+        elif max_category == TEResult.HOST_EXTINCTION:
+            return PatternFill(start_color=HOST_EXTINCTION_COLOUR, end_color=HOST_EXTINCTION_COLOUR, fill_type='solid')
+        else:
+            return PatternFill(start_color=TE_PERSISTENCE_COLOUR, end_color=TE_PERSISTENCE_COLOUR, fill_type='solid')
        
     def insert_data_into_worksheet(self, ws, parasitism_fields: str) -> None:
         """
@@ -205,24 +232,9 @@ class ResultsAnalyzer:
                 parameter_size //= 2
                     
             cell_name = f"{col_name}{str(row_name)}"
-            
-            max_category = None
-            
-            # Determine the most frequent result
-            if row.te_extinction_count > row.host_extinction_count:
-                if row.te_extinction_count > row.te_persistence_count:
-                    max_category = TEResult.TE_EXTINCTION
-                else:
-                    max_category = TEResult.TE_PERSISTENCE
-            else:
-                if row.host_extinction_count > row.te_persistence_count:
-                    max_category = TEResult.HOST_EXTINCTION
-                else:
-                    max_category = TEResult.TE_PERSISTENCE
-                    
-            
+
             # Insert data
-            ws[cell_name] = max_category.name
+            ws[cell_name].fill = self.get_result_fill(row)
         
     def set_up_worksheet(self, ws, parasitism_fields: str) -> None:
         """
