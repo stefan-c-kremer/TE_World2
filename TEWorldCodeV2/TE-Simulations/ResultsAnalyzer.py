@@ -43,13 +43,17 @@ class ResultsAnalyzer:
         df = pd.read_csv(path)
         
         # Check conditions to see what result it should be classified
-        if df.iloc[-1][TE_EXTINCT_COL] == 0:
-            return TEResult.TE_EXTINCTION
-        elif df.iloc[-1][HOST_EXTINCT_COL] == 0:
-            return TEResult.HOST_EXTINCTION
-        elif df.iloc[-1][TE_PERSISTENCE_COL] == MAX_GENS:
-            return TEResult.TE_PERSISTENCE
-        else:
+        try:
+            if df.iloc[-1][TE_EXTINCT_COL] == 0:
+                return TEResult.TE_EXTINCTION
+            elif df.iloc[-1][HOST_EXTINCT_COL] == 0:
+                return TEResult.HOST_EXTINCTION
+            elif df.iloc[-1][TE_PERSISTENCE_COL] == MAX_GENS:
+                return TEResult.TE_PERSISTENCE
+            else:
+                return TEResult.OTHER
+        # If there is some sort of file-specific exception, return OTHER
+        except Exception:
             return TEResult.OTHER
     
     def analyze_experiment(self, path: str) -> dict:
@@ -100,8 +104,7 @@ class ResultsAnalyzer:
         folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
         
         for folder in folder_names:
-            folder_path = f"{EXPERIMENTS_PATH_SHORT}/{folder}"
-            experiment_result = self.analyze_experiment(folder_path)
+            experiment_result = self.analyze_experiment(folder)
             
             # Obtain names of experiments, corresponding to graph
             experiment_name = name_pattern.findall(folder)[0]
@@ -132,8 +135,20 @@ class ResultsAnalyzer:
         }
         
         self.results = pd.DataFrame(data)
+        
+    def export_results_to_excel(self, save_path="results.xlsx", parasitism_fields="LL"):
+        """
+        Exports results to an excel file
+        """
+        
+        results = self.results
+        
+        if parasitism_fields:
+            results = self.results[self.results.parasitism_names == parasitism_fields]
+        
+        results.to_excel(save_path)
     
-    def export_results_to_graph(self, save_path="results.xlsx", parasitism_fields="LL") -> None:
+    def export_results_to_graph(self, save_path="graph.xlsx", parasitism_fields="LL") -> None:
         """
         Takes the data corresponding to the parasitism fields and exports an excel file for basic visualization, 
         similar to the original paper.
@@ -275,4 +290,5 @@ if __name__ == "__main__":
     print(extractor.results)
     
     # Export results to an excel file
-    extractor.export_results_to_graph()
+    extractor.export_results_to_excel(parasitism_fields=None)
+    # extractor.export_results_to_graph()
