@@ -2,34 +2,44 @@
 # I have ordered this to align the logic of the code with Dr. Kremer's graph
 configuration_mappings:
   - Insertion_bias:
+      Name: Insertion Bias
       High: TE_Insertion_Distribution = Triangle( pmax=0, pzero=3.0/3.0 );
             Gene_Insertion_Distribution = Triangle( pzero=1.0/3.0, pmax=1 );
       Low: TE_Insertion_Distribution = Flat();
            Gene_Insertion_Distribution = Flat();
   - TE_death_rate:
+      Name: TE Death Rate
       High: 0.005
       Low: 0.0005
   - TE_excision_rate:
+      Name: TE Excision Rate
       High: 0.5
       Low: 0.1
   - TE_progeny:
+      Name: TE Progeny
       High: ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
       Low: ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
   - Carrying_capacity:
+      Name: Carrying Capacity
       High: 300
       Low: 30
   - Mutation_effect:
+      Name: Mutation Effect
       High: 0.1
       Low: 0.01
   - Junk_BP:
+      Name: Junk BP
       High: 14000000
       Low: 1400000
   - Corrected_mutation_rate:
+      Name: Corrected Mutation Rate
       High: 0.3
       Low: 0.03
   - Total_NAut_TE: # Total non-autonomous TEs, spread randomly across the hosts
+      Name: Total Non-autonomous TE
       High: int(Initial_TEs * Carrying_capacity * 3) # implicitly 75% of all TEs should be non-autonomous initially
       Low: int(Initial_TEs * Carrying_capacity) # implicitly 50% of all TEs should be non-autonomous initially
   - Kidnapping_Frequency:
+      Name: Kidnapping Frequency
       High: "lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)"
       Low: "lambda live_aut, live_naut : 1 - 1/(1 + 0.001 * live_naut)"
