@@ -18,9 +18,9 @@ Additionally, it creates an Excel graph for this data.
 """
 
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
-TE_EXTINCT_COL = " LTETOTAL"
-HOST_EXTINCT_COL = " pop_size"
-TE_PERSISTENCE_COL = "      gen"
+LIVE_TE_COL = " LTETOTAL"
+POP_SIZE_COL = " pop_size"
+GEN_COL = "      gen"
 MAX_GENS = 1500
 MAX_VALUE_LEN = 16
 
@@ -40,25 +40,42 @@ class ResultsAnalyzer:
     
     def analyze_file(self, path: str) -> TEResult:
         """
-        Analyzes a given trace (result) file, and returns the corresponding result.
+        Analyzes a given trace (result) file, and returns the corresponding result and generation count.
         """
         
         # Read CSV into data frame
         df = pd.read_csv(path)
         
+        analysis = {
+            
+        }
+        
         # Check conditions to see what result it should be classified
         try:
-            if df.iloc[-1][TE_EXTINCT_COL] == 0:
-                return TEResult.TE_EXTINCTION
-            elif df.iloc[-1][HOST_EXTINCT_COL] == 0:
-                return TEResult.HOST_EXTINCTION
-            elif df.iloc[-1][TE_PERSISTENCE_COL] == MAX_GENS:
-                return TEResult.TE_PERSISTENCE
+            result_type = None
+            
+            if df.iloc[-1][LIVE_TE_COL] == 0:
+                result_type = TEResult.TE_EXTINCTION
+            elif df.iloc[-1][POP_SIZE_COL] == 0:
+                result_type = TEResult.HOST_EXTINCTION
+            elif df.iloc[-1][GEN_COL] == MAX_GENS:
+                result_type = TEResult.TE_PERSISTENCE
             else:
-                return TEResult.OTHER
+                result_type = TEResult.OTHER
+                
+            analysis = {
+                "result": result_type,
+                "generations": int(df.iloc[-1][GEN_COL])
+            }
+    
         # If there is some sort of file-specific exception, return OTHER
-        except Exception:
-            return TEResult.OTHER
+        except Exception:            
+            analysis = {
+                "result": TEResult.OTHER,
+                "generations": 0
+            }
+        
+        return analysis
     
     def analyze_experiment(self, path: str) -> dict:
         """
@@ -78,11 +95,11 @@ class ResultsAnalyzer:
         for file in files:
             trial_result = self.analyze_file(file)
             
-            if trial_result == TEResult.TE_EXTINCTION:
+            if trial_result["result"] == TEResult.TE_EXTINCTION:
                 experiment_results["TE_EXTINCTION"] += 1
-            elif trial_result == TEResult.HOST_EXTINCTION:
+            elif trial_result["result"] == TEResult.HOST_EXTINCTION:
                 experiment_results["HOST_EXTINCTION"] += 1
-            elif trial_result == TEResult.TE_PERSISTENCE:
+            elif trial_result["result"] == TEResult.TE_PERSISTENCE:
                 experiment_results["TE_PERSISTENCE"] += 1
             else:
                 experiment_results["OTHER"] += 1
