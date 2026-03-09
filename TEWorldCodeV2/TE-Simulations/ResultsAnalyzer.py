@@ -54,10 +54,10 @@ class ResultsAnalyzer:
         try:
             result_type = None
             
-            if df.iloc[-1][LIVE_TE_COL] == 0:
-                result_type = TEResult.TE_EXTINCTION
-            elif df.iloc[-1][POP_SIZE_COL] == 0:
+            if df.iloc[-1][POP_SIZE_COL] == 0:
                 result_type = TEResult.HOST_EXTINCTION
+            elif df.iloc[-1][LIVE_TE_COL] == 0:
+                result_type = TEResult.TE_EXTINCTION
             elif df.iloc[-1][GEN_COL] == MAX_GENS:
                 result_type = TEResult.TE_PERSISTENCE
             else:
@@ -360,4 +360,14 @@ if __name__ == "__main__":
     extractor.analyze_experiments()
     
     # Export results to an excel file
-    extractor.export_results_to_graph()
+    extractor.export_results_to_excel("results-ll.xlsx", "LL")
+    extractor.export_results_to_graph("graph-ll.xlsx", "LL")
+
+    extractor.export_results_to_excel("results-lh.xlsx", "LH")
+    extractor.export_results_to_graph("graph-lh.xlsx", "LH")
+
+    extractor.export_results_to_excel("results-hl.xlsx", "HL")
+    extractor.export_results_to_graph("graph-hl.xlsx", "HL")
+
+    extractor.export_results_to_excel("results-hh.xlsx", "HH")
+    extractor.export_results_to_graph("graph-hh.xlsx", "HH")
