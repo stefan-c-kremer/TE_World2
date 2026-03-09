@@ -38,7 +38,7 @@ class ResultsAnalyzer:
     def __init__(self):
         pass
     
-    def analyze_file(self, path: str) -> TEResult:
+    def analyze_file(self, path: str) -> dict:
         """
         Analyzes a given trace (result) file, and returns the corresponding result and generation count.
         """
