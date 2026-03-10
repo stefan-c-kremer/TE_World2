@@ -62,6 +62,8 @@ csv2key = {
   'LTE050pe': '50%%', 
   'LTE075pe': '75%%', 
   'LTE100pe': '100%%', 
+  'LTEAUT': 'Autonomous TEs',
+  'LTENAUT': 'Non-autonomous TEs',
   'DTETOTAL': 'TEs', 
   'DTE000pe': '0%%', 
   'DTE025pe': '25%%', 
@@ -107,6 +109,8 @@ csv2lt = {
   'LTE050pe': '#FF0000',
   'LTE075pe': '#FF7F7F',
   'LTE100pe': '#FFAFAF',
+  'LTEAUT': "#00FF26",
+  'LTENAUT': "#C300FF",
   'DTETOTAL': '#FF0000',
   'DTE000pe': '#FFAFAF',
   'DTE025pe': '#FF7F7F',
@@ -156,7 +160,8 @@ plots = [
     ( 'TE Collisions vs Generation', 'gen', [ 'COLLISIO' ] ),
     ( 'TE Jumps vs Generation', 'gen', [ 'TOTAL_JU' ] ),
     ( 'TE Jump Effects vs Generation', 'gen', ['LETHAL_J', 'DELETE_J', 'NEUTRA_J', 'BENEFI_J' ] ),
-    ( 'TE and Gene Locations', 'gen', ['GSIZE100','GSIZE075','GSIZE050','GSIZE025','GSIZE000', 'GELOC100','GELOC075','GELOC050','GELOC025','GELOC000', 'TELOC100','TELOC075','TELOC050','TELOC025','TELOC000' ] ) 
+    ( 'TE and Gene Locations', 'gen', ['GSIZE100','GSIZE075','GSIZE050','GSIZE025','GSIZE000', 'GELOC100','GELOC075','GELOC050','GELOC025','GELOC000', 'TELOC100','TELOC075','TELOC050','TELOC025','TELOC000' ] ),
+    ( 'Live (autonomous and non-autonomous) TEs vs Generation', 'gen', ['LTEAUT', 'LTENAUT']) 
 ];
     
 
