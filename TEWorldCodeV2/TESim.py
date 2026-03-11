@@ -179,7 +179,7 @@ class SelectiveInsertTE(Element):
     # Should return if the TE is now dead or non-autonomous
     # The rest of the functionality is not relevant to non-autonomous elements
     # There should be an early return, if the function has not returned yet, in this case
-    if self.dead and not self.autonomous:
+    if self.dead or not self.autonomous:
       return jump_effects;
 
     if parameters.TE_excision_rate==0.0:	# assume retro-transposon
