@@ -2,9 +2,9 @@
 
 There are several graphing functionalities of this repository, which are outlined below.
 
-## `MakeGraphs.py`: Quick Graphing of Individual Trials
+## `CreateTraceGraphs`: Quick Graphing of Individual Trials
 
-[`MakeGraphs.py`](MakeGraphs.py) is a quick and easy-to-use program that takes CSV trace files that were produced by a list of trials, and outputs corresponding graphs that are predefined in the code. These include:
+[`CreateTraceGraphs.py`](CreateTraceGraphs.py) is a quick and easy-to-use program that takes CSV trace files that were produced by a list of trials, and outputs corresponding graphs that are predefined in the code. These include:
 
 - Host Population vs Generation
 - Total Live TEs vs Generation
@@ -19,22 +19,16 @@ There are several graphing functionalities of this repository, which are outline
 - TE and Gene Locations
 - Live autonomous/non-autonomous TEs vs Generation
 
-### Run `MakeGraphs.py`
+### Run `CreateTraceGraphs`
 
-1. Install `gnuplot`, if you haven't already.
-
-```
-sudo apt install gnuplot
-```
-
-Navigate to the same folder as `MakeGraphs.py` within your terminal.
+1. Navigate to the same folder as `CreateTraceGraphs.py` within your terminal.
 
 2. Copy any trace files that you want to graph into this directory. They will be identified by the code. Ensure that they match the regular expression `trace-[0-9]{3}.csv` (i.e. `trace-001.csv`).
 
-3. Run `MakeGraphs.py` with python2.
+3. Run `CreateTraceGraphs.py`.
 
 ```
-python2 MakeGraphs.py
+python3 CreateTraceGraphs.py
 ```
 
 The graphs should be created and output as `.svg` files, for all of the specified trace files.
