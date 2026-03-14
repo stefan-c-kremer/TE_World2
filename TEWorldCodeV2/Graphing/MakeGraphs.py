@@ -1,152 +1,23 @@
-import os;
-import sys;
-import glob;
-import subprocess;
+import os
+import glob
+import pandas as pd
+import matplotlib.pyplot as plt
 
- 
-"""
-MakeGraphs.py implements a quick and easy-to-use graphing tool that quickly creates many pre-defined graphs for any `trace-[0-9]{3}.csv` files that are within the same folder as this file.
-"""
-
-gnuplot_commands = """
-set size ratio 0.2
-set title "%s"
-set key left
-set terminal svg size 800,200 font "Verdana,10"
-set output '%s-%03d.svg'
-plot 'trace-%03d.csv' """;
-
-class Graph:
-  def __init__( self, trial, title, x, y ):
-    self.trial = trial;
-    self.title = title;
-    self.x = x;
-    self.y = y;
-
-  def plot( self ):
-    gnuplot = subprocess.Popen( "gnuplot", stdin=subprocess.PIPE );
-    xi = self.trial.headers.index(self.x);
-    commands = gnuplot_commands + \
-	", '' ".join( 'using %d:%d lt rgb "%s" with lines title "%s"' % (xi, self.trial.headers.index(y1),csv2lt[y1],csv2key[y1]) \
-             for y1 in self.y ) + "\nquit\n";
-
-    commands2 = commands % tuple( 2*[self.title] + 2*[self.trial.i] );
-    print(repr( commands2 ));
-    gnuplot.communicate( input = commands2 );
-    
- 
-
-class Trial: 
-  def __init__(self,i):
-    self.i = i;
-    fp = open( 'trace-%03d.csv' % i );
-    self.headers = ['#'] + [h.strip() for h in fp.readline().split(',')];
-    fp.close();
-
-  def plot( self, title, x, y ):
-    Graph( self, title, x, y ).plot();
-
-
-        
-################################################################################
-# Main code; program starts here
-################################################################################
-
+# --- Mapping Dictionaries ---
 csv2key = {
-  'time':     'time (s)', 
-  'gen':      'gens', 
-  'pop_size': 'hosts', 
-  'LTETOTAL': 'TEs', 
-  'LTE000pe': '0%%', 
-  'LTE025pe': '25%%', 
-  'LTE050pe': '50%%', 
-  'LTE075pe': '75%%', 
-  'LTE100pe': '100%%', 
-  'LTEAUT': 'Autonomous TEs',
-  'LTENAUT': 'Non-autonomous TEs',
-  'DTETOTAL': 'TEs', 
-  'DTE000pe': '0%%', 
-  'DTE025pe': '25%%', 
-  'DTE050pe': '50%%', 
-  'DTE075pe': '75%%', 
-  'DTE100pe': '100%%', 
-  'FIT000pe': '0%%', 
-  'FIT025pe': '25%%', 
-  'FIT050pe': '50%%', 
-  'FIT075pe': '75%%', 
-  'FIT100pe': '100%%', 
-  'TEDEATH':  'TEs', 
-  'COLLISIO': 'TEs', 
-  'TOTAL_JU': 'TEs', 
-  'LETHAL_J': 'Lethal', 
-  'DELETE_J': 'Delet.', 
-  'NEUTRA_J': 'Neutral', 
-  'BENEFI_J': 'Benfit.',
-  'GSIZE000': '0%%',
-  'GSIZE025': '25%%', 
-  'GSIZE050': '50%%',
-  'GSIZE075': '75%%',
-  'GSIZE100': '100%%',
-  'TELOC000': 'T0%%',
-  'TELOC025': 'T25%%', 
-  'TELOC050': 'T50%%', 
-  'TELOC075': 'T75%%', 
-  'TELOC100': 'T100%%', 
-  'GELOC000': 'G0%%', 
-  'GELOC025': 'G25%%', 
-  'GELOC050': 'G50%%', 
-  'GELOC075': 'G75%%', 
-  'GELOC100': 'G100%%'
-};
-
-csv2lt = {
-  'time':     '#FF0000',
-  'gen':      '#FF0000',
-  'pop_size': '#FF0000',
-  'LTETOTAL': '#FF0000',
-  'LTE000pe': '#FFAFAF',
-  'LTE025pe': '#FF7F7F',
-  'LTE050pe': '#FF0000',
-  'LTE075pe': '#FF7F7F',
-  'LTE100pe': '#FFAFAF',
-  'LTEAUT': "#00FF26",
-  'LTENAUT': "#C300FF",
-  'DTETOTAL': '#FF0000',
-  'DTE000pe': '#FFAFAF',
-  'DTE025pe': '#FF7F7F',
-  'DTE050pe': '#FF0000',
-  'DTE075pe': '#FF7F7F',
-  'DTE100pe': '#FFAFAF',
-  'FIT000pe': '#FFAFAF',
-  'FIT025pe': '#FF7F7F',
-  'FIT050pe': '#FF0000',
-  'FIT075pe': '#FF7F7F',
-  'FIT100pe': '#FFAFAF',
-  'TEDEATH':  '#FF0000',
-  'COLLISIO': '#FF0000',
-  'TOTAL_JU': '#FF0000',
-  'LETHAL_J': '#FF0000',
-  'DELETE_J': '#00FF00',
-  'NEUTRA_J': '#0000FF',
-  'BENEFI_J': '#000000',
-  'GSIZE000': '#FFAFAF',
-  'GSIZE025': '#FF7F7F',
-  'GSIZE050': '#FF0000',
-  'GSIZE075': '#FF7F7F',
-  'GSIZE100': '#FFAFAF',
-  'TELOC000': '#AFFFAF',
-  'TELOC025': '#7FFF7F',
-  'TELOC050': '#00FF00',
-  'TELOC075': '#7FFF7F',
-  'TELOC100': '#AFFFAF',
-  'GELOC000': '#AFAFFF',
-  'GELOC025': '#7F7FFF',
-  'GELOC050': '#0000FF',
-  'GELOC075': '#7F7FFF',
-  'GELOC100': '#AFAFFF' 
+    'pop_size': 'hosts', 'LTETOTAL': 'TEs', 'LTEAUT': 'Autonomous TEs', 
+    'LTENAUT': 'Non-autonomous TEs', 'LETHAL_J': 'Lethal', 'DELETE_J': 'Delet.', 
+    'NEUTRA_J': 'Neutral', 'BENEFI_J': 'Benfit.', 'TEDEATH': 'TEs', 
+    'COLLISIO': 'TEs', 'TOTAL_JU': 'TEs'
 }
 
-plots = [
+csv2lt = {
+    'pop_size': '#FF0000', 'LTETOTAL': '#FF0000', 'LTEAUT': "#00FF26", 
+    'LTENAUT': "#C300FF", 'DELETE_J': '#00FF00', 'NEUTRA_J': '#0000FF', 
+    'BENEFI_J': '#000000', 'LETHAL_J': '#FF0000'
+}
+
+plots_config = [
     ( 'Host Population vs Generation', 'gen', ['pop_size'] ),
     ( 'Total Live TEs vs Generation', 'gen', ['LTETOTAL'] ),
     ( 'Live TE Percentiles vs Generation', 'gen', [ 'LTE100pe',
