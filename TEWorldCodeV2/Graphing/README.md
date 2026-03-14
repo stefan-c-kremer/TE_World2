@@ -17,6 +17,7 @@ There are several graphing functionalities of this repository, which are outline
 - TE Jumps vs Generation
 - TE Jump Effects vs Generation
 - TE and Gene Locations
+- Live autonomous/non-autonomous TEs vs Generation
 
 ### Run `MakeGraphs.py`
 
@@ -30,7 +31,7 @@ Navigate to the same folder as `MakeGraphs.py` within your terminal.
 
 2. Copy any trace files that you want to graph into this directory. They will be identified by the code. Ensure that they match the regular expression `trace-[0-9]{3}.csv` (i.e. `trace-001.csv`).
 
-3. Run `MakeGraphs.py`.
+3. Run `MakeGraphs.py` with python2.
 
 ```
 python2 MakeGraphs.py
