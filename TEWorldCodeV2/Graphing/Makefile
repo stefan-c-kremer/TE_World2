@@ -1,0 +1,2 @@
+clean:
+	rm *.svg *.html

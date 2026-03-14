@@ -38,3 +38,9 @@ python2 MakeGraphs.py
 ```
 
 The graphs should be created and output as `.svg` files, for all of the specified trace files.
+
+4. To delete all the HTML and SVG files, use the Makefile.
+
+```
+make
+```
