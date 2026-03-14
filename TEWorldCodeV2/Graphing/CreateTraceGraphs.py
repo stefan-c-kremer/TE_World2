@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -35,11 +36,11 @@ plots_config = [
 ]
 
 class Trial:
-    def __init__(self, i):
-        self.i = i
-        self.filename = f'trace-{i:03d}.csv'
-        # Pandas handles the header and comma logic automatically
-        self.df = pd.read_csv(self.filename)
+    def __init__(self, trial_id):
+        self.trial_id = trial_id
+        self.file_name = f"{trial_id}.csv" # Assuming implicitly that the trace files are in the current directory
+        self.df = pd.read_csv(self.file_name)
+        
         # Standardize column names (strip whitespace)
         self.df.columns = [c.strip() for c in self.df.columns]
 
@@ -70,28 +71,33 @@ class Trial:
         plt.tight_layout()
         
         # Save as SVG
-        output_name = f"{title}-{self.i:03d}.svg"
+        output_name = f"{title}-{self.trial_id}.svg"
         plt.savefig(output_name, format='svg')
         plt.close()
 
 def main():
     # Find files like trace-001.csv
-    files = [int(name[6:9]) for name in glob.glob("trace-???.csv")]
-    files.sort()
-
-    for file_id in files:
-        print(f"Processing trace-{file_id:03d}...")
-        trial = Trial(file_id)
+    files = sys.argv[1:]
+    
+    print(f"{len(files)} will be processed and graphed. Please wait...")
+    
+    # Allows for multiple files via command line arguments
+    for file_name in files:
+        trial_id = file_name.split(".")[0]
+        print(f"Processing file {file_name}")
+        trial = Trial(trial_id)
         trial.plot_all(plots_config)
 
         # Generate HTML Summary
-        with open(f"graphs-{file_id:03d}.html", "w") as html:
-            html.write(f"<html><body><h1> trace-{file_id:03d} </h1>\n")
+        with open(f"graphs-{trial_id}.html", "w") as html:
+            html.write(f"<html><body><h1> {trial_id} </h1>\n")
             for title, _, _ in plots_config:
-                img_name = f"{title}-{file_id:03d}.svg"
+                img_name = f"{title}-{trial_id}.svg"
                 if os.path.exists(img_name):
                     html.write(f'<p><img src="{img_name}"/></p>\n')
             html.write("</body></html>")
+            
+    print("Finished creating graphs for all input files.")
 
 if __name__ == "__main__":
     main()
