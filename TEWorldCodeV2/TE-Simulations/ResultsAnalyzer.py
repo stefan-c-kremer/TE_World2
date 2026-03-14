@@ -1,11 +1,13 @@
 import yaml
 import re
+import shutil
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, PatternFill
 from glob import glob
 from RunSimulations import EXPERIMENTS_PATH
 from enum import Enum
+from CreateTraceGraphs import Trial
 
 """
 Extracts results from all of the TE-Experiments folders, reporting the following results:
@@ -34,9 +36,16 @@ TE_EXTINCTION_COLOUR = "FFFF00"
 HOST_EXTINCTION_COLOUR = "A02B93"
 TE_PERSISTENCE_COLOUR = "00B0F0"
 
+plots_config = [
+    ( 'Live (autonomous and non-autonomous) TEs vs Generation', 'gen', ['LTEAUT', 'LTENAUT']) 
+]
+
+OUTPUT_PATH = "output/"
+
+
 class ResultsAnalyzer:
     def __init__(self):
-        pass
+        self.results = None
     
     def analyze_file(self, path: str) -> dict:
         """
@@ -209,6 +218,37 @@ class ResultsAnalyzer:
             return PatternFill(start_color=HOST_EXTINCTION_COLOUR, end_color=HOST_EXTINCTION_COLOUR, fill_type='solid')
         else:
             return PatternFill(start_color=TE_PERSISTENCE_COLOUR, end_color=TE_PERSISTENCE_COLOUR, fill_type='solid')
+        
+    def get_all_te_persistence_experiments(self) -> list[str]:
+        """
+        Obtains all TE persistence experiments and returns their corresponding names to be identified in folders.
+        """
+        return self.results[self.results.te_persistence_count > 0]["name"].values
+    
+    def output_te_persistence_detailed_results(self, output_path: str) -> None:
+        """
+        Obtains all trace files corresponding with an experiment that had TE persistence, and copies them to an output path.
+        Also runs the individual trace graphing functionality.
+        """
+        persistence_names = self.get_all_te_persistence_experiments()
+        
+        # Obtain all of the CSV files within all of the files that returned TE persistence results
+        # Copy these corresponding files in the folder
+        for name in persistence_names:
+            # Create glob file path to obtain CSV files
+            glob_path = f"{EXPERIMENTS_PATH_SHORT}/IS-{name}-EXP/*.csv"
+            trace_files = sorted(glob(glob_path))
+            
+            # Copy trace files for the corresponding experiment that has at least one TE persistence result
+            for i, trace_file_name in enumerate(trace_files):
+                output_name = f"{name}-{i + 1}"  
+                trace_output_path = f"{output_path}{output_name}.csv"     
+                shutil.copy(trace_file_name, trace_output_path)
+                
+                # After copying the file, we will create graphs (the file needs to be in the graphing folder to create a graph)
+                trial = Trial(output_name, trace_output_path, OUTPUT_PATH)
+                trial.plot_all(plots_config)
+                
        
     def insert_data_into_worksheet(self, ws, parasitism_fields: str) -> None:
         """
@@ -359,15 +399,10 @@ if __name__ == "__main__":
     extractor = ResultsAnalyzer()
     extractor.analyze_experiments()
     
-    # Export results to an excel file
-    extractor.export_results_to_excel("results-ll.xlsx", "LL")
-    extractor.export_results_to_graph("graph-ll.xlsx", "LL")
-
-    extractor.export_results_to_excel("results-lh.xlsx", "LH")
-    extractor.export_results_to_graph("graph-lh.xlsx", "LH")
-
-    extractor.export_results_to_excel("results-hl.xlsx", "HL")
-    extractor.export_results_to_graph("graph-hl.xlsx", "HL")
-
-    extractor.export_results_to_excel("results-hh.xlsx", "HH")
-    extractor.export_results_to_graph("graph-hh.xlsx", "HH")
+    new_config_permutations = ["LL", "LH", "HL", "HH"]
+    
+    for permutation in new_config_permutations:
+        extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", "LL")
+        extractor.export_results_to_graph(f"output/graph-{permutation.lower()}.xlsx", "LL")
+    
+    extractor.output_te_persistence_detailed_results(OUTPUT_PATH)

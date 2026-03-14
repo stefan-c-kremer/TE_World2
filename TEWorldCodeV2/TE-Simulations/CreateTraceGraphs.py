@@ -36,9 +36,16 @@ plots_config = [
 ]
 
 class Trial:
-    def __init__(self, trial_id):
+    def __init__(self, trial_id, file_name: str = None, output_path: str = ""):
         self.trial_id = trial_id
-        self.file_name = f"{trial_id}.csv" # Assuming implicitly that the trace files are in the current directory
+        if not file_name:
+            # Assuming implicitly that the trace files are in the current directory
+            self.file_name = f"{trial_id}.csv" 
+        else:
+            self.file_name = file_name
+            
+        self.output_path = output_path
+
         self.df = pd.read_csv(self.file_name)
         
         # Standardize column names (strip whitespace)
@@ -71,7 +78,7 @@ class Trial:
         plt.tight_layout()
         
         # Save as SVG
-        output_name = f"{title}-{self.trial_id}.svg"
+        output_name = f"{self.output_path}{title}-{self.trial_id}.svg"
         plt.savefig(output_name, format='svg')
         plt.close()
 
@@ -87,15 +94,6 @@ def main():
         print(f"Processing file {file_name}")
         trial = Trial(trial_id)
         trial.plot_all(plots_config)
-
-        # Generate HTML Summary
-        with open(f"graphs-{trial_id}.html", "w") as html:
-            html.write(f"<html><body><h1> {trial_id} </h1>\n")
-            for title, _, _ in plots_config:
-                img_name = f"{title}-{trial_id}.svg"
-                if os.path.exists(img_name):
-                    html.write(f'<p><img src="{img_name}"/></p>\n')
-            html.write("</body></html>")
             
     print("Finished creating graphs for all input files.")
 
