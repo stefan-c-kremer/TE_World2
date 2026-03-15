@@ -402,7 +402,7 @@ if __name__ == "__main__":
     new_config_permutations = ["LL", "LH", "HL", "HH"]
     
     for permutation in new_config_permutations:
-        extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", "LL")
-        extractor.export_results_to_graph(f"output/graph-{permutation.lower()}.xlsx", "LL")
+        extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
+        extractor.export_results_to_graph(f"output/graph-{permutation.lower()}.xlsx", permutation)
     
     extractor.output_te_persistence_detailed_results(OUTPUT_PATH)
