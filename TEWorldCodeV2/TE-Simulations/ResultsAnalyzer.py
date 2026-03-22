@@ -2,24 +2,23 @@ import numpy as np
 import yaml
 import re
 import shutil
+import os
 import pandas as pd
 import matplotlib.axes as ax
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gs
+import matplotlib.patches as pa
 from math import sqrt
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, PatternFill
 from glob import glob
 from RunSimulations import EXPERIMENTS_PATH
 from enum import Enum
 from CreateTraceGraphs import Trial
-import matplotlib.gridspec as gs
-import matplotlib.patches as pa
 
 """
 Extracts results from all of the TE-Experiments folders, reporting the following results:
   - TE extinction
   - Host extinction
-  - TE peristence
+  - TE peristence (both, autonomous only, non-autonomous)
   - Cancelled early
   
 Additionally, it creates an Excel graph for this data.
@@ -478,14 +477,20 @@ class ResultsAnalyzer:
             glob_path = f"{EXPERIMENTS_PATH_SHORT}/IS-{name}-EXP/*.csv"
             trace_files = sorted(glob(glob_path))
             
+            experiment_output_path = f"{OUTPUT_PATH}{name}/"
+            
+            # Create folder for organizational purposes
+            if not os.path.exists(experiment_output_path):
+                os.makedirs(experiment_output_path)
+            
             # Copy trace files for the corresponding experiment that has at least one TE persistence result
             for i, trace_file_name in enumerate(trace_files):
                 output_name = f"{name}-{i + 1}"  
-                trace_output_path = f"{output_path}{output_name}.csv"     
+                trace_output_path = f"{experiment_output_path}{output_name}.csv"     
                 shutil.copy(trace_file_name, trace_output_path)
                 
                 # After copying the file, we will create graphs (the file needs to be in the graphing folder to create a graph)
-                trial = Trial(output_name, trace_output_path, OUTPUT_PATH)
+                trial = Trial(output_name, trace_output_path, experiment_output_path)
                 trial.plot_all(plots_config)
                 
        
@@ -509,6 +514,9 @@ if __name__ == "__main__":
     extractor.analyze_experiments()
     
     new_config_permutations = ["LL", "LH", "HL", "HH"]
+    
+    if not os.path.exists("output"):
+        os.makedirs("output")
     
     for permutation in new_config_permutations:
         extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
