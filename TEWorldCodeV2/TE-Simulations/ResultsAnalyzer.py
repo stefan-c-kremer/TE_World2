@@ -30,7 +30,9 @@ DIM = 16
 HEADER_DIM = 4
 N_PARAMS = int(sqrt(DIM))
 GEN_COL = "      gen"
-FIG_DIM = 24
+FIG_HEIGHT = 20
+FIG_WIDTH = 24
+
 
 class TEResult(Enum):
     TE_EXTINCTION = 1 # both autonomous and non-autonomous go extinct
@@ -246,30 +248,31 @@ class ResultsAnalyzer:
         Takes the data and outputs the graph to a PNG file, similar to the original paper.
         """
         
-        # Create 21 * 21 grid of sub-figures of fixed sizes (DIM + HEADER_DIM additional cells for headers, etc.)
-        fig = plt.figure(figsize=(FIG_DIM, FIG_DIM))
-        grid = gs.GridSpec(FIG_DIM, FIG_DIM)
-        ax_main = fig.add_subplot(grid[HEADER_DIM:FIG_DIM, HEADER_DIM:DIM + HEADER_DIM])
+        # Create HEIGHT * WIDTH grid of sub-figures of fixed sizes (DIM + HEADER_DIM additional cells for headers, etc.)
+        fig = plt.figure(figsize=(20, 20))
+        grid = gs.GridSpec(FIG_HEIGHT, FIG_WIDTH)
+        ax_main = fig.add_subplot(grid[HEADER_DIM:FIG_HEIGHT, HEADER_DIM:FIG_WIDTH - HEADER_DIM])
         ax_top_left = fig.add_subplot(grid[0:HEADER_DIM, 0:HEADER_DIM])
-        ax_top = fig.add_subplot(grid[0:HEADER_DIM, HEADER_DIM:DIM + HEADER_DIM])
-        ax_top_right = fig.add_subplot(grid[0:HEADER_DIM, FIG_DIM - HEADER_DIM:FIG_DIM])
-        ax_right = fig.add_subplot(grid[HEADER_DIM:FIG_DIM, HEADER_DIM + DIM:FIG_DIM])
+        ax_top = fig.add_subplot(grid[0:HEADER_DIM, HEADER_DIM:FIG_WIDTH - HEADER_DIM])
+        ax_top_right = fig.add_subplot(grid[0:HEADER_DIM, FIG_WIDTH - HEADER_DIM:FIG_WIDTH])
+        ax_right = fig.add_subplot(grid[HEADER_DIM:FIG_HEIGHT, FIG_WIDTH - HEADER_DIM:FIG_WIDTH])
         
         # Hide the background of the label areas so they look like empty space
         # ax_top.axis('off')
         # ax_right.axis('off')
         
-        ax_main.set_xlim(0, DIM + HEADER_DIM) 
-        ax_main.set_ylim(0, DIM + HEADER_DIM)
+        ax_main.set_xlim(0, DIM) 
+        ax_main.set_ylim(0, DIM)
         x_labels, y_labels = self.get_plot_tick_labels()
         label_pos = [i for i in range(DIM)]
-        
+
         # Set tick values
         ax_main.set_xticks(label_pos, x_labels)
         ax_main.set_yticks(label_pos, y_labels)
         
         # Obtain results and fill in graph
-        self.fill_in_plot_graph_headers(fig, ax_top)
+        self.fill_in_plot_graph_header_titles(ax_top_left, ax_top_right)
+        self.fill_in_plot_graph_headers(ax_top, ax_right)
         matched_results = self.get_relevant_results(parasitism_names)
         self.fill_in_plot_graph(fig, ax_main, matched_results, parasitism_names)
         
@@ -289,8 +292,21 @@ class ResultsAnalyzer:
             
         # y-labels are the same as the x-labels, but in opposite order
         return np.array(x_labels), np.array(y_labels)
+    
+    def fill_in_plot_graph_headers(self, ax_top: ax.Axes, ax_right: ax.Axes) -> None:
+        """
+        Fill in header (H/L) values.
+        """
+        # Set dimensions
+        ax_top.set_xlim(0, DIM)
+        ax_top.set_ylim(0, HEADER_DIM)
+        ax_right.set_xlim(0, HEADER_DIM)
+        ax_right.set_ylim(0, DIM)
+        
+        # Create subplots
+        
 
-    def fill_in_plot_graph_headers(self, fig, axs: ax.Axes) -> None:
+    def fill_in_plot_graph_header_titles(self, ax_top: ax.Axes, ax_right: ax.Axes) -> None:
         """
         Fills in headers of plot graph.
         """
@@ -311,15 +327,19 @@ class ResultsAnalyzer:
         top_field_names = graph_field_names[0:4]
         right_field_names = graph_field_names[4:8]
         
-        # Add a bunch of subplots
+        # Adjust axes to better align with the headers
+        ax_top.set_xlim(0, 1)
+        ax_top.set_ylim(0, HEADER_DIM)
         
+        ax_right.set_xlim(0, HEADER_DIM)
+        ax_right.set_ylim(0, 1)
+        
+        # Add a bunch of subplots
         for i, name in enumerate(top_field_names):
-            row = DIM + i
-            axs.text(0, row, name)
+            ax_top.text(0.25, i, name)
             
-        # for i, name, in enumerate(right_field_names):
-        #     col = DIM + i
-        #     axs.text(col, DIM + 4, name, rotation=270)
+        for i, name, in enumerate(right_field_names):
+            ax_right.text(i, 0.25, name, rotation=270)
         
     def fill_in_plot_graph(self, fig, axs, matched_results: pd.DataFrame, parasitism_names="LL") -> None:
         """
