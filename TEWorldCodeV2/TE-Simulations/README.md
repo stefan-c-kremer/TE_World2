@@ -36,3 +36,17 @@ python3 ResultsAnalyzer.py
 ```
 
 The files (graphs, images, excel summaries) will be created and written to the `TE-Simulations/output` folder.
+
+## Analysis Notes
+
+### TE Results Overview Plots
+
+In the results overview plots the colours correspond with the following scenarios:
+
+- **Teal:** TE persistence (both autonomous and non-autonomous)
+- **Orange:** Autonomous TE persistence
+- **Red:** Non-autonomous TE persistence
+- **Yellow:** TE extinction (both autonomous and non-autonomous)
+- **Purple:** Host extinction
+
+![Example results overview plot](example-results-overview-plot.png)
