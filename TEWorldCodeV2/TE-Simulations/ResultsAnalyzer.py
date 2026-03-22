@@ -1,7 +1,9 @@
+import numpy as np
 import yaml
 import re
 import shutil
 import pandas as pd
+import matplotlib.axes as ax
 import matplotlib.pyplot as plt
 from math import sqrt
 from openpyxl import Workbook
@@ -24,8 +26,10 @@ Additionally, it creates an Excel graph for this data.
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
 MAX_GENS = 1500
 DIM = 16
+HEADER_DIM = 5
 N_PARAMS = int(sqrt(DIM))
 GEN_COL = "      gen"
+FIG_SIZE_DIM = 20
 
 class TEResult(Enum):
     TE_EXTINCTION = 1 # both autonomous and non-autonomous go extinct
@@ -241,17 +245,68 @@ class ResultsAnalyzer:
         Takes the data and outputs the graph to a PNG file, similar to the original paper.
         """
         
-        # Create 16 * 16 grid of sub-figures of fixed sizes
-        fig, axs = plt.subplots(figsize=(12, 12))
-        axs.set_xlim(0, 16)
-        axs.set_ylim(0, 16)
+        # Create 21 * 21 grid of sub-figures of fixed sizes (DIM + HEADER_DIM additional cells for headers, etc.)
+        fig, axs = plt.subplots(figsize=(FIG_SIZE_DIM, FIG_SIZE_DIM))
+        
+        axs.set_xlim(0, DIM + HEADER_DIM) 
+        axs.set_ylim(0, DIM + HEADER_DIM)
+        x_labels, y_labels = self.get_plot_tick_labels()
+        label_pos = [i for i in range(DIM)]
+        
+        axs.set_xticks(label_pos, x_labels)
+        axs.set_yticks(label_pos, y_labels)
         
         # Obtain results and fill in graph
+        self.fill_in_plot_graph_headers(fig, axs)
         matched_results = self.get_relevant_results(parasitism_names)
         self.fill_in_plot_graph(fig, axs, matched_results, parasitism_names)
         
         # Save figure
         fig.savefig(save_path)
+        
+    def get_plot_tick_labels(self) -> tuple[np.array, np.array]:
+        """
+        Get x/y tick labels.
+        """
+        x_labels = []
+        
+        for row in range(DIM):
+            x_labels.append(self.convert_number_to_partial_experiment_name(row))
+            
+        y_labels = list(reversed(x_labels))
+            
+        # y-labels are the same as the x-labels, but in opposite order
+        return np.array(x_labels), np.array(y_labels)
+        
+        
+    def fill_in_plot_graph_headers(self, fig, axs: ax.Axes) -> None:
+        """
+        Fills in headers of plot graph.
+        """
+        # Fill in row headers
+        # Create configurations
+        with open("changeable-configurations.yaml", "r") as fp:
+            mappings = yaml.safe_load(fp)["configuration_mappings"]
+            
+        graph_field_names = []
+            
+        for field in mappings:
+            # Should only have 1 key
+            for key in field.keys():
+                field_name = key
+            
+            graph_field_names.append(field_name)
+            
+        top_field_names = graph_field_names[0:4]
+        right_field_names = graph_field_names[4:8]
+        
+        for i, name in enumerate(top_field_names):
+            row = DIM + i
+            axs.text(0, row, name)
+            
+        for i, name, in enumerate(right_field_names):
+            col = DIM + i
+            axs.text(col, DIM + 4, name, rotation=270)
         
     def fill_in_plot_graph(self, fig, axs, matched_results: pd.DataFrame, parasitism_names="LL") -> None:
         """
@@ -397,7 +452,6 @@ class ResultsAnalyzer:
                             (self.results.te_aut_persistence_count > 0)
                         )
                     ]
-        
        
     def insert_data_into_worksheet(self, ws, matched_results: pd.DataFrame) -> None:
         """
