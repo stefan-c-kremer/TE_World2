@@ -13,6 +13,7 @@ from RunSimulations import EXPERIMENTS_PATH
 from enum import Enum
 from CreateTraceGraphs import Trial
 import matplotlib.gridspec as gs
+import matplotlib.patches as pa
 
 """
 Extracts results from all of the TE-Experiments folders, reporting the following results:
@@ -303,9 +304,57 @@ class ResultsAnalyzer:
         ax_right.set_xlim(0, HEADER_DIM)
         ax_right.set_ylim(0, DIM)
         
-        # Create subplots
-        
+        # Create top H/L boxes
+        width = int(DIM // 2)
+        row = 3
 
+        while width >= 1:
+            col = 0
+            label = "H"
+            
+            while col < DIM:
+                rect = pa.Rectangle((col, row), width, 1, edgecolor='black', facecolor='none')
+                ax_top.add_patch(rect)
+                
+                # Add text in the centere of the box
+                ax_top.text(col + width/2, row + 0.5, label, ha='center', va='center')
+                
+                # Set-up for next column
+                col += width
+                if label == "H":
+                    label = "L"
+                else:
+                    label = "H"
+                    
+            width = int(width // 2)
+            row -= 1
+            
+        height = int(DIM // 2)
+        col = 3
+
+        while height >= 1:
+            row = 0
+            label = "L"
+            
+            while row < DIM:
+                rect = pa.Rectangle((col, row), 1, height, edgecolor='black', facecolor='none')
+                ax_right.add_patch(rect)
+                
+                # Add text in the centere of the box
+                ax_right.text(col + 0.5, row + height/2, label, ha='center', va='center', rotation=270)
+                
+                # Set-up for next column
+                row += height
+                if label == "H":
+                    label = "L"
+                else:
+                    label = "H"
+                    
+                
+                    
+            height = int(height // 2)
+            col -= 1
+        
     def fill_in_plot_graph_header_titles(self, ax_top: ax.Axes, ax_right: ax.Axes) -> None:
         """
         Fills in headers of plot graph.
