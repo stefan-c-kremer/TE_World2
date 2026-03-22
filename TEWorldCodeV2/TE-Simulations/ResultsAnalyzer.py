@@ -26,8 +26,8 @@ GEN_COL = "      gen"
 
 class TEResult(Enum):
     TE_EXTINCTION = 1 # both autonomous and non-autonomous go extinct
-    TE_AUT_EXTINCTION = 2 # autonomous TEs go extinct
-    TE_NAUT_EXTINCTION = 3 # non-autonomous TEs go extinct
+    TE_NAUT_PERSISTENCE = 2 # autonomous TEs go extinct
+    TE_AUT_PERSISTENCE = 3 # non-autonomous TEs go extinct
     HOST_EXTINCTION = 4
     TE_PERSISTENCE = 5 # autonomous and non-autonomous persist
     OTHER = 6 # normally the run was cancelled mid-way
@@ -39,14 +39,14 @@ SCENARIO_MAPPINGS = {
             "count_name": "te_extinction_count",
             "colour": "FFFF00"
         },
-    TEResult.TE_AUT_EXTINCTION.value: {
+    TEResult.TE_NAUT_PERSISTENCE.value: {
             "column": "   LTEAUT",
-            "count_name": "te_aut_extinction_count",
+            "count_name": "te_naut_persistence_count",
             "colour": "FF0000",
         },
-    TEResult.TE_NAUT_EXTINCTION.value: {
+    TEResult.TE_AUT_PERSISTENCE.value: {
             "column": "  LTENAUT",
-            "count_name": "te_naut_extinction_count",
+            "count_name": "te_aut_persistence_count",
             "colour": "FF6F00"
         },
     TEResult.HOST_EXTINCTION.value: {
@@ -89,10 +89,10 @@ class ResultsAnalyzer:
                 result_type = TEResult.HOST_EXTINCTION
             elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_EXTINCTION.value]["column"]] == 0:
                 result_type = TEResult.TE_EXTINCTION
-            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_AUT_EXTINCTION.value]["column"]] == 0:
-                result_type = TEResult.TE_AUT_EXTINCTION
-            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_EXTINCTION.value]["column"]] == 0:
-                result_type = TEResult.TE_NAUT_EXTINCTION
+            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_PERSISTENCE.value]["column"]] == 0:
+                result_type = TEResult.TE_NAUT_PERSISTENCE
+            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_AUT_PERSISTENCE.value]["column"]] == 0:
+                result_type = TEResult.TE_AUT_PERSISTENCE
             elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] == MAX_GENS:
                 result_type = TEResult.TE_PERSISTENCE
             else:
@@ -122,8 +122,8 @@ class ResultsAnalyzer:
         
         experiment_results = {
             "TE_EXTINCTION": 0,
-            "TE_AUT_EXTINCTION": 0,
-            "TE_NAUT_EXTINCTION": 0,
+            "TE_NAUT_PERSISTENCE": 0,
+            "TE_AUT_PERSISTENCE": 0,
             "HOST_EXTINCTION": 0,
             "TE_PERSISTENCE": 0,
             "OTHER": 0
@@ -134,10 +134,10 @@ class ResultsAnalyzer:
             
             if trial_result["result"] == TEResult.TE_EXTINCTION:
                 experiment_results["TE_EXTINCTION"] += 1
-            elif trial_result["result"] == TEResult.TE_AUT_EXTINCTION:
-                experiment_results["TE_AUT_EXTINCTION"] += 1
-            elif trial_result["result"] == TEResult.TE_NAUT_EXTINCTION:
-                experiment_results["TE_NAUT_EXTINCTION"] += 1
+            elif trial_result["result"] == TEResult.TE_NAUT_PERSISTENCE:
+                experiment_results["TE_NAUT_PERSISTENCE"] += 1
+            elif trial_result["result"] == TEResult.TE_AUT_PERSISTENCE:
+                experiment_results["TE_AUT_PERSISTENCE"] += 1
             elif trial_result["result"] == TEResult.HOST_EXTINCTION:
                 experiment_results["HOST_EXTINCTION"] += 1
             elif trial_result["result"] == TEResult.TE_PERSISTENCE:
@@ -157,8 +157,8 @@ class ResultsAnalyzer:
         right_names = []
         parasitism_names = []
         te_extinction_counts = []
-        te_aut_extinction_counts = []
-        te_naut_extinction_counts = []
+        te_naut_persistence_counts = []
+        te_aut_persistence_counts = []
         host_extinction_counts = []
         te_persistence_counts = []
         other_counts = []
@@ -182,8 +182,8 @@ class ResultsAnalyzer:
             right_names.append(right_name)
             parasitism_names.append(parasitism_name)
             te_extinction_counts.append(experiment_result["TE_EXTINCTION"])
-            te_aut_extinction_counts.append(experiment_result["TE_AUT_EXTINCTION"])
-            te_naut_extinction_counts.append(experiment_result["TE_NAUT_EXTINCTION"])
+            te_naut_persistence_counts.append(experiment_result["TE_NAUT_PERSISTENCE"])
+            te_aut_persistence_counts.append(experiment_result["TE_AUT_PERSISTENCE"])
             host_extinction_counts.append(experiment_result["HOST_EXTINCTION"])
             te_persistence_counts.append(experiment_result["TE_PERSISTENCE"])
             other_counts.append(experiment_result["OTHER"])
@@ -195,8 +195,8 @@ class ResultsAnalyzer:
             "right_name": right_names,
             "parasitism_names": parasitism_names,
             "te_extinction_count": te_extinction_counts,
-            "te_aut_extinction_count": te_aut_extinction_counts,
-            "te_naut_extinction_count": te_naut_extinction_counts,
+            "te_naut_persistence_count": te_naut_persistence_counts,
+            "te_aut_persistence_count": te_aut_persistence_counts,
             "host_extinction_count": host_extinction_counts,
             "te_persistence_count": te_persistence_counts,
             "other_count": other_counts
@@ -226,7 +226,7 @@ class ResultsAnalyzer:
         
         # Set up row and column headers of worksheet
         self.set_up_worksheet(ws, parasitism_fields)
-        self.insert_data_into_worksheet(ws, parasitism_fields)
+        self.insert_data_into_worksheet(ws, self.get_relevant_results(parasitism_fields))
         
         # Insert data into worksheet
       
@@ -281,22 +281,26 @@ class ResultsAnalyzer:
                 trial.plot_all(plots_config)
                 
        
-    def insert_data_into_worksheet(self, ws, parasitism_fields: str) -> None:
+    def get_relevant_results(self, parasitism_fields: str) -> None:
         """
-        Inserts data into the worksheet, corresponding to the parasitism fields.
+        Get results that have at least one non-TEResult.OTHER result, and match the parasitism fields.
         """
-        # Obtain all results corresonding to the parasitism fields
-        # Obtain results with mapped fields
-        matched_results = self.results[
-                (self.results.parasitism_names == parasitism_fields) & 
-                (
-                    (self.results.te_extinction_count > 0) | 
-                    (self.results.host_extinction_count > 0) | 
-                    (self.results.te_persistence_count > 0) | 
-                    (self.results.te_aut_extinction_count > 0) |
-                    (self.results.te_naut_extinction_count > 0)
-                )
-            ]
+        return self.results[
+                        (self.results.parasitism_names == parasitism_fields) & 
+                        (
+                            (self.results.te_extinction_count > 0) | 
+                            (self.results.host_extinction_count > 0) | 
+                            (self.results.te_persistence_count > 0) | 
+                            (self.results.te_naut_persistence_count > 0) |
+                            (self.results.te_aut_persistence_count > 0)
+                        )
+                    ]
+        
+       
+    def insert_data_into_worksheet(self, ws, matched_results: pd.DataFrame) -> None:
+        """
+        Inserts data into the worksheet to the matched results.
+        """
         
         # Iterate through each result
         for row in matched_results.itertuples():
