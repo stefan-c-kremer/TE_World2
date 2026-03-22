@@ -2,6 +2,8 @@ import yaml
 import re
 import shutil
 import pandas as pd
+import matplotlib.pyplot as plt
+from math import sqrt
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, PatternFill
 from glob import glob
@@ -21,7 +23,8 @@ Additionally, it creates an Excel graph for this data.
 
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
 MAX_GENS = 1500
-MAX_VALUE_LEN = 16
+DIM = 16
+N_PARAMS = int(sqrt(DIM))
 GEN_COL = "      gen"
 
 class TEResult(Enum):
@@ -206,19 +209,19 @@ class ResultsAnalyzer:
         
         self.results = pd.DataFrame(data)
         
-    def export_results_to_excel(self, save_path="results.xlsx", parasitism_fields="LL"):
+    def export_results_to_excel(self, save_path="results.xlsx", parasitism_names="LL"):
         """
         Exports results to an excel file
         """
         
         results = self.results
         
-        if parasitism_fields:
-            results = self.results[self.results.parasitism_names == parasitism_fields]
+        if parasitism_names:
+            results = self.results[self.results.parasitism_names == parasitism_names]
         
         results.to_excel(save_path)
     
-    def export_results_to_graph(self, save_path="graph.xlsx", parasitism_fields="LL") -> None:
+    def export_results_to_graph(self, save_path="graph.xlsx", parasitism_names="LL") -> None:
         """
         Takes the data corresponding to the parasitism fields and exports an excel file for basic visualization, 
         similar to the original paper.
@@ -227,11 +230,109 @@ class ResultsAnalyzer:
         ws = wb.active
         
         # Set up row and column headers of worksheet
-        self.set_up_worksheet(ws, parasitism_fields)
-        self.insert_data_into_worksheet(ws, self.get_relevant_results(parasitism_fields))
+        self.set_up_worksheet(ws, parasitism_names)
+        self.insert_data_into_worksheet(ws, self.get_relevant_results(parasitism_names))
         
         # Insert data into worksheet
         wb.save(save_path)
+        
+    def export_results_to_plot_graph(self, save_path="graph.png",  parasitism_names="LL") -> None:
+        """
+        Takes the data and outputs the graph to a PNG file, similar to the original paper.
+        """
+        
+        # Create 16 * 16 grid of sub-figures of fixed sizes
+        fig, axs = plt.subplots(figsize=(12, 12))
+        axs.set_xlim(0, 16)
+        axs.set_ylim(0, 16)
+        
+        # Obtain results and fill in graph
+        matched_results = self.get_relevant_results(parasitism_names)
+        self.fill_in_plot_graph(fig, axs, matched_results, parasitism_names)
+        
+        # Save figure
+        fig.savefig(save_path)
+        
+    def fill_in_plot_graph(self, fig, axs, matched_results: pd.DataFrame, parasitism_names="LL") -> None:
+        """
+        Fills in sub-figures of graph with their corresponding experimental results.
+        """
+        for row in range(DIM):
+            for col in range(DIM):
+                # Row adjustment is to align with matplotlib
+                name = self.convert_number_to_experiment_name(DIM - row - 1, col, parasitism_names)
+                
+                # Fill in the boxes with respect to their proportions
+                result_proportions = self.get_scenario_proportions(name, matched_results)
+                self.fill_in_fig_with_stacked_bars(fig, axs, row, col, result_proportions)
+                
+    def fill_in_fig_with_stacked_bars(self, fig, axs, row: int, col: int, props: dict) -> None:
+        """
+        Fills in individual sub-figures with stacked bar graphs to represent proportional results.
+        """
+        bottom = row
+        
+        # Iterate through all the scenario mappings with an ordered dictionary, filling in the corresponding colours like a bar chart
+        for key, scenario_items in SCENARIO_MAPPINGS.items():
+            prop = props[key]
+            
+            axs.bar(col + 0.5, prop, bottom=bottom, width=0.8, color=f"#{scenario_items['colour']}")
+            bottom += prop
+    
+    def get_scenario_proportions(self, name: str, matched_results: pd.DataFrame) -> dict:
+        """
+        Obtains proportions of each scenario for each entry.
+        """
+        # Dictionaries in Python are now sorted, so this can be traversed through consistently
+        props = {
+            TEResult.HOST_EXTINCTION.value: 0,
+            TEResult.TE_AUT_PERSISTENCE.value: 0,
+            TEResult.TE_EXTINCTION.value: 0,
+            TEResult.TE_NAUT_PERSISTENCE.value: 0,
+            TEResult.TE_PERSISTENCE.value: 0
+        }
+        
+        total_count = 0
+        
+        # Add counts, before turning into proportion
+        for key, scenario_values in SCENARIO_MAPPINGS.items():
+            try:
+                count_value = matched_results.loc[matched_results.name == name, scenario_values["count_name"]].item()
+                props[key] = count_value
+                total_count += count_value
+            # Error handling in case no value was obtained
+            except ValueError:
+                pass
+            
+        # If there were proper results, obtain the proportion
+        if total_count > 0:
+            for key in props.keys():
+                props[key] /= total_count
+        
+        return props
+                
+    def convert_number_to_experiment_name(self, row: int, col: int, parasitism_names: str) -> str:
+        return self.convert_number_to_partial_experiment_name(col) + self.convert_number_to_partial_experiment_name(row) + parasitism_names
+                
+    def convert_number_to_partial_experiment_name(self, pos: int) -> str:
+        """
+        Used the row/col integer to return the corresponding experiment name (row-wise or column-wise).
+        """
+        name = ""
+        modulus = 2
+        
+        while modulus <= DIM:
+            half_modulus = int(modulus // 2)
+            res = pos % modulus
+            
+            if res < half_modulus:
+                name += "H"
+            else:
+                name += "L"
+            
+            modulus *= 2
+        
+        return name
         
     def get_result_fill(self, row):
         """
@@ -282,12 +383,12 @@ class ResultsAnalyzer:
                 trial.plot_all(plots_config)
                 
        
-    def get_relevant_results(self, parasitism_fields: str) -> None:
+    def get_relevant_results(self, parasitism_names: str) -> pd.DataFrame:
         """
         Get results that have at least one non-TEResult.OTHER result, and match the parasitism fields.
         """
         return self.results[
-                        (self.results.parasitism_names == parasitism_fields) & 
+                        (self.results.parasitism_names == parasitism_names) & 
                         (
                             (self.results.te_extinction_count > 0) | 
                             (self.results.host_extinction_count > 0) | 
@@ -307,7 +408,7 @@ class ResultsAnalyzer:
         for row in matched_results.itertuples():
             col_name = "Q"
             
-            parameter_size = MAX_VALUE_LEN // 2
+            parameter_size = DIM // 2
             
             # Obtain column by traversing letters in reverse
             for letter in reversed(row.top_name):
@@ -316,7 +417,7 @@ class ResultsAnalyzer:
                     
                 parameter_size //= 2
             
-            parameter_size = MAX_VALUE_LEN // 2
+            parameter_size = DIM // 2
             
             # Obtain row by traversing letters in reverse
             row_name = 20
@@ -331,11 +432,11 @@ class ResultsAnalyzer:
             # Insert data
             ws[cell_name].fill = self.get_result_fill(row)
         
-    def set_up_worksheet(self, ws, parasitism_fields: str) -> None:
+    def set_up_worksheet(self, ws, parasitism_names: str) -> None:
         """
         Sets up column and row headers for a worksheet, and doesn't save the file (to be done in parent function).
         """
-        ws.title = f"Results ({parasitism_fields})"
+        ws.title = f"Results ({parasitism_names})"
         center_alignment = Alignment(horizontal="center", vertical="center")
         
         # Centre-align rows by default
@@ -374,7 +475,7 @@ class ResultsAnalyzer:
             ws.merge_cells(f"{start_cell_name}:{end_cell_name}")
             
         # Implement top field cell merging
-        merge_size = MAX_VALUE_LEN // 2
+        merge_size = DIM // 2
         row = 1
         
         # Merge cells together, and add column header values
@@ -401,7 +502,7 @@ class ResultsAnalyzer:
             merge_size //= 2
             
         col = 0
-        merge_size = MAX_VALUE_LEN // 2
+        merge_size = DIM // 2
             
         # Merge cells together, and add row header values
         while merge_size >= 1:
@@ -440,7 +541,7 @@ if __name__ == "__main__":
     new_config_permutations = ["LL", "LH", "HL", "HH"]
     
     for permutation in new_config_permutations:
-        extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
-        extractor.export_results_to_graph(f"output/graph-{permutation.lower()}.xlsx", permutation)
+        # extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
+        extractor.export_results_to_plot_graph(f"output/graph-{permutation.lower()}.png", permutation)
     
     extractor.output_te_persistence_detailed_results(OUTPUT_PATH)
