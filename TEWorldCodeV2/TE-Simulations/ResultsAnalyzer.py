@@ -84,16 +84,18 @@ class ResultsAnalyzer:
         try:
             result_type = None
             
+            tes_persisted = df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] == MAX_GENS
+            
             # The order of conditional statements matters (i.e. host extinction should be checked first)
             if df.iloc[-1][SCENARIO_MAPPINGS[TEResult.HOST_EXTINCTION.value]["column"]] == 0:
                 result_type = TEResult.HOST_EXTINCTION
             elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_EXTINCTION.value]["column"]] == 0:
                 result_type = TEResult.TE_EXTINCTION
-            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_PERSISTENCE.value]["column"]] == 0:
+            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_PERSISTENCE.value]["column"]] == 0 and tes_persisted:
                 result_type = TEResult.TE_NAUT_PERSISTENCE
-            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_AUT_PERSISTENCE.value]["column"]] == 0:
+            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_AUT_PERSISTENCE.value]["column"]] == 0 and tes_persisted:
                 result_type = TEResult.TE_AUT_PERSISTENCE
-            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] == MAX_GENS:
+            elif tes_persisted: # both types of TEs persisted
                 result_type = TEResult.TE_PERSISTENCE
             else:
                 result_type = TEResult.OTHER
@@ -229,7 +231,6 @@ class ResultsAnalyzer:
         self.insert_data_into_worksheet(ws, self.get_relevant_results(parasitism_fields))
         
         # Insert data into worksheet
-      
         wb.save(save_path)
         
     def get_result_fill(self, row):
@@ -254,7 +255,7 @@ class ResultsAnalyzer:
         """
         Obtains all TE persistence experiments and returns their corresponding names to be identified in folders.
         """
-        return self.results[self.results.te_persistence_count > 0]["name"].values
+        return self.results[(self.results.te_persistence_count > 0) | (self.results.te_naut_persistence_count > 0) | (self.results.te_aut_persistence_count > 0)]["name"].values
     
     def output_te_persistence_detailed_results(self, output_path: str) -> None:
         """
