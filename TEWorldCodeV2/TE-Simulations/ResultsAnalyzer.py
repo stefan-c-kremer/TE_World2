@@ -12,6 +12,7 @@ from glob import glob
 from RunSimulations import EXPERIMENTS_PATH
 from enum import Enum
 from CreateTraceGraphs import Trial
+import matplotlib.gridspec as gs
 
 """
 Extracts results from all of the TE-Experiments folders, reporting the following results:
@@ -246,20 +247,29 @@ class ResultsAnalyzer:
         """
         
         # Create 21 * 21 grid of sub-figures of fixed sizes (DIM + HEADER_DIM additional cells for headers, etc.)
-        fig, axs = plt.subplots(figsize=(FIG_SIZE_DIM, FIG_SIZE_DIM))
+        fig = plt.figure(figsize=(FIG_SIZE_DIM, FIG_SIZE_DIM))
+        grid = gs.GridSpec(FIG_SIZE_DIM, FIG_SIZE_DIM)
+        ax_main = fig.add_subplot(grid[HEADER_DIM - 1:FIG_SIZE_DIM, 0:DIM])
+        ax_top = fig.add_subplot(grid[0:HEADER_DIM - 1, 0:DIM])
+        ax_right = fig.add_subplot(grid[HEADER_DIM - 1:FIG_SIZE_DIM, DIM:FIG_SIZE_DIM])
         
-        axs.set_xlim(0, DIM + HEADER_DIM) 
-        axs.set_ylim(0, DIM + HEADER_DIM)
+        # Hide the background of the label areas so they look like empty space
+        ax_top.axis('off')
+        ax_right.axis('off')
+        
+        ax_main.set_xlim(0, DIM + HEADER_DIM) 
+        ax_main.set_ylim(0, DIM + HEADER_DIM)
         x_labels, y_labels = self.get_plot_tick_labels()
         label_pos = [i for i in range(DIM)]
         
-        axs.set_xticks(label_pos, x_labels)
-        axs.set_yticks(label_pos, y_labels)
+        # Set tick values
+        ax_main.set_xticks(label_pos, x_labels)
+        ax_main.set_yticks(label_pos, y_labels)
         
         # Obtain results and fill in graph
-        self.fill_in_plot_graph_headers(fig, axs)
+        # self.fill_in_plot_graph_headers(fig, axs)
         matched_results = self.get_relevant_results(parasitism_names)
-        self.fill_in_plot_graph(fig, axs, matched_results, parasitism_names)
+        self.fill_in_plot_graph(fig, ax_main, matched_results, parasitism_names)
         
         # Save figure
         fig.savefig(save_path)
@@ -277,8 +287,7 @@ class ResultsAnalyzer:
             
         # y-labels are the same as the x-labels, but in opposite order
         return np.array(x_labels), np.array(y_labels)
-        
-        
+
     def fill_in_plot_graph_headers(self, fig, axs: ax.Axes) -> None:
         """
         Fills in headers of plot graph.
