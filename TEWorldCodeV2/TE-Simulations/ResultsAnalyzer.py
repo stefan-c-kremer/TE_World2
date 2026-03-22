@@ -27,10 +27,10 @@ Additionally, it creates an Excel graph for this data.
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
 MAX_GENS = 1500
 DIM = 16
-HEADER_DIM = 5
+HEADER_DIM = 4
 N_PARAMS = int(sqrt(DIM))
 GEN_COL = "      gen"
-FIG_SIZE_DIM = 20
+FIG_DIM = 24
 
 class TEResult(Enum):
     TE_EXTINCTION = 1 # both autonomous and non-autonomous go extinct
@@ -247,15 +247,17 @@ class ResultsAnalyzer:
         """
         
         # Create 21 * 21 grid of sub-figures of fixed sizes (DIM + HEADER_DIM additional cells for headers, etc.)
-        fig = plt.figure(figsize=(FIG_SIZE_DIM, FIG_SIZE_DIM))
-        grid = gs.GridSpec(FIG_SIZE_DIM, FIG_SIZE_DIM)
-        ax_main = fig.add_subplot(grid[HEADER_DIM - 1:FIG_SIZE_DIM, 0:DIM])
-        ax_top = fig.add_subplot(grid[0:HEADER_DIM - 1, 0:DIM])
-        ax_right = fig.add_subplot(grid[HEADER_DIM - 1:FIG_SIZE_DIM, DIM:FIG_SIZE_DIM])
+        fig = plt.figure(figsize=(FIG_DIM, FIG_DIM))
+        grid = gs.GridSpec(FIG_DIM, FIG_DIM)
+        ax_main = fig.add_subplot(grid[HEADER_DIM:FIG_DIM, HEADER_DIM:DIM + HEADER_DIM])
+        ax_top_left = fig.add_subplot(grid[0:HEADER_DIM, 0:HEADER_DIM])
+        ax_top = fig.add_subplot(grid[0:HEADER_DIM, HEADER_DIM:DIM + HEADER_DIM])
+        ax_top_right = fig.add_subplot(grid[0:HEADER_DIM, FIG_DIM - HEADER_DIM:FIG_DIM])
+        ax_right = fig.add_subplot(grid[HEADER_DIM:FIG_DIM, HEADER_DIM + DIM:FIG_DIM])
         
         # Hide the background of the label areas so they look like empty space
-        ax_top.axis('off')
-        ax_right.axis('off')
+        # ax_top.axis('off')
+        # ax_right.axis('off')
         
         ax_main.set_xlim(0, DIM + HEADER_DIM) 
         ax_main.set_ylim(0, DIM + HEADER_DIM)
@@ -267,7 +269,7 @@ class ResultsAnalyzer:
         ax_main.set_yticks(label_pos, y_labels)
         
         # Obtain results and fill in graph
-        # self.fill_in_plot_graph_headers(fig, axs)
+        self.fill_in_plot_graph_headers(fig, ax_top)
         matched_results = self.get_relevant_results(parasitism_names)
         self.fill_in_plot_graph(fig, ax_main, matched_results, parasitism_names)
         
@@ -309,13 +311,15 @@ class ResultsAnalyzer:
         top_field_names = graph_field_names[0:4]
         right_field_names = graph_field_names[4:8]
         
+        # Add a bunch of subplots
+        
         for i, name in enumerate(top_field_names):
             row = DIM + i
             axs.text(0, row, name)
             
-        for i, name, in enumerate(right_field_names):
-            col = DIM + i
-            axs.text(col, DIM + 4, name, rotation=270)
+        # for i, name, in enumerate(right_field_names):
+        #     col = DIM + i
+        #     axs.text(col, DIM + 4, name, rotation=270)
         
     def fill_in_plot_graph(self, fig, axs, matched_results: pd.DataFrame, parasitism_names="LL") -> None:
         """
