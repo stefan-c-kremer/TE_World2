@@ -20,21 +20,46 @@ Additionally, it creates an Excel graph for this data.
 """
 
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
-LIVE_TE_COL = " LTETOTAL"
-POP_SIZE_COL = " pop_size"
-GEN_COL = "      gen"
 MAX_GENS = 1500
 MAX_VALUE_LEN = 16
+GEN_COL = "      gen"
 
 class TEResult(Enum):
-    TE_EXTINCTION = 1
-    HOST_EXTINCTION = 2
-    TE_PERSISTENCE = 3
-    OTHER = 4 # normally the run was cancelled mid-way
-
-TE_EXTINCTION_COLOUR = "FFFF00"
-HOST_EXTINCTION_COLOUR = "A02B93"
-TE_PERSISTENCE_COLOUR = "00B0F0"
+    TE_EXTINCTION = 1 # both autonomous and non-autonomous go extinct
+    TE_AUT_EXTINCTION = 2 # autonomous TEs go extinct
+    TE_NAUT_EXTINCTION = 3 # non-autonomous TEs go extinct
+    HOST_EXTINCTION = 4
+    TE_PERSISTENCE = 5 # autonomous and non-autonomous persist
+    OTHER = 6 # normally the run was cancelled mid-way
+    
+# Stores important information needed for data extraction, storage and graph relevant to all TE scenarios
+SCENARIO_MAPPINGS = {
+    TEResult.TE_EXTINCTION.value: {
+            "column": " LTETOTAL",
+            "count_name": "te_extinction_count",
+            "colour": "FFFF00"
+        },
+    TEResult.TE_AUT_EXTINCTION.value: {
+            "column": " LTEAUT",
+            "count_name": "te_aut_extinction_count",
+            "colour": "FF0000",
+        },
+    TEResult.TE_NAUT_EXTINCTION.value: {
+            "column": " LTENAUT",
+            "count_name": "te_naut_extinction_count",
+            "colour": "FF6F00"
+        },
+    TEResult.HOST_EXTINCTION.value: {
+            "column": " pop_size",
+            "count_name": "host_extinction_count",
+            "colour": "A02B93"
+        },
+    TEResult.TE_PERSISTENCE.value: {
+            "column": GEN_COL,
+            "count_name": "te_persistence_count",
+            "colour": "00B0F0"
+    }
+}
 
 plots_config = [
     ( 'Live (autonomous and non-autonomous) TEs vs Generation', 'gen', ['LTEAUT', 'LTENAUT']) 
@@ -63,11 +88,16 @@ class ResultsAnalyzer:
         try:
             result_type = None
             
-            if df.iloc[-1][POP_SIZE_COL] == 0:
+            # The order of conditional statements matters (i.e. host extinction should be checked first)
+            if df.iloc[-1][SCENARIO_MAPPINGS[TEResult.HOST_EXTINCTION.value]["column"]] == 0:
                 result_type = TEResult.HOST_EXTINCTION
-            elif df.iloc[-1][LIVE_TE_COL] == 0:
+            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_EXTINCTION.value]["column"]] == 0:
                 result_type = TEResult.TE_EXTINCTION
-            elif df.iloc[-1][GEN_COL] == MAX_GENS:
+            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_AUT_EXTINCTION.value]["column"]] == 0:
+                result_type = TEResult.TE_AUT_EXTINCTION
+            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_EXTINCTION.value]["column"]] == 0:
+                result_type = TEResult.TE_NAUT_EXTINCTION
+            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] == MAX_GENS:
                 result_type = TEResult.TE_PERSISTENCE
             else:
                 result_type = TEResult.OTHER
@@ -96,6 +126,8 @@ class ResultsAnalyzer:
         
         experiment_results = {
             "TE_EXTINCTION": 0,
+            "TE_AUT_EXTINCTION": 0,
+            "TE_NAUT_EXTINCTION": 0,
             "HOST_EXTINCTION": 0,
             "TE_PERSISTENCE": 0,
             "OTHER": 0
@@ -106,6 +138,10 @@ class ResultsAnalyzer:
             
             if trial_result["result"] == TEResult.TE_EXTINCTION:
                 experiment_results["TE_EXTINCTION"] += 1
+            elif trial_result["result"] == TEResult.TE_AUT_EXTINCTION:
+                experiment_results["TE_AUT_EXTINCTION"] += 1
+            elif trial_result["result"] == TEResult.TE_NAUT_EXTINCTION:
+                experiment_results["TE_NAUT_EXTINCTION"] += 1
             elif trial_result["result"] == TEResult.HOST_EXTINCTION:
                 experiment_results["HOST_EXTINCTION"] += 1
             elif trial_result["result"] == TEResult.TE_PERSISTENCE:
@@ -125,6 +161,8 @@ class ResultsAnalyzer:
         right_names = []
         parasitism_names = []
         te_extinction_counts = []
+        te_aut_extinction_counts = []
+        te_naut_extinction_counts = []
         host_extinction_counts = []
         te_persistence_counts = []
         other_counts = []
@@ -148,6 +186,8 @@ class ResultsAnalyzer:
             right_names.append(right_name)
             parasitism_names.append(parasitism_name)
             te_extinction_counts.append(experiment_result["TE_EXTINCTION"])
+            te_aut_extinction_counts.append(experiment_result["TE_AUT_EXTINCTION"])
+            te_naut_extinction_counts.append(experiment_result["TE_NAUT_EXTINCTION"])
             host_extinction_counts.append(experiment_result["HOST_EXTINCTION"])
             te_persistence_counts.append(experiment_result["TE_PERSISTENCE"])
             other_counts.append(experiment_result["OTHER"])
@@ -159,6 +199,8 @@ class ResultsAnalyzer:
             "right_name": right_names,
             "parasitism_names": parasitism_names,
             "te_extinction_count": te_extinction_counts,
+            "te_aut_extinction_count": te_aut_extinction_counts,
+            "te_naut_extinction_count": te_naut_extinction_counts,
             "host_extinction_count": host_extinction_counts,
             "te_persistence_count": te_persistence_counts,
             "other_count": other_counts
@@ -197,27 +239,20 @@ class ResultsAnalyzer:
     def get_result_fill(self, row):
         """
         Computes and returns a cell fill type based on the most frequent results.
+        Assumes that the given row has a corresponding result (not 'TEResult.OTHER')
         """
         max_category = None
+        max_category_count = 0
             
-        # Determine the most frequent result
-        if row.te_extinction_count > row.host_extinction_count:
-            if row.te_extinction_count > row.te_persistence_count:
-                max_category = TEResult.TE_EXTINCTION
-            else:
-                max_category = TEResult.TE_PERSISTENCE
-        else:
-            if row.host_extinction_count > row.te_persistence_count:
-                max_category = TEResult.HOST_EXTINCTION
-            else:
-                max_category = TEResult.TE_PERSISTENCE
-                
-        if max_category == TEResult.TE_EXTINCTION:
-            return PatternFill(start_color=TE_EXTINCTION_COLOUR, end_color=TE_EXTINCTION_COLOUR, fill_type='solid')
-        elif max_category == TEResult.HOST_EXTINCTION:
-            return PatternFill(start_color=HOST_EXTINCTION_COLOUR, end_color=HOST_EXTINCTION_COLOUR, fill_type='solid')
-        else:
-            return PatternFill(start_color=TE_PERSISTENCE_COLOUR, end_color=TE_PERSISTENCE_COLOUR, fill_type='solid')
+        # Iterate through all of the scenarios, and then pick the most frequent result
+        for scenario, scenario_info in SCENARIO_MAPPINGS.items():
+            scenario_count = getattr(row, scenario_info["count_name"])
+            
+            if not max_category or scenario_count > max_category_count:
+                max_category = scenario
+                max_category_count = scenario_count
+             
+        return PatternFill(start_color=SCENARIO_MAPPINGS[max_category]["colour"], end_color=SCENARIO_MAPPINGS[max_category]["colour"], fill_type='solid')
         
     def get_all_te_persistence_experiments(self) -> list[str]:
         """
@@ -398,6 +433,8 @@ class ResultsAnalyzer:
 if __name__ == "__main__":
     extractor = ResultsAnalyzer()
     extractor.analyze_experiments()
+    
+    print(extractor.results)
     
     new_config_permutations = ["LL", "LH", "HL", "HH"]
     
