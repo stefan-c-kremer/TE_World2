@@ -40,12 +40,12 @@ SCENARIO_MAPPINGS = {
             "colour": "FFFF00"
         },
     TEResult.TE_AUT_EXTINCTION.value: {
-            "column": " LTEAUT",
+            "column": "   LTEAUT",
             "count_name": "te_aut_extinction_count",
             "colour": "FF0000",
         },
     TEResult.TE_NAUT_EXTINCTION.value: {
-            "column": " LTENAUT",
+            "column": "  LTENAUT",
             "count_name": "te_naut_extinction_count",
             "colour": "FF6F00"
         },
@@ -79,10 +79,6 @@ class ResultsAnalyzer:
         
         # Read CSV into data frame
         df = pd.read_csv(path)
-        
-        analysis = {
-            
-        }
         
         # Check conditions to see what result it should be classified
         try:
@@ -296,7 +292,9 @@ class ResultsAnalyzer:
                 (
                     (self.results.te_extinction_count > 0) | 
                     (self.results.host_extinction_count > 0) | 
-                    (self.results.te_persistence_count > 0)
+                    (self.results.te_persistence_count > 0) | 
+                    (self.results.te_aut_extinction_count > 0) |
+                    (self.results.te_naut_extinction_count > 0)
                 )
             ]
         
@@ -433,8 +431,6 @@ class ResultsAnalyzer:
 if __name__ == "__main__":
     extractor = ResultsAnalyzer()
     extractor.analyze_experiments()
-    
-    print(extractor.results)
     
     new_config_permutations = ["LL", "LH", "HL", "HH"]
     
