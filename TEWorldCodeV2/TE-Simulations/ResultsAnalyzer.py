@@ -228,23 +228,8 @@ class ResultsAnalyzer:
             results = self.results[self.results.parasitism_names == parasitism_names]
         
         results.to_excel(save_path)
-    
-    def export_results_to_graph(self, save_path="graph.xlsx", parasitism_names="LL") -> None:
-        """
-        Takes the data corresponding to the parasitism fields and exports an excel file for basic visualization, 
-        similar to the original paper.
-        """
-        wb = Workbook()
-        ws = wb.active
         
-        # Set up row and column headers of worksheet
-        self.set_up_worksheet(ws, parasitism_names)
-        self.insert_data_into_worksheet(ws, self.get_relevant_results(parasitism_names))
-        
-        # Insert data into worksheet
-        wb.save(save_path)
-        
-    def export_results_to_plot_graph(self, save_path="graph.png",  parasitism_names="LL") -> None:
+    def export_results_to_plot(self, save_path="graph.png",  parasitism_names="LL") -> None:
         """
         Takes the data and outputs the graph to a PNG file, similar to the original paper.
         """
@@ -259,8 +244,10 @@ class ResultsAnalyzer:
         ax_right = fig.add_subplot(grid[HEADER_DIM:FIG_HEIGHT, FIG_WIDTH - HEADER_DIM:FIG_WIDTH])
         
         # Hide the background of the label areas so they look like empty space
-        # ax_top.axis('off')
-        # ax_right.axis('off')
+        ax_top_left.axis('off')
+        ax_top.axis('off')
+        ax_top_right.axis('off')
+        ax_right.axis('off')
         
         ax_main.set_xlim(0, DIM) 
         ax_main.set_ylim(0, DIM)
@@ -471,24 +458,6 @@ class ResultsAnalyzer:
         
         return name
         
-    def get_result_fill(self, row):
-        """
-        Computes and returns a cell fill type based on the most frequent results.
-        Assumes that the given row has a corresponding result (not 'TEResult.OTHER')
-        """
-        max_category = None
-        max_category_count = 0
-            
-        # Iterate through all of the scenarios, and then pick the most frequent result
-        for scenario, scenario_info in SCENARIO_MAPPINGS.items():
-            scenario_count = getattr(row, scenario_info["count_name"])
-            
-            if not max_category or scenario_count > max_category_count:
-                max_category = scenario
-                max_category_count = scenario_count
-             
-        return PatternFill(start_color=SCENARIO_MAPPINGS[max_category]["colour"], end_color=SCENARIO_MAPPINGS[max_category]["colour"], fill_type='solid')
-        
     def get_all_te_persistence_experiments(self) -> list[str]:
         """
         Obtains all TE persistence experiments and returns their corresponding names to be identified in folders.
@@ -534,142 +503,7 @@ class ResultsAnalyzer:
                             (self.results.te_aut_persistence_count > 0)
                         )
                     ]
-       
-    def insert_data_into_worksheet(self, ws, matched_results: pd.DataFrame) -> None:
-        """
-        Inserts data into the worksheet to the matched results.
-        """
         
-        # Iterate through each result
-        for row in matched_results.itertuples():
-            col_name = "Q"
-            
-            parameter_size = DIM // 2
-            
-            # Obtain column by traversing letters in reverse
-            for letter in reversed(row.top_name):
-                if letter == "H":
-                    col_name = chr(ord(col_name) - parameter_size)
-                    
-                parameter_size //= 2
-            
-            parameter_size = DIM // 2
-            
-            # Obtain row by traversing letters in reverse
-            row_name = 20
-            for letter in reversed(row.right_name):
-                if letter == "H":
-                    row_name -= parameter_size
-                    
-                parameter_size //= 2
-                    
-            cell_name = f"{col_name}{str(row_name)}"
-
-            # Insert data
-            ws[cell_name].fill = self.get_result_fill(row)
-        
-    def set_up_worksheet(self, ws, parasitism_names: str) -> None:
-        """
-        Sets up column and row headers for a worksheet, and doesn't save the file (to be done in parent function).
-        """
-        ws.title = f"Results ({parasitism_names})"
-        center_alignment = Alignment(horizontal="center", vertical="center")
-        
-        # Centre-align rows by default
-        for row in ws.iter_rows(min_row=1, max_row=20, min_col=1, max_col=21):
-            for cell in row:
-                cell.alignment = center_alignment
-        
-        # Create configurations
-        with open("changeable-configurations.yaml", "r") as fp:
-            mappings = yaml.safe_load(fp)["configuration_mappings"]
-            
-        graph_field_names = []
-            
-        for field in mappings:
-            # Should only have 1 key
-            for key in field.keys():
-                field_name = key
-            
-            graph_field_names.append(field_name)
-            
-        top_field_names = graph_field_names[0:4]
-        right_field_names = graph_field_names[4:8]
-        
-        # Write top field names
-        for i, field_name in enumerate(top_field_names):
-            ws[f"A{i + 1}"] = field_name
-            
-        # Write right field names
-        for i, field_name in enumerate(right_field_names):
-            field_letter = chr(ord("R") + i)
-            start_cell_name = f"{field_letter}1"
-            end_cell_name = f"{field_letter}4"
-            ws[start_cell_name] = field_name
-            
-            # Merge cells
-            ws.merge_cells(f"{start_cell_name}:{end_cell_name}")
-            
-        # Implement top field cell merging
-        merge_size = DIM // 2
-        row = 1
-        
-        # Merge cells together, and add column header values
-        while merge_size >= 1:
-            start_cell_name = f"B{row}"
-            cell_val = "H"
-            
-            while start_cell_name < "R1":
-                end_cell_name = f"{chr(ord(start_cell_name[0]) + merge_size - 1)}{start_cell_name[1]}"
-                cell_range = f"{start_cell_name}:{end_cell_name}"
-                ws.merge_cells(cell_range)
-                
-                # Add cell value
-                ws[start_cell_name] = cell_val
-                
-                if cell_val == "H":
-                    cell_val = "L"
-                else:
-                    cell_val = "H"
-                
-                start_cell_name = f"{chr(ord(end_cell_name[0]) + 1)}{end_cell_name[1]}"
-                
-            row += 1
-            merge_size //= 2
-            
-        col = 0
-        merge_size = DIM // 2
-            
-        # Merge cells together, and add row header values
-        while merge_size >= 1:
-            start_cell_name = f"{chr(ord('U') - col)}5"
-            cell_val = "H"
-            
-            while int(start_cell_name[1:]) <= 20:
-                end_cell_name = f"{start_cell_name[0]}{int(start_cell_name[1:]) + merge_size - 1}"
-                cell_range = f"{start_cell_name}:{end_cell_name}"
-                
-                ws.merge_cells(cell_range)
-                
-                # Add cell value
-                ws[start_cell_name] = cell_val
-                
-                if cell_val == "H":
-                    cell_val = "L"
-                else:
-                    cell_val = "H"
-                
-                start_cell_name = f"{end_cell_name[0]}{int(end_cell_name[1:]) + 1}"
-                
-            col += 1
-            merge_size //= 2
-            
-        # Adjust alignment of right headers
-        for row in ws.iter_rows(1, 20, 18, 21):
-            for cell in row:
-                cell.alignment = Alignment(horizontal="center", vertical="center", text_rotation=180)
-  
-            
 if __name__ == "__main__":
     extractor = ResultsAnalyzer()
     extractor.analyze_experiments()
@@ -677,7 +511,7 @@ if __name__ == "__main__":
     new_config_permutations = ["LL", "LH", "HL", "HH"]
     
     for permutation in new_config_permutations:
-        # extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
-        extractor.export_results_to_plot_graph(f"output/graph-{permutation.lower()}.png", permutation)
+        extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
+        extractor.export_results_to_plot(f"output/graph-{permutation.lower()}.png", permutation)
     
     extractor.output_te_persistence_detailed_results(OUTPUT_PATH)
