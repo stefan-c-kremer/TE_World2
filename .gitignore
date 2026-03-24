@@ -1,7 +1,4 @@
 *.pyc
 **/**/*.gz
 **/**/*.csv
-TEWorldCodeV2/TE-Simulations/sharknet.sh
-*.xlsx
-*.svg
-*.html
+TEWorldCodeV2/TE-Simulations/output
