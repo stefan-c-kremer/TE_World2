@@ -389,6 +389,16 @@ class Chromosome:
     """
     self.elements.remove( item );
     
+  def get_kidnapping_probability(self):
+    """
+    Computes the probability that a SINE will kidnap a LINE's retransposition protein, so that it can reproduce.
+    """
+    # Obtain the number of parasitic TEs, to obtain a ratio to be used for kidnapping probability
+    n_autonomous = len(self.TEs(live=True, dead=False, autonomous=True))
+    n_non_autonomous = len(self.TEs(live=True, dead=False, autonomous=False))
+    
+    return parameters.Kidnapping_Frequency(n_autonomous, n_non_autonomous)
+    
   def __repr__( self ):
     """
     Return a representation of this object.
@@ -488,16 +498,6 @@ class TestChromosome2(Chromosome):
     
   def testart( self ):
     return int(parameters.TE_Insertion_Distribution.sample()*self.length);
-  
-  def get_kidnapping_probability(self):
-    """
-    Computes the probability that a SINE will kidnap a LINE's retransposition protein, so that it can reproduce.
-    """
-    # Obtain the number of parasitic TEs, to obtain a ratio to be used for kidnapping probability
-    n_autonomous = len(self.TEs(live=True, dead=False, autonomous=True))
-    n_non_autonomous = len(self.TEs(live=True, dead=False, autonomous=False))
-    
-    return parameters.Kidnapping_Frequency(n_autonomous, n_non_autonomous)
     
   def jump( self ):
     jump_effects = { 'TEDEATH':  0, 
