@@ -10,7 +10,7 @@ configuration_mappings:
   - TE_death_rate:
       Name: TE Death Rate
       High: "lambda autonomous : 0.0008 if autonomous else 0.02"
-      Low: "lambda autonomous : 0.00008 if autonomous else 0.0.002"
+      Low: "lambda autonomous : 0.00008 if autonomous else 0.002"
   - TE_excision_rate:
       Name: TE Excision Rate
       High: 0.5

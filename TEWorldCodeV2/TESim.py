@@ -153,8 +153,8 @@ class SelectiveInsertTE(Element):
   
   def __init__( self, start, dead=False, autonomous=True):
     self.dead = dead;
-    Element.__init__( self, parameters.TE_length, start );
     self.autonomous = autonomous
+    Element.__init__( self, parameters.TE_length(self.autonomous), start );
     
   def jump( self ):
     """

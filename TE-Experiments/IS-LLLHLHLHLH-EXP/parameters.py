@@ -68,7 +68,7 @@ saved = None;   # if saved = None then we start a new simulation from scratch
 
 Insertion_bias = TE_Insertion_Distribution = Flat(); Gene_Insertion_Distribution = Flat();
 
-TE_death_rate = lambda autonomous : 0.00008 if autonomous else 0.0.002
+TE_death_rate = lambda autonomous : 0.00008 if autonomous else 0.002
 
 TE_excision_rate = 0.1
 
