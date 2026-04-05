@@ -14,7 +14,7 @@ output = {
 	};
 
 Gene_length = 1000;
-TE_length = 1000;
+TE_length = lambda autonomous : 6000 if autonomous else 300;
 						 
 Initial_genes = 500;
 Append_gene = True;	# True: when the intialization routine tries to place 
@@ -68,7 +68,7 @@ saved = None;   # if saved = None then we start a new simulation from scratch
 
 Insertion_bias = TE_Insertion_Distribution = Flat(); Gene_Insertion_Distribution = Flat();
 
-TE_death_rate = lambda autonomous : 0.005 if autonomous else 0.005 * 3
+TE_death_rate = lambda autonomous : 0.0008 if autonomous else 0.02
 
 TE_excision_rate = 0.1
 

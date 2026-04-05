@@ -23,7 +23,7 @@ output = {
 	};
 
 Gene_length = 1000;
-TE_length = 1000;
+TE_length = lambda autonomous : 6000 if autonomous else 300;
 						 
 Initial_genes = 500;
 Append_gene = True;	# True: when the intialization routine tries to place 
