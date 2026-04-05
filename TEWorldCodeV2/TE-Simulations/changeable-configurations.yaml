@@ -9,8 +9,8 @@ configuration_mappings:
            Gene_Insertion_Distribution = Flat();
   - TE_death_rate:
       Name: TE Death Rate
-      High: 0.005
-      Low: 0.0005
+      High: "lambda autonomous : 0.005 if autonomous else 0.005 * 3"
+      Low: "lambda autonomous : 0.0005 if autonomous else 0.0005 * 3"
   - TE_excision_rate:
       Name: TE Excision Rate
       High: 0.5
