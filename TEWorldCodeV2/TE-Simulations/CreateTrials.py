@@ -120,10 +120,10 @@ def generate_configurations():
             
             # Adding changeable configuration values, based on configured mappings
             if is_high(permutation, i):
-                configuration_body += str(field[field_name]["High"])
+                configuration_body += str(field[field_name]["high"])
                 configuration_name += "H"
             else:
-                configuration_body += str(field[field_name]["Low"])
+                configuration_body += str(field[field_name]["low"])
                 configuration_name += "L"
                 
         # Add comment about dynamic configuration generation, for debugging purposes
