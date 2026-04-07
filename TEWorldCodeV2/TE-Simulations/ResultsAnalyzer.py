@@ -347,7 +347,7 @@ class ResultsAnalyzer:
         """
         # Fill in row headers
         # Create configurations
-        with open("changeable-configurations.yaml", "r") as fp:
+        with open("parameters.yaml", "r") as fp:
             mappings = yaml.safe_load(fp)["configuration_mappings"]
             
         graph_field_names = []

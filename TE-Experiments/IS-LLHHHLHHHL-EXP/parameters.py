@@ -16,7 +16,6 @@ output = {
 Gene_length = 1000;
 TE_length = 1000;
 						 
-Initial_genes = 500;
 Append_gene = True;	# True: when the intialization routine tries to place 
 			# a gene inside another gene, it instead appends it
 			# at the end of the original gene (use this with small
@@ -29,9 +28,6 @@ Append_gene = True;	# True: when the intialization routine tries to place
 Initial_TEs = 1;
 
 Host_start_fitness = 1.0;
-
-Host_start_fitness = 1.0;
-Host_mutation_rate = 0.03;
 
 Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0,
                                   0.30, lambda fit: fit - random.random()*0.01,
@@ -64,27 +60,40 @@ saved = None;   # if saved = None then we start a new simulation from scratch
 
 # ********************************************
 # TRIAL FIELDS
+# Parameter: Insertion Bias
+TE_Insertion_Distribution = Flat()
+Gene_Insertion_Distribution = Flat()
 
-
-Insertion_bias = TE_Insertion_Distribution = Flat(); Gene_Insertion_Distribution = Flat();
-
+# Parameter: TE Death Rate
 TE_death_rate = 0.005
 
+# Parameter: TE Excision Rate
 TE_excision_rate = 0.5
 
+# Parameter: TE Progeny
 TE_progeny = ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
 
+# Parameter: Carrying Capacity
 Carrying_capacity = 300
 
-Mutation_effect = 0.01
+# Parameter: Mutation Effect
+Host_Mutation = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.01, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.01 )
+Insertion_effect = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.01, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.01 )
 
+# Parameter: Non-coding Base Pairs
 Junk_BP = 14000000
 
-Corrected_mutation_rate = 0.3
+# Parameter: Corrected Mutation Rate
+Initial_genes = 5000
+Host_mutation_rate = 0.3
 
+# Parameter: Total Non-autonomous TE
 Total_NAut_TE = int(Initial_TEs * Carrying_capacity * 3)
 
+# Parameter: Kidnapping Frequency
 Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.001 * live_naut)
 
+
+
 # This configuration file was programmatically generated.
-# Used permutation '0011101110', which corresponds to 'LLHHHLHHHL'. Reference the mappings in the configuration file to determine what is 'high' and what is 'low'
+# Used permutation '0011101110', which corresponds to 'LLHHHLHHHL'. Reference the configuration_mappings in the configuration file to determine what is 'high' and what is 'low'
