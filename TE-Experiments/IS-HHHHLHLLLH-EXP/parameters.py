@@ -68,7 +68,7 @@ saved = None;   # if saved = None then we start a new simulation from scratch
 
 Insertion_bias = TE_Insertion_Distribution = Triangle( pmax=0, pzero=3.0/3.0 ); Gene_Insertion_Distribution = Triangle( pzero=1.0/3.0, pmax=1 );
 
-TE_death_rate = 0.005
+TE_death_rate = 0.0005
 
 TE_excision_rate = 0.5
 
