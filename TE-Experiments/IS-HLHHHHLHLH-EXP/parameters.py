@@ -28,19 +28,6 @@ Append_gene = True;	# True: when the intialization routine tries to place
 Initial_TEs = 1;
 
 Host_start_fitness = 1.0;
-
-Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0,
-                                  0.30, lambda fit: fit - random.random()*0.01,
-                                  0.15, lambda fit: fit,
-                                  0.15, lambda fit: fit + random.random()*0.01
-                                  );
-	
-# what happens when a TA hits a gene
-Insertion_effect = ProbabilityTable(0.30, lambda fit: 0.0,
-                                    0.20, lambda fit: fit - random.random()*0.01,
-                                    0.30, lambda fit: fit,
-                                    0.20, lambda fit: fit + random.random()*0.01
-                                    );
 		
 Host_reproduction_rate = 1;  # how many offspring each host has
 
