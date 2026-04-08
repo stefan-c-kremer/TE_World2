@@ -104,3 +104,10 @@ save_frequency = 50;	# Frequency with with which to save state of experiment
 
 saved = None;	# if saved = None then we start a new simulation from scratch
 		# if saves = string, then we open that file and resume a simulation
+  
+  
+# Total Non-autonomous TE
+Total_NAut_TE = int(Initial_TEs * Carrying_capacity * 3)
+
+# Kidnapping Frequency
+Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)

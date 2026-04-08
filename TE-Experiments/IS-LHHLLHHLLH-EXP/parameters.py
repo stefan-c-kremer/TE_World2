@@ -64,7 +64,7 @@ TE_progeny = ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
 Carrying_capacity = 30
 
 # Parameter: Mutation Effect
-Host_Mutation = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.1, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.1 )
+Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.1, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.1 )
 Insertion_effect = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.1, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.1 )
 
 # Parameter: Non-coding Base Pairs

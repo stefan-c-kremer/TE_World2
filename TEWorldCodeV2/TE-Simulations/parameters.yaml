@@ -38,7 +38,7 @@ configurations:
         low: 30
   - name: Mutation Effect
     parameters:
-      - id: Host_Mutation
+      - id: Host_mutation
         name: Host Mutation
         high: "ProbabilityTable( 0.40, lambda fit: 0.0,
                0.30, lambda fit: fit - random.random()*0.1,
