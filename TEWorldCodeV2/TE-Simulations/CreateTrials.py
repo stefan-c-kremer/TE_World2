@@ -25,7 +25,6 @@ output = {
 Gene_length = 1000;
 TE_length = 1000;
 						 
-Initial_genes = 500;
 Append_gene = True;	# True: when the intialization routine tries to place 
 			# a gene inside another gene, it instead appends it
 			# at the end of the original gene (use this with small
@@ -38,22 +37,6 @@ Append_gene = True;	# True: when the intialization routine tries to place
 Initial_TEs = 1;
 
 Host_start_fitness = 1.0;
-
-Host_start_fitness = 1.0;
-Host_mutation_rate = 0.03;
-
-Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0,
-                                  0.30, lambda fit: fit - random.random()*0.01,
-                                  0.15, lambda fit: fit,
-                                  0.15, lambda fit: fit + random.random()*0.01
-                                  );
-	
-# what happens when a TA hits a gene
-Insertion_effect = ProbabilityTable(0.30, lambda fit: 0.0,
-                                    0.20, lambda fit: fit - random.random()*0.01,
-                                    0.30, lambda fit: fit,
-                                    0.20, lambda fit: fit + random.random()*0.01
-                                    );
 		
 Host_reproduction_rate = 1;  # how many offspring each host has
 
@@ -92,8 +75,8 @@ def generate_configurations():
     Generates all configurations and returns them as strings.
     """
     
-    mappings = get_configuration_mappings()["configuration_mappings"]
-    n_changeable_configurations = len(mappings)
+    configuration_mappings = get_configuration_mappings()["configurations"]
+    n_changeable_configurations = len(configuration_mappings)
     mapping_split = n_changeable_configurations # for the purposes of replicating the graph
     permutations = generate_binary_strings(n_changeable_configurations)
     configurations = []
@@ -104,31 +87,40 @@ def generate_configurations():
         configuration_body = unchanged_fields
         configuration_body += "\n# ********************************************"
         configuration_body += "\n# TRIAL FIELDS\n"
-        
+
         # Obtain the configuration, and append the corresponding value, based on the flag
-        for i, field in enumerate(mappings):
-            # Should only have 1 key
-            for key in field.keys():
-                field_name = key
-            
-            configuration_body += "\n\n"
-            configuration_body += "{} = ".format(field_name)
-            
+        for i, config in enumerate(configuration_mappings):
+            # Update name
             # If halfway through the dictionary, add a hyphen to mark the difference between columns and rows
             if i == mapping_split:
                 configuration_name += "-"
-            
-            # Adding changeable configuration values, based on configured mappings
+        
             if is_high(permutation, i):
-                configuration_body += str(field[field_name]["High"])
                 configuration_name += "H"
             else:
-                configuration_body += str(field[field_name]["Low"])
                 configuration_name += "L"
                 
+                
+            # Add comment
+            configuration_body += f"# Parameter: {config['name']}\n"
+                          
+            # Iterate through 
+            for parameter in config["parameters"]:
+                configuration_body += f"{parameter['id']} = "
+                
+                # Adding changeable configuration values, based on configured configuration_mappings
+                if is_high(permutation, i):
+                    configuration_body += str(parameter["high"])
+                else:
+                    configuration_body += str(parameter["low"])
+                    
+                configuration_body += "\n"
+                
+            configuration_body += "\n"
+     
         # Add comment about dynamic configuration generation, for debugging purposes
         configuration_body += "\n\n# This configuration file was programmatically generated."
-        configuration_body += "\n# Used permutation '{}', which corresponds to '{}'. Reference the mappings in the configuration file to determine what is 'high' and what is 'low'".format(permutation, configuration_name)
+        configuration_body += "\n# Used permutation '{}', which corresponds to '{}'. Reference the configuration_mappings in the configuration file to determine what is 'high' and what is 'low'".format(permutation, configuration_name)
                 
         configuration = {
             "name": configuration_name,
@@ -175,14 +167,14 @@ def create_configuration_files():
 
 def get_configuration_mappings():
     """
-    Obtains configuration mappings from the YAML file, and returns them as a dictionary.
+    Obtains configuration configuration_mappings from the YAML file, and returns them as a dictionary.
     """
-    mappings = None
+    configuration_mappings = None
     
-    with open("changeable-configurations.yaml", "r") as fp:
-        mappings = yaml.safe_load(fp)
+    with open("parameters.yaml", "r") as fp:
+        configuration_mappings = yaml.safe_load(fp)
     
-    return mappings
+    return configuration_mappings
         
 if __name__ == "__main__":
     create_configuration_files()

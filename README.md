@@ -5,9 +5,7 @@
 This code was used to generate the results reported in Kremer et al. [1].  That publication describes the operation of 
 this software and the paraters used by it.
 
-The code runs with Python 2.7.12+. 
-Other versions of Python may or may not work.
-In particular, any version of Python 3 will not work due to the format of the print statements (other unspecified versions of Python 2 may not work as well).
+The code runs with Python 3.10.
 It is worth considering using [pyenv](https://github.com/pyenv/pyenv) to swiftly switch to a valid Python version.
 
 You can run any of the experiments from the original paper from the command line by chaning to the experiments directory:

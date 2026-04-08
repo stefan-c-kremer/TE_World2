@@ -347,17 +347,13 @@ class ResultsAnalyzer:
         """
         # Fill in row headers
         # Create configurations
-        with open("changeable-configurations.yaml", "r") as fp:
-            mappings = yaml.safe_load(fp)["configuration_mappings"]
+        with open("parameters.yaml", "r") as fp:
+            mappings = yaml.safe_load(fp)["configurations"]
             
         graph_field_names = []
             
         for field in mappings:
-            # Should only have 1 key
-            for key in field.keys():
-                field_name = key
-            
-            graph_field_names.append(field_name)
+            graph_field_names.append(field["name"])
             
         top_field_names = graph_field_names[0:4]
         right_field_names = graph_field_names[4:8]
