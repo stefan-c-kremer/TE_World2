@@ -153,8 +153,8 @@ class SelectiveInsertTE(Element):
   
   def __init__( self, start, dead=False, autonomous=True):
     self.dead = dead;
-    Element.__init__( self, parameters.TE_length, start );
     self.autonomous = autonomous
+    Element.__init__( self, parameters.TE_length(self.autonomous), start );
     
   def jump( self ):
     """
@@ -172,7 +172,7 @@ class SelectiveInsertTE(Element):
 					# this happens if another element jumped into this element
       return jump_effects;
 
-    if random.random() < parameters.TE_death_rate:    # mutation or host defenses
+    if random.random() < parameters.TE_death_rate(self.autonomous):    # mutation or host defenses
       self.dead = True;
       jump_effects['TEDEATH'] += 1;
       

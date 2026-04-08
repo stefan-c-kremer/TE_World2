@@ -1,84 +1,45 @@
 # These are changeable configurations, that each have high/low mappings
 # I have ordered this to align the logic of the code with Dr. Kremer's graph
 configuration_mappings:
-  - TE_Insertion_Distribution:
-      id: Insertion Bias
-      name: TE Insertion Distribution
-      high: Triangle( pmax=0, pzero=3.0/3.0 )
-      low: Flat();
-  - Gene_Insertion_Distribution:
-      id: Insertion Bias
-      name: Gene Insertion Distribution
-      high: Triangle( pzero=1.0/3.0, pmax=1 )
-      low: Flat()
+  - Insertion_bias:
+      Name: Insertion Bias
+      High: TE_Insertion_Distribution = Triangle( pmax=0, pzero=3.0/3.0 );
+            Gene_Insertion_Distribution = Triangle( pzero=1.0/3.0, pmax=1 );
+      Low: TE_Insertion_Distribution = Flat();
+           Gene_Insertion_Distribution = Flat();
   - TE_death_rate:
-      id: TE Death Rate
-      name: TE Death Rate
-      high: 0.0005
-      low: 0.005
+      Name: TE Death Rate
+      High: "lambda autonomous : 0.0008 if autonomous else 0.02"
+      Low: "lambda autonomous : 0.00008 if autonomous else 0.002"
   - TE_excision_rate:
-      id: TE Excision Rate
-      name: TE Excision Rate
-      high: 0.5
-      low: 0.1
+      Name: TE Excision Rate
+      High: 0.5
+      Low: 0.1
   - TE_progeny:
-      id: TE Progeny
-      name: TE Progeny
-      high: ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
-      low: ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
+      Name: TE Progeny
+      High: ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
+      Low: ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
   - Carrying_capacity:
-      id: Carrying Capacity
-      name: Carrying Capacity
-      high: 300
-      low: 30
-  - Host Mutation:
-      id: Mutation Effect
-      name: Host Mutation
-      high: "ProbabilityTable( 0.40, lambda fit: 0.0,
-                                  0.30, lambda fit: fit - random.random()*0.1,
-                                  0.15, lambda fit: fit,
-                                  0.15, lambda fit: fit + random.random()*0.1
-                                  )"
-      low: "ProbabilityTable( 0.40, lambda fit: 0.0,
-                                  0.30, lambda fit: fit - random.random()*0.01,
-                                  0.15, lambda fit: fit,
-                                  0.15, lambda fit: fit + random.random()*0.01
-                                  )"
-  - Insertion_effect:
-      id: Mutation Effect
-      name: Insertion Effect
-      high: "ProbabilityTable(0.30, lambda fit: 0.0,
-                                    0.20, lambda fit: fit - random.random()*0.1,
-                                    0.30, lambda fit: fit,
-                                    0.20, lambda fit: fit + random.random()*0.1
-                                    )"
-      low: "ProbabilityTable(0.30, lambda fit: 0.0,
-                                    0.20, lambda fit: fit - random.random()*0.01,
-                                    0.30, lambda fit: fit,
-                                    0.20, lambda fit: fit + random.random()*0.01
-                                    )"
+      Name: Carrying Capacity
+      High: 300
+      Low: 30
+  - Mutation_effect:
+      Name: Mutation Effect
+      High: 0.1
+      Low: 0.01
   - Junk_BP:
-      id: Junk BP
-      name: Junk BP
-      high: 14000000
-      low: 1400000
-  - Initial_genes:
-      id: Corrected Mutation Rate
-      name: Initial Genes
-      high: 5000
-      low: 500
-  - Host_mutation_rate:
-      id: Corrected Mutation Rate
-      name: Host Mutation Rate
-      high: 0.3
-      low: 0.03
+      Name: Junk BP
+      High: 14000000
+      Low: 1400000
+  - Corrected_mutation_rate:
+      Name: Corrected Mutation Rate
+      High: 0.3
+      Low: 0.03
   - Total_NAut_TE: # Total non-autonomous TEs, spread randomly across the hosts
-      id: Total Non-autonomous TE
-      name: Total Non-autonomous TE
-      high: int(Initial_TEs * Carrying_capacity * 3) # implicitly 75% of all TEs should be non-autonomous initially
-      low: int(Initial_TEs * Carrying_capacity) # implicitly 50% of all TEs should be non-autonomous initially
+      Name: Total Non-autonomous TE
+      High: int(Initial_TEs * Carrying_capacity * 3) # implicitly 75% of all TEs should be non-autonomous initially
+      Low: int(Initial_TEs * Carrying_capacity) # implicitly 50% of all TEs should be non-autonomous initially
   - Kidnapping_Frequency:
-      id: Kidnapping Frequency
-      name: Kidnapping Frequency
-      high: "lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)"
-      low: "lambda live_aut, live_naut : 1 - 1/(1 + 0.001 * live_naut)"
+      Name: Kidnapping Frequency
+      High: "lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)"
+      Low: "lambda live_aut, live_naut : 1 - 1/(1 + 0.01 * live_naut)"
