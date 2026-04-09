@@ -70,13 +70,6 @@ Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0,
                                   0.15, lambda fit: fit + fit*random.random()*0.10
                                   );
 
-# Old host mutation: added absolute value to fit   
-#Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0,
-#                                  0.30, lambda fit: fit - random.random()*0.10,
-#                                  0.15, lambda fit: fit,
-#                                  0.15, lambda fit: fit + random.random()*0.10
-#                                  );
-	
 # what happens when a TA hits a gene
 Insertion_effect = ProbabilityTable(0.30, lambda fit: 0.0,
                                     0.20, lambda fit: fit - random.random()*0.10,

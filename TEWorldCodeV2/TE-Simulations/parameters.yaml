@@ -34,16 +34,16 @@ configurations:
               )"
       - id: Insertion_effect
         name: Insertion Effect
-        high: "ProbabilityTable( 0.40, lambda fit: 0.0,
-               0.30, lambda fit: fit - random.random()*0.1,
-               0.15, lambda fit: fit,
-               0.15, lambda fit: fit + random.random()*0.1
-               )"
-        low: "ProbabilityTable( 0.40, lambda fit: 0.0,
-              0.30, lambda fit: fit - random.random()*0.01,
-              0.15, lambda fit: fit,
-              0.15, lambda fit: fit + random.random()*0.01
-              )"
+        high: "ProbabilityTable(0.30, lambda fit: 0.0,
+                                0.20, lambda fit: fit - random.random()*0.10,
+                                0.30, lambda fit: fit,
+                                0.20, lambda fit: fit + random.random()*0.10
+                                ))"
+        low: "ProbabilityTable(0.30, lambda fit: 0.0,
+                                0.20, lambda fit: fit - random.random()*0.01,
+                                0.30, lambda fit: fit,
+                                0.20, lambda fit: fit + random.random()*0.01
+                                ))"
   - name: Carrying Capacity
     parameters:
       - id: Carrying_capacity
