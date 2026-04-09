@@ -95,7 +95,7 @@ STANDARD_PARAMS = {
   'output': "{'SPLAT': False, 'SPLAT FITNESS': False, 'INITIALIZATION': False, 'GENERATION': True, 'HOST EXTINCTION': True, 'TE EXTINCTION': True, 'TRIAL NO': True, 'GENE INIT': False, 'TE INIT': False}",
   'Gene_length': '1000',
   'Append_gene': 'True',
-  'Initial_TEs': '1',
+  'Initial_Aut_TEs': '1',
   'MILLION': '1000000',
   'Host_start_fitness': '1.0',
   'Host_reproduction_rate': '1',
