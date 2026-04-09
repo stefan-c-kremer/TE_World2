@@ -94,7 +94,6 @@ def pretty_rhs( params: dict[ str, ast.AST ] ) -> dict[ str, str ]:
 STANDARD_PARAMS = {
   'output': "{'SPLAT': False, 'SPLAT FITNESS': False, 'INITIALIZATION': False, 'GENERATION': True, 'HOST EXTINCTION': True, 'TE EXTINCTION': True, 'TRIAL NO': True, 'GENE INIT': False, 'TE INIT': False}",
   'Gene_length': '1000',
-  'TE_length': '1000',
   'Append_gene': 'True',
   'Initial_TEs': '1',
   'MILLION': '1000000',
@@ -111,34 +110,17 @@ STANDARD_PARAMS = {
 
 HIGH_LOW_PARAMS = [
 
-  # 0 - TE_progeny - 15% change of inserting 3 gives higher proliferation
-  ( 'TE_progeny', ( 'ProbabilityTable(0.0, 0, 0.55, 1, 0.3, 2, 0.15, 3)',
-                    'ProbabilityTable(0.15, 0, 0.55, 1, 0.3, 2)' ) ),
-
-  # 1 - TE_excision_rate - higher values gives higher proliferation
-  ( 'TE_excision_rate', ( '0.5', '0.1' ) ),
-
-  # 2 - TE_death_rate - lower value gives higher proliferation
-  ( 'TE_death_rate', ('0.0005', '0.005') ),
-
-  # 3,4 - Insertion_bias
-  ( 'TE_Insertion_Distribution', ( 'Triangle(pmax=0, pzero=3.0 / 3.0)', 
-                                   'Flat()' ) ),
-
-  ( 'Gene_Insertion_Distribution', ( 'Triangle(pzero=1.0 / 3.0, pmax=1)',
-                                     'Flat()' ) ),
-                                     
-  # 5,6 - Corrected_mutation_rate 
+  # 0,1 - Corrected_mutation_rate 
   ( 'Host_mutation_rate', ( '0.3', 
                             '0.03' ) ),
 
   ( 'Initial_genes', ( '5000', '500' ) ),
-
-  # 7 - NC_BP
+  
+  # 2 - NC_BP
   ( 'Junk_BP', ( '14 * MILLION', 
                  '1.4 * MILLION' ) ),
 
-  # 8,9 - Mutation_effect - high mutation effect is higher proliferation?
+  # 3,4 - Mutation_effect - high mutation effect is higher proliferation?
   ( 'Host_mutation', ( 'ProbabilityTable(0.4, lambda fit: 0.0, 0.3, lambda fit: fit - random.random() * 0.1, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random() * 0.1)', 
                        'ProbabilityTable(0.4, lambda fit: 0.0, 0.3, lambda fit: fit - random.random() * 0.01, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random() * 0.01)' ) ),
 
@@ -146,8 +128,40 @@ HIGH_LOW_PARAMS = [
                           'ProbabilityTable(0.3, lambda fit: 0.0, 0.2, lambda fit: fit - random.random() * 0.01, 0.3, lambda fit: fit, 0.2, lambda fit: fit + random.random() * 0.01)' ) ),
 
 
-  # 10 - Carrying_capacity
+  # 5 - Carrying_capacity
   ( 'Carrying_capacity', ( '300', '30' ) ),
+
+  # 6 - TE_progeny - 15% change of inserting 3 gives higher proliferation
+  ( 'TE_progeny', ( 'ProbabilityTable(0.0, 0, 0.55, 1, 0.3, 2, 0.15, 3)',
+                    'ProbabilityTable(0.15, 0, 0.55, 1, 0.3, 2)' ) ),
+
+  # 7 - TE_excision_rate - higher values gives higher proliferation
+  ( 'TE_excision_rate', ( '0.5', '0.1' ) ),
+
+  # 8 - TE_death_rate - lower value gives higher proliferation
+  ( 'TE_death_rate', ('0.0005', '0.005') ),
+
+  # 9,10 - Insertion_bias
+  ( 'TE_Insertion_Distribution', ( 'Triangle(pmax=0, pzero=3.0 / 3.0)', 
+                                   'Flat()' ) ),
+
+  ( 'Gene_Insertion_Distribution', ( 'Triangle(pzero=1.0 / 3.0, pmax=1)',
+                                     'Flat()' ) ),
+                                     
+
+  # 11,12 Initial_NAut_TEs
+  ( 'Initial_NAut_TEs', ( 3, 1, None ) ),
+
+  ( 'TE_length', ( 'lambda autonomous: 6000 if autonomous else 300',
+                   'lambda autonomous: 6000 if autonomous else 300',
+                   'labmda autonomous: 1000' ) ),
+
+  # 13 Kidnapping_frequency
+  ( 'Kidnapping_frequency', ( 
+            'lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)',
+            'lambda live_aut, live_naut : 1 - 1/(1 + 0.02 * live_naut)',
+            None ),
+  )
 ];
 
 ################################################################################
@@ -173,15 +187,29 @@ def get_code( fn: str, d:dict ):
   code = "";
   for key, values in HIGH_LOW_PARAMS:
     if key not in d:
-      raise KeyError( f"{fn}: Missing required HIGH_LOW parameter: '{key}'." );
+      d[key] = None;
     if not d[key] in values:
       raise ValueError( f"{fn}: Invalid value for key {key}, expected one of {repr(values)}, got {repr(d[key])}." );
-    if d[key] in values[0]:
+    if d[key] == values[0]:
       code += "H";
-    else:
+    elif d[key] == values[1]:
       code += "L";
+    else:
+      code += "-";
+    
 
-  code = code + " " + code[0:3]+"("+code[3:5]+")"+"("+code[5:7]+")"+code[7]+"("+code[8:10]+")"+code[10];
+  if code[0]!=code[1] or code[3]!=code[4] or code[9]!=code[10] or \
+                         code[11]!=code[12]:
+    code = f"{code} ({code[0:2]}){code[2]}({code[3:5]}){code[5:9]}" + \
+           f"({code[9:11]})({code[11:13]}){code[13]}";
+
+    print( d['Host_mutation_rate'] );
+    print( HIGH_LOW_PARAMS[0] );
+    raise ValueError( f"Inconsistent paired parameter {code}." );
+  else:
+    code = code[0]+code[2:4]+code[5:10]+code[11]+code[13];    
+       # remove duplicate pairs
+    
   return code;
 
 
@@ -198,8 +226,9 @@ def main( argv: list[ str ] ):
   else:
     # fix Isaiahisms
     del( STANDARD_PARAMS['MILLION'] );
-    HIGH_LOW_PARAMS[7] =   ( 'Junk_BP', ( '14000000',
+    HIGH_LOW_PARAMS[2] =   ( 'Junk_BP', ( '14000000',
                                           '1400000' ) );
+    STANDARD_PARAMS['TE_length'] = 'lambda autonomous: 6000 if autonomous else 300';
     paramfns = sorted( glob.glob( "../TE-Experiments/*/parameters.py" ) );
 
 
