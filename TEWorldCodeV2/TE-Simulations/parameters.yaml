@@ -2,43 +2,25 @@
 # I have ordered this to align the logic of the code with Dr. Kremer's graph
 # Some of the configurations correspond with multiple parameters, so I have implemented this with an array of parameters
 configurations:
-  - name: Insertion Bias
+  - name: Corrected Mutation Rate
     parameters:
-      - id: TE_Insertion_Distribution
-        name: TE Insertion Distribution
-        high: Triangle( pmax=0, pzero=3.0/3.0 )
-        low: Flat()
-      - id: Gene_Insertion_Distribution
-        name: Gene Insertion Distribution
-        high: Triangle( pzero=1.0/3.0, pmax=1 )
-        low: Flat()
-  - name: TE Death Rate
+      - id: Initial_genes
+        name: Initial Genes
+        high: 5000
+        low: 500
+      - id: Host_mutation_rate
+        name: Host Mutation Rate
+        high: 0.3
+        low: 0.03
+  - name: Non-coding Base Pairs
     parameters:
-      - id: TE_death_rate
-        name: TE Death Rate
-        high: 0.0005
-        low: 0.005
-  - name: TE Excision Rate
-    parameters:
-      - id: TE_excision_rate
-        name: TE Excision Rate
-        high: 0.5
-        low: 0.1
-  - name: TE Progeny
-    parameters:
-      - id: TE_progeny
-        name: TE Progeny
-        high: ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
-        low: ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
-  - name: Carrying Capacity
-    parameters:
-      - id: Carrying_capacity
-        name: Carrying Capacity
-        high: 300
-        low: 30
+      - id: Junk_BP
+        name: NC_BP
+        high: 14000000
+        low: 1400000
   - name: Mutation Effect
     parameters:
-      - id: Host_Mutation
+      - id: Host_mutation
         name: Host Mutation
         high: "ProbabilityTable( 0.40, lambda fit: 0.0,
                0.30, lambda fit: fit - random.random()*0.1,
@@ -52,32 +34,50 @@ configurations:
               )"
       - id: Insertion_effect
         name: Insertion Effect
-        high: "ProbabilityTable( 0.40, lambda fit: 0.0,
-               0.30, lambda fit: fit - random.random()*0.1,
-               0.15, lambda fit: fit,
-               0.15, lambda fit: fit + random.random()*0.1
-               )"
-        low: "ProbabilityTable( 0.40, lambda fit: 0.0,
-              0.30, lambda fit: fit - random.random()*0.01,
-              0.15, lambda fit: fit,
-              0.15, lambda fit: fit + random.random()*0.01
-              )"
-  - name: Non-coding Base Pairs
+        high: "ProbabilityTable(0.30, lambda fit: 0.0,
+                                0.20, lambda fit: fit - random.random()*0.10,
+                                0.30, lambda fit: fit,
+                                0.20, lambda fit: fit + random.random()*0.10
+                                )"
+        low: "ProbabilityTable(0.30, lambda fit: 0.0,
+                                0.20, lambda fit: fit - random.random()*0.01,
+                                0.30, lambda fit: fit,
+                                0.20, lambda fit: fit + random.random()*0.01
+                                )"
+  - name: Carrying Capacity
     parameters:
-      - id: Junk_BP
-        name: NC_BP
-        high: 14000000
-        low: 1400000
-  - name: Corrected Mutation Rate
+      - id: Carrying_capacity
+        name: Carrying Capacity
+        high: 300
+        low: 30
+  - name: TE Progeny
     parameters:
-      - id: Initial_genes
-        name: Initial Genes
-        high: 5000
-        low: 500
-      - id: Host_mutation_rate
-        name: Host Mutation Rate
-        high: 0.3
-        low: 0.03
+      - id: TE_progeny
+        name: TE Progeny
+        high: ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
+        low: ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
+  - name: TE Excision Rate
+    parameters:
+      - id: TE_excision_rate
+        name: TE Excision Rate
+        high: 0.5
+        low: 0.1
+  - name: TE Death Rate
+    parameters:
+      - id: TE_death_rate
+        name: TE Death Rate
+        high: 0.0005
+        low: 0.005
+  - name: Insertion Bias
+    parameters:
+      - id: TE_Insertion_Distribution
+        name: TE Insertion Distribution
+        high: Triangle( pmax=0, pzero=3.0/3.0 )
+        low: Flat()
+      - id: Gene_Insertion_Distribution
+        name: Gene Insertion Distribution
+        high: Triangle( pzero=1.0/3.0, pmax=1 )
+        low: Flat()
   - name: Total Non-autonomous TE
     parameters:
       - id: Total_NAut_TE # Total non-autonomous TEs, spread randomly across the hosts

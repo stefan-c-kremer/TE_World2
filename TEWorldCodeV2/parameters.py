@@ -70,13 +70,6 @@ Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0,
                                   0.15, lambda fit: fit + fit*random.random()*0.10
                                   );
 
-# Old host mutation: added absolute value to fit   
-#Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0,
-#                                  0.30, lambda fit: fit - random.random()*0.10,
-#                                  0.15, lambda fit: fit,
-#                                  0.15, lambda fit: fit + random.random()*0.10
-#                                  );
-	
 # what happens when a TA hits a gene
 Insertion_effect = ProbabilityTable(0.30, lambda fit: 0.0,
                                     0.20, lambda fit: fit - random.random()*0.10,
@@ -104,3 +97,10 @@ save_frequency = 50;	# Frequency with with which to save state of experiment
 
 saved = None;	# if saved = None then we start a new simulation from scratch
 		# if saves = string, then we open that file and resume a simulation
+  
+  
+# Total Non-autonomous TE
+Total_NAut_TE = int(Initial_TEs * Carrying_capacity * 3)
+
+# Kidnapping Frequency
+Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)
