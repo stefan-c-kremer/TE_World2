@@ -150,7 +150,7 @@ HIGH_LOW_PARAMS = [
                                      
 
   # 11,12 Initial_NAut_TEs
-  ( 'Initial_NAut_TEs', ( 3, 1, None ) ),
+  ( 'Initial_NAut_TEs', ( '3', '1', None ) ),
 
   ( 'TE_length', ( 'lambda autonomous: 6000 if autonomous else 300',
                    'lambda autonomous: 6000 if autonomous else 300',
@@ -183,6 +183,14 @@ def check_standard_params( fn:str, d:dict ):
 
 ################################################################################
 
+def pair_check( code, pairs ):
+  for pair in pairs:
+    if code[pair[0]]=='*' or code[pair[1]]=='*' or code[pair[0]]==code[pair[1]]:
+      return True;
+    else:
+      return False;
+
+
 def get_code( fn: str, d:dict ):
   code = "";
   for key, values in HIGH_LOW_PARAMS:
@@ -191,15 +199,17 @@ def get_code( fn: str, d:dict ):
     if not d[key] in values:
       raise ValueError( f"{fn}: Invalid value for key {key}, expected one of {repr(values)}, got {repr(d[key])}." );
     if d[key] == values[0]:
-      code += "H";
+      if values[0]==values[1]:
+        code += "*";    # both values are same
+      else:
+        code += "H";
     elif d[key] == values[1]:
       code += "L";
     else:
       code += "-";
     
 
-  if code[0]!=code[1] or code[3]!=code[4] or code[9]!=code[10] or \
-                         code[11]!=code[12]:
+  if not pair_check( code, [ (0,1), (3,4), (9,10), (11,12) ] ):
     code = f"{code} ({code[0:2]}){code[2]}({code[3:5]}){code[5:9]}" + \
            f"({code[9:11]})({code[11:13]}){code[13]}";
 
