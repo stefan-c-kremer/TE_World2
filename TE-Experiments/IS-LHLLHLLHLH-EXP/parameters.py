@@ -25,7 +25,7 @@ Append_gene = True;	# True: when the intialization routine tries to place
 			# else again (don't use theis option with samll amounts
 			# of Junk_BP).
 
-Initial_TEs = 1;
+Initial_Aut_TEs = 1;
 
 Host_start_fitness = 1.0;
 		
@@ -74,8 +74,8 @@ TE_death_rate = 0.005
 TE_Insertion_Distribution = Triangle( pmax=0, pzero=3.0/3.0 )
 Gene_Insertion_Distribution = Triangle( pzero=1.0/3.0, pmax=1 )
 
-# Parameter: Total Non-autonomous TE
-Total_NAut_TE = int(Initial_TEs * Carrying_capacity)
+# Parameter: Initial non-autonomous TEs
+Initial_NAut_TEs = 1
 
 # Parameter: Kidnapping Frequency
 Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)

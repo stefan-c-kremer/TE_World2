@@ -96,7 +96,7 @@ STANDARD_PARAMS = {
   'Gene_length': '1000',
   'TE_length': '1000',
   'Append_gene': 'True',
-  'Initial_TEs': '1',
+  'Initial_Aut_TEs': '1',
   'MILLION': '1000000',
   'Host_start_fitness': '1.0',
   'Host_reproduction_rate': '1',

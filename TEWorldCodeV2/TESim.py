@@ -462,11 +462,12 @@ class TestChromosome2(Chromosome):
   instead distributed in a probability distribution.
   """
   # number of genes to start with
-  gene_no = parameters.Initial_genes;
-  TE_no = parameters.Initial_TEs;           # number of TEs to start with
+  gene_no = parameters.Initial_genes
+  initial_aut_tes = parameters.Initial_Aut_TEs
+  initial_naut_tes = parameters.Initial_NAut_TEs
   length = parameters.Junk_BP
   
-  def add_elements( self, genes=gene_no, TEs=TE_no ):
+  def add_elements( self, genes=gene_no, n_aut_tes=initial_aut_tes ):
     while len( self.genes() ) < genes:
       try:
         start = self.genestart();      
@@ -479,14 +480,23 @@ class TestChromosome2(Chromosome):
         else:
           continue;  # while loop (try again)
     
-    while len( self.TEs() ) < TEs:      
+    # Insert initial autonomous, and non-autonomous TEs, if provided
+    self.add_initial_tes(self.initial_aut_tes, True)
+    self.add_initial_tes(self.initial_naut_tes, False)
+
+  def add_initial_tes( self, n_tes: int, autonomous: bool = True) -> None:
+    """
+    Add initial TEs, either autonomous (default) or non-autonomous.
+    """
+    while len( self.TEs(autonomous=autonomous) ) < n_tes:      
       try:
         start = self.testart();
-        te = SelectiveInsertTE(start=start, dead=False, autonomous=True)
+        te = SelectiveInsertTE(start=start, dead=False, autonomous=autonomous)
         self.insert(te);  # insert single TE instance
       except ElementDestroyed as e: # most recent if TE is in a gene
         continue;  # while loop (try again)
-      output( "TE INIT", "%s" % te );
+
+      output( "TE INIT", str(te) );
  
   def genestart( self ):
     """
@@ -494,10 +504,9 @@ class TestChromosome2(Chromosome):
     """
     return int( parameters.Gene_Insertion_Distribution.sample() * \
                 (self.length) );
-                #(self.length-parameters.Gene_length) );
     
   def testart( self ):
-    return int(parameters.TE_Insertion_Distribution.sample()*self.length);
+    return int(parameters.TE_Insertion_Distribution.sample() * self.length);
     
   def jump( self ):
     jump_effects = { 'TEDEATH':  0, 
@@ -628,34 +637,6 @@ class Population:
       
       # Clone hosts n times
       self.individual = [ host.clone() for _ in range(0,capacity) ]; 
-      
-      # After cloning the hosts we will distribute the non-autonomous TEs evenly
-      non_autonomous_even_count = int(parameters.Total_NAut_TE / parameters.Carrying_capacity)
-      non_autonomous_remainder = parameters.Total_NAut_TE % parameters.Carrying_capacity
-      
-      for host in self.individual:
-        non_autonomous_to_add  = non_autonomous_even_count
-        
-        # Add remainder until there is no more left
-        if non_autonomous_remainder > 0:
-          non_autonomous_to_add += 1
-          non_autonomous_remainder -= 1
-          
-        chromosome = host.chromosome[0]
-        # Create non-autonomous TEs and insert them
-        n_autonomous_tes = len(chromosome.TEs())
-        
-        # Ensuring that non_autonomous_to_add number of TEs were added correctly to the host
-        while (len(chromosome.TEs()) - n_autonomous_tes) < non_autonomous_to_add:
-          try:
-            start = chromosome.testart()
-            
-            te = SelectiveInsertTE(start=start, dead=False, autonomous=False)
-            chromosome.insert(te)
-          except ElementDestroyed:
-            # Try again
-            continue
-      
     else:
       self.individual = individual;
         
