@@ -47,32 +47,32 @@ saved = None;   # if saved = None then we start a new simulation from scratch
 
 # ********************************************
 # TRIAL FIELDS
-# Parameter: Insertion Bias
-TE_Insertion_Distribution = Triangle( pmax=0, pzero=3.0/3.0 )
-Gene_Insertion_Distribution = Triangle( pzero=1.0/3.0, pmax=1 )
-
-# Parameter: TE Death Rate
-TE_death_rate = 0.0005
-
-# Parameter: TE Excision Rate
-TE_excision_rate = 0.1
-
-# Parameter: TE Progeny
-TE_progeny = ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
-
-# Parameter: Carrying Capacity
-Carrying_capacity = 30
-
-# Parameter: Mutation Effect
-Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.1, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.1 )
-Insertion_effect = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.1, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.1 )
+# Parameter: Corrected Mutation Rate
+Initial_genes = 5000
+Host_mutation_rate = 0.3
 
 # Parameter: Non-coding Base Pairs
 Junk_BP = 14000000
 
-# Parameter: Corrected Mutation Rate
-Initial_genes = 500
-Host_mutation_rate = 0.03
+# Parameter: Mutation Effect
+Host_mutation = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.01, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.01 )
+Insertion_effect = ProbabilityTable( 0.40, lambda fit: 0.0, 0.30, lambda fit: fit - random.random()*0.01, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random()*0.01 )
+
+# Parameter: Carrying Capacity
+Carrying_capacity = 30
+
+# Parameter: TE Progeny
+TE_progeny = ProbabilityTable( 0.15, 0, 0.55, 1, 0.30, 2 )
+
+# Parameter: TE Excision Rate
+TE_excision_rate = 0.5
+
+# Parameter: TE Death Rate
+TE_death_rate = 0.0005
+
+# Parameter: Insertion Bias
+TE_Insertion_Distribution = Flat()
+Gene_Insertion_Distribution = Flat()
 
 # Parameter: Total Non-autonomous TE
 Total_NAut_TE = int(Initial_TEs * Carrying_capacity)
