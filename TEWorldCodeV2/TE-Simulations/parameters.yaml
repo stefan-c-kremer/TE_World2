@@ -38,12 +38,12 @@ configurations:
                                 0.20, lambda fit: fit - random.random()*0.10,
                                 0.30, lambda fit: fit,
                                 0.20, lambda fit: fit + random.random()*0.10
-                                ))"
+                                )"
         low: "ProbabilityTable(0.30, lambda fit: 0.0,
                                 0.20, lambda fit: fit - random.random()*0.01,
                                 0.30, lambda fit: fit,
                                 0.20, lambda fit: fit + random.random()*0.01
-                                ))"
+                                )"
   - name: Carrying Capacity
     parameters:
       - id: Carrying_capacity
