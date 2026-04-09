@@ -99,4 +99,4 @@ saved = None;	# if saved = None then we start a new simulation from scratch
 		# if saves = string, then we open that file and resume a simulation
 
 # Kidnapping Frequency
-Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)
+Kidnapping_frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)

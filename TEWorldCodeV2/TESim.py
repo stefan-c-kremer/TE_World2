@@ -397,7 +397,7 @@ class Chromosome:
     n_autonomous = len(self.TEs(live=True, dead=False, autonomous=True))
     n_non_autonomous = len(self.TEs(live=True, dead=False, autonomous=False))
     
-    return parameters.Kidnapping_Frequency(n_autonomous, n_non_autonomous)
+    return parameters.Kidnapping_frequency(n_autonomous, n_non_autonomous)
     
   def __repr__( self ):
     """

@@ -78,7 +78,7 @@ Gene_Insertion_Distribution = Triangle( pzero=1.0/3.0, pmax=1 )
 Initial_NAut_TEs = 1
 
 # Parameter: Kidnapping Frequency
-Kidnapping_Frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)
+Kidnapping_frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)
 
 
 
