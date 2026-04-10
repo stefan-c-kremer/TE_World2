@@ -65,7 +65,7 @@ Carrying_capacity = 30
 TE_progeny = ProbabilityTable( 0.00, 0, 0.55, 1, 0.30, 2, 0.15, 3 )
 
 # Parameter: TE Excision Rate
-TE_excision_rate = 0.5
+TE_excision_rate = 0
 
 # Parameter: TE Death Rate
 TE_death_rate = 0.0005
