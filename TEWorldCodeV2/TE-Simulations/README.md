@@ -38,6 +38,14 @@ python3 ResultsAnalyzer.py
 
 The files (graphs, images, excel summaries) will be created and written to the `TE-Simulations/output` folder.
 
+### Delete Simulation Results
+
+```
+./delete-simulation-files.sh
+```
+
+This deletes all CSV and state files associated with a simulation. **Do not run it** if you do not want to delete all your results. The actions in this script are irreversable.
+
 ## Analysis Notes
 
 ### TE Results Overview Plots
