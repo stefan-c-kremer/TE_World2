@@ -27,7 +27,8 @@ The files will be subsequently created after running this command.
 python3 ./RunSimulations.py
 ```
 
-The simulations will be run (all 3072 of them).
+After running this, a validation prompt will verify that you wanted to run this script. Alternatively, you can provide `-s` to skip this message.
+Additionally `-f` will run the script in 'fast mode'.
 
 ### Analyze Results
 
