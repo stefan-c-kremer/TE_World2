@@ -175,7 +175,7 @@ class ResultsAnalyzer:
         te_persistence_counts = []
         other_counts = []
         
-        name_pattern = re.compile('[HL]{10}')
+        name_pattern = re.compile('[HLZ]{9}')
         
         folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
         
@@ -186,7 +186,7 @@ class ResultsAnalyzer:
             experiment_name = name_pattern.findall(folder)[0]
             top_name = experiment_name[0:4]
             right_name = experiment_name[4:8]
-            parasitism_name = experiment_name[8:10]
+            parasitism_name = experiment_name[8:9]
             
             # Data storage mechanisms
             names.append(experiment_name)
@@ -216,7 +216,7 @@ class ResultsAnalyzer:
         
         self.results = pd.DataFrame(data)
         
-    def export_results_to_excel(self, save_path="results.xlsx", parasitism_names="LL"):
+    def export_results_to_excel(self, save_path="results.xlsx", parasitism_names="L"):
         """
         Exports results to an excel file
         """
@@ -228,7 +228,7 @@ class ResultsAnalyzer:
         
         results.to_excel(save_path)
         
-    def export_results_to_plot(self, save_path="graph.png",  parasitism_names="LL") -> None:
+    def export_results_to_plot(self, save_path="graph.png",  parasitism_names="L") -> None:
         """
         Takes the data and outputs the graph to a PNG file, similar to the original paper.
         """
@@ -261,7 +261,7 @@ class ResultsAnalyzer:
         self.fill_in_plot_graph_header_titles(ax_top_left, ax_top_right)
         self.fill_in_plot_graph_headers(ax_top, ax_right)
         matched_results = self.get_relevant_results(parasitism_names)
-        self.fill_in_plot_graph(fig, ax_main, matched_results, parasitism_names)
+        self.fill_in_plot_graph(ax_main, matched_results, parasitism_names)
         
         # Save figure
         fig.savefig(save_path)
@@ -372,7 +372,7 @@ class ResultsAnalyzer:
         for i, name, in enumerate(row_field_names):
             ax_right.text(i, 0.25, name, rotation=270)
         
-    def fill_in_plot_graph(self, fig, axs, matched_results: pd.DataFrame, parasitism_names="LL") -> None:
+    def fill_in_plot_graph(self, axs, matched_results: pd.DataFrame, parasitism_names="L") -> None:
         """
         Fills in sub-figures of graph with their corresponding experimental results.
         """
@@ -514,12 +514,12 @@ if __name__ == "__main__":
     extractor = ResultsAnalyzer()
     extractor.analyze_experiments()
     
-    new_config_permutations = ["LL", "LH", "HL", "HH"]
+    init_sine_tes = ["Z", "L", "H"]
     
     if not os.path.exists("output"):
         os.makedirs("output")
     
-    for permutation in new_config_permutations:
+    for permutation in init_sine_tes:
         extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
         extractor.export_results_to_plot(f"output/graph-{permutation.lower()}.png", permutation)
     
