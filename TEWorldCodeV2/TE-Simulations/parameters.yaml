@@ -72,15 +72,16 @@ configurations:
         name: Gene Insertion Distribution
         high: Triangle( pzero=1.0/3.0, pmax=1 )
         low: Flat()
-  - name: Initial non-autonomous TEs
-    parameters:
-      - id: Initial_NAut_TEs
-        name: Initial non-autonomous TEs
-        high: 3
-        low: 1
   - name: Kidnapping Frequency
     parameters:
       - id: Kidnapping_frequency
         name: Kidnapping Frequency
         high: "lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)"
         low: "lambda live_aut, live_naut : 1 - 1/(1 + 0.02 * live_naut)"
+  - name: Initial non-autonomous TEs
+    parameters:
+      - id: Initial_NAut_TEs
+        name: Initial non-autonomous TEs
+        high: 3
+        low: 1
+        zero: 0 # This key implies the value, but I will keep it in the same format for consistency

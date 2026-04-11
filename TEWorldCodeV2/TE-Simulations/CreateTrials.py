@@ -57,20 +57,31 @@ saved = None;   # if saved = None then we start a new simulation from scratch
                 # if saves = string, then we open that file and resume a simulation
 """
 
-def generate_binary_strings(n):
+def generate_num_strings(n):
     """
-    Generates all binary stirngs of length n.
+    Generates all numeric stirngs of length n.
+    This is not technically binary as 2 now represents the zero mapping.
     """
     permutations = []
     bit_format = "0{}b".format(n)
     
+    # Generate binary strings
     for i in range(2**n):
         permutations.append(format(i, bit_format))
         
+    short_bit_format = bit_format = "0{}b".format(n - 1) # 1 less bit than the bit_format variable
+        
+    # Generate all possible n - 1 binary strings, and then add zero at the end for special case (initial non-autonomous TEs)
+    for i in range(2**(n - 1)):
+        permutations.append(f"{format(i, short_bit_format)}2")
+    
     return permutations
 
 def is_high(permutation, i):
     return permutation[i] == "1"
+
+def is_low(permutation, i):
+    return permutation[i] == "0"
 
 def generate_configurations():
     """
@@ -80,7 +91,7 @@ def generate_configurations():
     configuration_mappings = get_configuration_mappings()["configurations"]
     n_changeable_configurations = len(configuration_mappings)
     mapping_split = n_changeable_configurations # for the purposes of replicating the graph
-    permutations = generate_binary_strings(n_changeable_configurations)
+    permutations = generate_num_strings(n_changeable_configurations)
     configurations = []
     
     # Will use each binary string to turn the respective configuration on/off
@@ -99,8 +110,10 @@ def generate_configurations():
         
             if is_high(permutation, i):
                 configuration_name += "H"
-            else:
+            elif is_low(permutation, i):
                 configuration_name += "L"
+            else:
+                configuration_name += "Z"
                 
                 
             # Add comment
@@ -113,8 +126,10 @@ def generate_configurations():
                 # Adding changeable configuration values, based on configured configuration_mappings
                 if is_high(permutation, i):
                     configuration_body += str(parameter["high"])
-                else:
+                elif is_low(permutation, i):
                     configuration_body += str(parameter["low"])
+                else:
+                    configuration_body += str(parameter["zero"])
                     
                 configuration_body += "\n"
                 

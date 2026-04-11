@@ -73,11 +73,11 @@ TE_death_rate = 0.005
 TE_Insertion_Distribution = Flat()
 Gene_Insertion_Distribution = Flat()
 
-# Parameter: Initial non-autonomous TEs
-Initial_NAut_TEs = 3
-
 # Parameter: Kidnapping Frequency
-Kidnapping_frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.02 * live_naut)
+Kidnapping_frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)
+
+# Parameter: Initial non-autonomous TEs
+Initial_NAut_TEs = 1
 
 
 
