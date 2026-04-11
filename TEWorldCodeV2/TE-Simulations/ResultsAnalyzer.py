@@ -355,8 +355,8 @@ class ResultsAnalyzer:
         for field in mappings:
             graph_field_names.append(field["name"])
             
-        top_field_names = graph_field_names[0:4]
-        right_field_names = graph_field_names[4:8]
+        col_field_names = reversed(graph_field_names[4:8])
+        row_field_names = reversed(graph_field_names[0:4])
         
         # Adjust axes to better align with the headers
         ax_top.set_xlim(0, 1)
@@ -366,10 +366,10 @@ class ResultsAnalyzer:
         ax_right.set_ylim(0, 1)
         
         # Add a bunch of subplots
-        for i, name in enumerate(top_field_names):
+        for i, name in enumerate(col_field_names):
             ax_top.text(0.25, i, name)
             
-        for i, name, in enumerate(right_field_names):
+        for i, name, in enumerate(row_field_names):
             ax_right.text(i, 0.25, name, rotation=270)
         
     def fill_in_plot_graph(self, fig, axs, matched_results: pd.DataFrame, parasitism_names="LL") -> None:
@@ -431,16 +431,21 @@ class ResultsAnalyzer:
         return props
                 
     def convert_number_to_experiment_name(self, row: int, col: int, parasitism_names: str) -> str:
-        return self.convert_number_to_partial_experiment_name(col) + self.convert_number_to_partial_experiment_name(row) + parasitism_names
+        """
+        Converts a number to the corresponding letter version of an experiment name.
+        This follows the 'rows first, outside-in' graph ordering.
+        """
+        return self.convert_number_to_partial_experiment_name(row) + self.convert_number_to_partial_experiment_name(col) + parasitism_names
                 
     def convert_number_to_partial_experiment_name(self, pos: int) -> str:
         """
         Used the row/col integer to return the corresponding experiment name (row-wise or column-wise).
+        This follows, the 'rows first, outside in' graph ordering.
         """
         name = ""
-        modulus = 2
+        modulus = DIM
         
-        while modulus <= DIM:
+        while modulus > 1:
             half_modulus = int(modulus // 2)
             res = pos % modulus
             
@@ -449,7 +454,7 @@ class ResultsAnalyzer:
             else:
                 name += "L"
             
-            modulus *= 2
+            modulus /= 2
         
         return name
         
