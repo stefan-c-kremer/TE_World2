@@ -13,7 +13,7 @@ MAX_PARALLEL = 120
 
 def run(args: list[str]) -> None:
     # -s indicates skipping validation prompt (for sharknet.sh batch script)
-    if len(args) == 1 or args[1] != "-s":
+    if len(args) == 1 or "-s" not in args:
         # Safety validation script, to prevent accidental runs
         print("Are you sure you want to run directly from the terminal (y/n)?")
         res = input("> ")
@@ -24,7 +24,7 @@ def run(args: list[str]) -> None:
     # -f for fast mode
     fast_mode = False
     
-    if len(args) > 1 and args[1] == "-f":
+    if len(args) > 1 and "-f" in args:
         fast_mode = True
         
     print("Starting simulations...")
