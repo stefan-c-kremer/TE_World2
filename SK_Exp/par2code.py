@@ -208,6 +208,8 @@ def pair_check( code: str, pairs: list[tuple[int,int]] ) -> bool:
 
 def get_code( fn: str, d:dict ) -> str:
   """
+  DEPRECATED:  this function no longer works with new encoding.
+
   Converts the parameters in the dictionary d into a High/Low code string.
   fn is the file name for error reporting.
   """
@@ -268,7 +270,12 @@ def check_dir( directory: str ):
 
 ################################################################################
 
-def code2str( code: str ) -> dict[ str, str]:
+def code2str( code: str ) -> str: 
+  """
+  Convert a 8 character of 9 character parameter code to a string
+  containing a parameters.py file.
+  """
+
   if len(code)==9 and all( c in {"H","L"} for c in code ) or \
      len(code)==8 and all( c in {"H","L"} for c in code[:7] ) and code[7]=='0':
     pass;
