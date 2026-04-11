@@ -165,8 +165,8 @@ class ResultsAnalyzer:
         """
         # These correspond to the graph names
         names = []
-        top_names = []
-        right_names = []
+        col_names = []
+        row_names = []
         parasitism_names = []
         te_extinction_counts = []
         te_naut_persistence_counts = []
@@ -184,14 +184,14 @@ class ResultsAnalyzer:
             
             # Obtain names of experiments, corresponding to graph
             experiment_name = name_pattern.findall(folder)[0]
-            top_name = experiment_name[0:4]
-            right_name = experiment_name[4:8]
+            row_name = experiment_name[0:4]
+            col_name = experiment_name[4:8]
             parasitism_name = experiment_name[8:9]
             
             # Data storage mechanisms
             names.append(experiment_name)
-            top_names.append(top_name)
-            right_names.append(right_name)
+            col_names.append(col_name)
+            row_names.append(row_name)
             parasitism_names.append(parasitism_name)
             te_extinction_counts.append(experiment_result["TE_EXTINCTION"])
             te_naut_persistence_counts.append(experiment_result["TE_NAUT_PERSISTENCE"])
@@ -203,8 +203,8 @@ class ResultsAnalyzer:
         # Storage in data frame
         data = {
             "name": names,
-            "top_name": top_names,
-            "right_name": right_names,
+            "col_name": col_names,
+            "row_name": row_names,
             "parasitism_names": parasitism_names,
             "te_extinction_count": te_extinction_counts,
             "te_naut_persistence_count": te_naut_persistence_counts,
