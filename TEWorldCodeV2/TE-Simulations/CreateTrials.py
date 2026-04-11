@@ -36,6 +36,8 @@ Append_gene = True;	# True: when the intialization routine tries to place
 
 Initial_Aut_TEs = 1;
 
+TE_excision_rate = 0.0; # set to zero as LINE and SINE are retrotransposons (copy/paste)
+
 Host_start_fitness = 1.0;
 		
 Host_reproduction_rate = 1;  # how many offspring each host has
@@ -138,16 +140,20 @@ def create_configuration_files():
     print("Generating configurations...")
     configurations = generate_configurations()
     print("Finished generating configurations.")
+    experiments_path = "../../TE-Experiments"
+    
+    # Create TE-Experiments folder, if it does not exist
+    if not os.path.exists(experiments_path):
+        os.mkdir(experiments_path)
     
     # Write all of the configurations to files in the TE-Experiments directory
     print("Writing trial configurations to files...")
     for configuration in configurations:
-        
         name = configuration["name"]
         print(name)
         body = configuration["body"]
-        dir_path = "../../TE-Experiments/IS-{}-EXP".format(name)
-        config_path = "{}/parameters.py".format(dir_path)
+        dir_path = f"{experiments_path}/IS-{name}-EXP"
+        config_path = f"{dir_path}/parameters.py"
         
         print("Writing trial configuration to {}...".format(config_path))
         
