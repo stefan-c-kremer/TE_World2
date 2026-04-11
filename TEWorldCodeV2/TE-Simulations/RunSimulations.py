@@ -5,9 +5,9 @@ import subprocess
 # Iterates through each TE configuration folder, running all of the experiments and stores them in trace files.
 # It leverages parallel processing to take advantage of the associated performance enhancements.
 
-N_PASS_THROUGHS = 3
+N_PASS_THROUGHS = 1
 EXPERIMENTS_PATH = "../../TE-Experiments/**"
-MAX_PARALLEL = 48
+MAX_PARALLEL = 120
 
 def simulate_all_experiments() -> None:
     """
