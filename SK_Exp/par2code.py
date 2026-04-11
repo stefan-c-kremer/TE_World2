@@ -26,7 +26,7 @@ def extract_parameters( path: str ) -> dict[ str, ast.AST ]:
 
   Raises:
     SyntaxError:
-      If the file is not valid Python.
+      If the string is not valid Python.
     ValueError:
       If a top-level assignment target is not a simple name.
   """
@@ -90,16 +90,20 @@ def pretty_rhs( params: dict[ str, ast.AST ] ) -> dict[ str, str ]:
 
 
 ################################################################################
+# Dictionary of standard parameters and their values that must be present
+# in every parameters.py file.
+################################################################################
 
 STANDARD_PARAMS = {
   'output': "{'SPLAT': False, 'SPLAT FITNESS': False, 'INITIALIZATION': False, 'GENERATION': True, 'HOST EXTINCTION': True, 'TE EXTINCTION': True, 'TRIAL NO': True, 'GENE INIT': False, 'TE INIT': False}",
   'Gene_length': '1000',
   'Append_gene': 'True',
   'Initial_Aut_TEs': '1',
-  'MILLION': '1000000',
+  'TE_length': 'lambda autonomous: 6000 if autonomous else 300',
   'Host_start_fitness': '1.0',
   'Host_reproduction_rate': '1',
   'Host_survival_rate': 'lambda propfit: min(Carrying_capacity * propfit, 0.95)',
+  'TE_excision_rate': '0.0',
   'Maximum_generations': '1500',
   'Terminate_no_TEs': 'True',
   'seed': 'None',
@@ -107,20 +111,24 @@ STANDARD_PARAMS = {
 };
 
 ################################################################################
+# List of parameters which can have a High or Low setting value.
+# Some parameters have more than one parameter variables involved.
+# (Stefan's version of Isaiah's YAML file.)
+################################################################################
 
 HIGH_LOW_PARAMS = [
 
-  # 0,1 - Corrected_mutation_rate 
+  # 0->0,1 - Corrected_mutation_rate 
   ( 'Host_mutation_rate', ( '0.3', 
                             '0.03' ) ),
 
   ( 'Initial_genes', ( '5000', '500' ) ),
   
-  # 2 - NC_BP
+  # 1->2 - NC_BP
   ( 'Junk_BP', ( '14 * MILLION', 
                  '1.4 * MILLION' ) ),
 
-  # 3,4 - Mutation_effect - high mutation effect is higher proliferation?
+  # 2->3,4 - Mutation_effect - high mutation effect is higher proliferation?
   ( 'Host_mutation', ( 'ProbabilityTable(0.4, lambda fit: 0.0, 0.3, lambda fit: fit - random.random() * 0.1, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random() * 0.1)', 
                        'ProbabilityTable(0.4, lambda fit: 0.0, 0.3, lambda fit: fit - random.random() * 0.01, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random() * 0.01)' ) ),
 
@@ -128,20 +136,17 @@ HIGH_LOW_PARAMS = [
                           'ProbabilityTable(0.3, lambda fit: 0.0, 0.2, lambda fit: fit - random.random() * 0.01, 0.3, lambda fit: fit, 0.2, lambda fit: fit + random.random() * 0.01)' ) ),
 
 
-  # 5 - Carrying_capacity
+  # 3->5 - Carrying_capacity
   ( 'Carrying_capacity', ( '300', '30' ) ),
 
-  # 6 - TE_progeny - 15% change of inserting 3 gives higher proliferation
+  # 4->6 - TE_progeny - 15% change of inserting 3 gives higher proliferation
   ( 'TE_progeny', ( 'ProbabilityTable(0.0, 0, 0.55, 1, 0.3, 2, 0.15, 3)',
                     'ProbabilityTable(0.15, 0, 0.55, 1, 0.3, 2)' ) ),
 
-  # 7 - TE_excision_rate - higher values gives higher proliferation
-  ( 'TE_excision_rate', ( '0.5', '0.1' ) ),
+  # 5->7 TE_death_rate
+  ( 'TE_death_rate', ( '0.0005', '0.005' ) ),
 
-  # 8 - TE_death_rate - lower value gives higher proliferation
-  ( 'TE_death_rate', ('0.0005', '0.005') ),
-
-  # 9,10 - Insertion_bias
+  # 6->8,9 - Insertion_bias
   ( 'TE_Insertion_Distribution', ( 'Triangle(pmax=0, pzero=3.0 / 3.0)', 
                                    'Flat()' ) ),
 
@@ -149,24 +154,24 @@ HIGH_LOW_PARAMS = [
                                      'Flat()' ) ),
                                      
 
-  # 11,12 Initial_NAut_TEs
-  ( 'Initial_NAut_TEs', ( '3', '1', None ) ),
+  # 7->10 Initial_NAut_TEs
+  ( 'Initial_NAut_TEs', ( '3', '1' ) ),
 
-  ( 'TE_length', ( 'lambda autonomous: 6000 if autonomous else 300',
-                   'lambda autonomous: 6000 if autonomous else 300',
-                   'labmda autonomous: 1000' ) ),
-
-  # 13 Kidnapping_frequency
+  # 8->11 Kidnapping_frequency
   ( 'Kidnapping_frequency', ( 
-            'lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)',
-            'lambda live_aut, live_naut : 1 - 1/(1 + 0.02 * live_naut)',
-            None ),
-  )
+            'lambda live_aut, live_naut: 1 - 1 / (1 + 0.07 * live_naut)',
+            'lambda live_aut, live_naut: 1 - 1 / (1 + 0.02 * live_naut)',
+  ) )
 ];
+
 
 ################################################################################
 
 def pp_dict( d: dict[ str, str ] ):
+  """
+  Print the contents of the given dictionary with one key, value pair per
+  line.
+  """
   print( "{" );
   for key,val in d.items():
     print( f"  {repr(key)}: {repr(val)}," );
@@ -175,6 +180,11 @@ def pp_dict( d: dict[ str, str ] ):
 ################################################################################
 
 def check_standard_params( fn:str, d:dict ):
+  """
+  Check that the dictionary contains all of the standard parameters and that
+  their values conform to expectation.
+  fn is the filename for exception messages.
+  """
   for key,value in STANDARD_PARAMS.items():
     if key not in d:
       raise KeyError( f"{fn}: Missing required STANDARD parameter: '{key}'." );
@@ -183,15 +193,24 @@ def check_standard_params( fn:str, d:dict ):
 
 ################################################################################
 
-def pair_check( code, pairs ):
+def pair_check( code: str, pairs: list[tuple[int,int]] ) -> bool:
+  """
+  Check that parameter pairs have matching H/L values.
+  * matches either H or L.
+  """
   for pair in pairs:
     if code[pair[0]]=='*' or code[pair[1]]=='*' or code[pair[0]]==code[pair[1]]:
       return True;
     else:
       return False;
 
+################################################################################
 
-def get_code( fn: str, d:dict ):
+def get_code( fn: str, d:dict ) -> str:
+  """
+  Converts the parameters in the dictionary d into a High/Low code string.
+  fn is the file name for error reporting.
+  """
   code = "";
   for key, values in HIGH_LOW_PARAMS:
     if key not in d:
@@ -223,23 +242,21 @@ def get_code( fn: str, d:dict ):
   return code;
 
 
-
 ################################################################################
 
-def main( argv: list[ str ] ): 
+def check_dir( directory: str ):
+  """
+  Print filenames and HL codes for all files in the given directory.
+  """
 
-  #ex="Stefan";
-  ex="Isaiah";
+  if directory == "PaperExperiments":
+    fmt = 'Old';
 
-  if ex=="Stefan": 
-    paramfns = sorted( glob.glob( "../PaperExperiments/*/parameters.py" ) );
-  else:
-    # fix Isaiahisms
-    del( STANDARD_PARAMS['MILLION'] );
-    HIGH_LOW_PARAMS[2] =   ( 'Junk_BP', ( '14000000',
-                                          '1400000' ) );
-    STANDARD_PARAMS['TE_length'] = 'lambda autonomous: 6000 if autonomous else 300';
-    paramfns = sorted( glob.glob( "../TE-Experiments/*/parameters.py" ) );
+  if directory == "TE-Experiments":
+    fmt = 'New';
+
+  paramfns = sorted( glob.glob( f"../{directory}/*/parameters.py" ) );
+
 
 
   paramdicts = { fn: pretty_rhs(extract_parameters(fn)) for fn in paramfns };
@@ -249,36 +266,46 @@ def main( argv: list[ str ] ):
     print( fn, get_code( fn, paramdict ) );
 
 
+################################################################################
 
-  keys = next(iter(paramdicts.values())); # get keys from first param dictionary
+def code2str( code: str ) -> dict[ str, str]:
+  if len(code)==9 and all( c in {"H","L"} for c in code ) or \
+     len(code)==8 and all( c in {"H","L"} for c in code[:7] ) and code[7]=='0':
+    pass;
+  else:
+    raise ValueError( f"Invalid H/L code, '{code}'." );
 
-  summary = {
-    key: set( paramdict[key] for paramdict in paramdicts.values() )
-           for key in keys
+  # extend code for paired parameters
+  code = 2*code[0]+code[1]+2*code[2]+code[3:6]+2*code[6]+code[7]+code[8:];
+  if len(code)==11:
+    code += 'H';
 
-  };
+  d = STANDARD_PARAMS.copy();
+  for i,val in enumerate(code):
+    if val=='H':
+      idx = 0;
+    elif val=='L':
+      idx = 1;
+    elif val=='0':
+      d[ HIGH_LOW_PARAMS[i][0] ] = '0';
+      continue;
+    d[ HIGH_LOW_PARAMS[i][0] ] = HIGH_LOW_PARAMS[i][1][idx];
 
-  #pp_dict( summary );
-  fixed = {};
-  hl = {};
-  other = {};
-  for key,values in summary.items():
-    if len( values )==1:
-      fixed[ key ] = next(iter(values));
-    elif len( values )==2:
-      hl[ key ] = values;
-    else:
-      other[ key ] = values;
+  str1 = ( "from TEUtil import *;\n"
+           "\n"
+           "MILLION = 1000000;\n"
+           "\n" );
+
+  for key,val in d.items():
+    str1 += f"{key} = {(val)}\n";
+
+  return str1;
 
 
-  #pp_dict( fixed );
 
-  #for key,val in hl.items():
-    #print( key, val );
-
-  #for key,val in other.items():
-    #print( key, val );
+################################################################################
 
 
 if __name__ == "__main__":
-  main( sys.argv );
+  #check_dir( "TE-Experiments" );
+  print( code2str( "LHHHHHHLL" ) );
