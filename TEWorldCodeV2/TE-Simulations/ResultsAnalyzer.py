@@ -383,9 +383,9 @@ class ResultsAnalyzer:
                 
                 # Fill in the boxes with respect to their proportions
                 result_proportions = self.get_scenario_proportions(name, matched_results)
-                self.fill_in_fig_with_stacked_bars(fig, axs, row, col, result_proportions)
+                self.fill_in_fig_with_stacked_bars(axs, row, col, result_proportions)
                 
-    def fill_in_fig_with_stacked_bars(self, fig, axs, row: int, col: int, props: dict) -> None:
+    def fill_in_fig_with_stacked_bars(self, axs, row: int, col: int, props: dict) -> None:
         """
         Fills in individual sub-figures with stacked bar graphs to represent proportional results.
         """
