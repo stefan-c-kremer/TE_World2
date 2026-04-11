@@ -165,8 +165,8 @@ class ResultsAnalyzer:
         """
         # These correspond to the graph names
         names = []
-        top_names = []
-        right_names = []
+        col_names = []
+        row_names = []
         parasitism_names = []
         te_extinction_counts = []
         te_naut_persistence_counts = []
@@ -175,7 +175,7 @@ class ResultsAnalyzer:
         te_persistence_counts = []
         other_counts = []
         
-        name_pattern = re.compile('[HL]{10}')
+        name_pattern = re.compile('[HLZ]{9}')
         
         folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
         
@@ -184,14 +184,14 @@ class ResultsAnalyzer:
             
             # Obtain names of experiments, corresponding to graph
             experiment_name = name_pattern.findall(folder)[0]
-            top_name = experiment_name[0:4]
-            right_name = experiment_name[4:8]
-            parasitism_name = experiment_name[8:10]
+            row_name = experiment_name[0:4]
+            col_name = experiment_name[4:8]
+            parasitism_name = experiment_name[8:9]
             
             # Data storage mechanisms
             names.append(experiment_name)
-            top_names.append(top_name)
-            right_names.append(right_name)
+            col_names.append(col_name)
+            row_names.append(row_name)
             parasitism_names.append(parasitism_name)
             te_extinction_counts.append(experiment_result["TE_EXTINCTION"])
             te_naut_persistence_counts.append(experiment_result["TE_NAUT_PERSISTENCE"])
@@ -203,8 +203,8 @@ class ResultsAnalyzer:
         # Storage in data frame
         data = {
             "name": names,
-            "top_name": top_names,
-            "right_name": right_names,
+            "col_name": col_names,
+            "row_name": row_names,
             "parasitism_names": parasitism_names,
             "te_extinction_count": te_extinction_counts,
             "te_naut_persistence_count": te_naut_persistence_counts,
@@ -216,7 +216,7 @@ class ResultsAnalyzer:
         
         self.results = pd.DataFrame(data)
         
-    def export_results_to_excel(self, save_path="results.xlsx", parasitism_names="LL"):
+    def export_results_to_excel(self, save_path="results.xlsx", parasitism_names="L"):
         """
         Exports results to an excel file
         """
@@ -228,7 +228,7 @@ class ResultsAnalyzer:
         
         results.to_excel(save_path)
         
-    def export_results_to_plot(self, save_path="graph.png",  parasitism_names="LL") -> None:
+    def export_results_to_plot(self, save_path="graph.png",  parasitism_names="L") -> None:
         """
         Takes the data and outputs the graph to a PNG file, similar to the original paper.
         """
@@ -261,7 +261,7 @@ class ResultsAnalyzer:
         self.fill_in_plot_graph_header_titles(ax_top_left, ax_top_right)
         self.fill_in_plot_graph_headers(ax_top, ax_right)
         matched_results = self.get_relevant_results(parasitism_names)
-        self.fill_in_plot_graph(fig, ax_main, matched_results, parasitism_names)
+        self.fill_in_plot_graph(ax_main, matched_results, parasitism_names)
         
         # Save figure
         fig.savefig(save_path)
@@ -355,8 +355,8 @@ class ResultsAnalyzer:
         for field in mappings:
             graph_field_names.append(field["name"])
             
-        top_field_names = graph_field_names[0:4]
-        right_field_names = graph_field_names[4:8]
+        col_field_names = reversed(graph_field_names[4:8])
+        row_field_names = reversed(graph_field_names[0:4])
         
         # Adjust axes to better align with the headers
         ax_top.set_xlim(0, 1)
@@ -366,13 +366,13 @@ class ResultsAnalyzer:
         ax_right.set_ylim(0, 1)
         
         # Add a bunch of subplots
-        for i, name in enumerate(top_field_names):
+        for i, name in enumerate(col_field_names):
             ax_top.text(0.25, i, name)
             
-        for i, name, in enumerate(right_field_names):
+        for i, name, in enumerate(row_field_names):
             ax_right.text(i, 0.25, name, rotation=270)
         
-    def fill_in_plot_graph(self, fig, axs, matched_results: pd.DataFrame, parasitism_names="LL") -> None:
+    def fill_in_plot_graph(self, axs, matched_results: pd.DataFrame, parasitism_names="L") -> None:
         """
         Fills in sub-figures of graph with their corresponding experimental results.
         """
@@ -383,9 +383,9 @@ class ResultsAnalyzer:
                 
                 # Fill in the boxes with respect to their proportions
                 result_proportions = self.get_scenario_proportions(name, matched_results)
-                self.fill_in_fig_with_stacked_bars(fig, axs, row, col, result_proportions)
+                self.fill_in_fig_with_stacked_bars(axs, row, col, result_proportions)
                 
-    def fill_in_fig_with_stacked_bars(self, fig, axs, row: int, col: int, props: dict) -> None:
+    def fill_in_fig_with_stacked_bars(self, axs, row: int, col: int, props: dict) -> None:
         """
         Fills in individual sub-figures with stacked bar graphs to represent proportional results.
         """
@@ -431,16 +431,21 @@ class ResultsAnalyzer:
         return props
                 
     def convert_number_to_experiment_name(self, row: int, col: int, parasitism_names: str) -> str:
-        return self.convert_number_to_partial_experiment_name(col) + self.convert_number_to_partial_experiment_name(row) + parasitism_names
+        """
+        Converts a number to the corresponding letter version of an experiment name.
+        This follows the 'rows first, outside-in' graph ordering.
+        """
+        return self.convert_number_to_partial_experiment_name(row) + self.convert_number_to_partial_experiment_name(col) + parasitism_names
                 
     def convert_number_to_partial_experiment_name(self, pos: int) -> str:
         """
         Used the row/col integer to return the corresponding experiment name (row-wise or column-wise).
+        This follows, the 'rows first, outside in' graph ordering.
         """
         name = ""
-        modulus = 2
+        modulus = DIM
         
-        while modulus <= DIM:
+        while modulus > 1:
             half_modulus = int(modulus // 2)
             res = pos % modulus
             
@@ -449,7 +454,7 @@ class ResultsAnalyzer:
             else:
                 name += "L"
             
-            modulus *= 2
+            modulus /= 2
         
         return name
         
@@ -509,12 +514,12 @@ if __name__ == "__main__":
     extractor = ResultsAnalyzer()
     extractor.analyze_experiments()
     
-    new_config_permutations = ["LL", "LH", "HL", "HH"]
+    init_sine_tes = ["Z", "L", "H"]
     
     if not os.path.exists("output"):
         os.makedirs("output")
     
-    for permutation in new_config_permutations:
+    for permutation in init_sine_tes:
         extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
         extractor.export_results_to_plot(f"output/graph-{permutation.lower()}.png", permutation)
     

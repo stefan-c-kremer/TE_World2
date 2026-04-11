@@ -27,7 +27,8 @@ The files will be subsequently created after running this command.
 python3 ./RunSimulations.py
 ```
 
-The simulations will be run (all 3072 of them).
+After running this, a validation prompt will verify that you wanted to run this script. Alternatively, you can provide `-s` to skip this message.
+Additionally `-f` will run the script in 'fast mode'.
 
 ### Analyze Results
 
@@ -36,6 +37,14 @@ python3 ResultsAnalyzer.py
 ```
 
 The files (graphs, images, excel summaries) will be created and written to the `TE-Simulations/output` folder.
+
+### Delete Simulation Results
+
+```
+./delete-simulation-files.sh
+```
+
+This deletes all CSV and state files associated with a simulation. **Do not run it** if you do not want to delete all your results. The actions in this script are irreversable.
 
 ## Analysis Notes
 

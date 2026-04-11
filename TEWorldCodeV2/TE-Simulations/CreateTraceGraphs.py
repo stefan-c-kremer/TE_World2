@@ -61,7 +61,7 @@ class Trial:
         if not available_y or x_col not in self.df.columns:
             return
 
-        # Create figure (mimicking your 800,200 size)
+        # Create figure
         plt.figure(figsize=(8, 2)) 
         
         for y in available_y:
