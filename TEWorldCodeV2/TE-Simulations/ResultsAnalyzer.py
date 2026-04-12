@@ -72,7 +72,7 @@ SCENARIO_MAPPINGS = {
 }
 
 plots_config = [
-    ( 'Live (autonomous and non-autonomous) TEs vs Generation', 'gen', ['LTEAUT', 'LTENAUT']) 
+    ( 'Live (autonomous and non-autonomous) TEs vs Generation', 'gen', ['LTEAUT'], ['LTENAUT']) 
 ]
 
 OUTPUT_PATH = "output/"

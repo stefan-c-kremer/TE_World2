@@ -13,6 +13,37 @@ This is the code to:
 
 ## To Run
 
+### Create Trace Graphs
+
+[`CreateTraceGraphs.py`](CreateTraceGraphs.py) is a quick and easy-to-use program that takes CSV trace files that were produced by a list of trials, and outputs corresponding graphs that are predefined in the code. These include:
+
+- Host Population vs Generation
+- Total Live TEs vs Generation
+- Live TE Percentiles vs Generation
+- Total Dead TEs vs Generation
+- Dead TE Percentiles vs Generation
+- Fitness Percentiles vs Generation
+- TE Deaths vs Generation
+- TE Collisions vs Generation
+- TE Jumps vs Generation
+- TE Jump Effects vs Generation
+- TE and Gene Locations
+- Live autonomous/non-autonomous TEs vs Generation
+
+#### Run `CreateTraceGraphs`
+
+1. Navigate to the same folder as `CreateTraceGraphs.py` within your terminal.
+
+2. Copy any trace files that you want to graph into this directory. They must be a CSV file, but they can be of any name.
+
+3. Run `CreateTraceGraphs.py` with all of your input files passed as command line arguments.
+
+```
+python3 CreateTraceGraphs.py trace-001.csv test.csv
+```
+
+The graphs should be created and output as `.svg` files, for all of the specified trace files.
+
 ### Create Trials
 
 ```
@@ -57,5 +88,6 @@ In the results overview plots the colours correspond with the following scenario
 - **Red:** Non-autonomous TE persistence
 - **Yellow:** TE extinction (both autonomous and non-autonomous)
 - **Purple:** Host extinction
+- **White:** No results for experiment
 
 ![Example results overview plot](example-results-overview-plot.png)

@@ -18,21 +18,21 @@ csv2lt = {
 }
 
 plots_config = [
-    ( 'Host Population vs Generation', 'gen', ['pop_size'] ),
-    ( 'Total Live TEs vs Generation', 'gen', ['LTETOTAL'] ),
+    ( 'Host Population vs Generation', 'gen', ['pop_size'], [] ),
+    ( 'Total Live TEs vs Generation', 'gen', ['LTETOTAL'], [] ),
     ( 'Live TE Percentiles vs Generation', 'gen', [ 'LTE100pe',
-                           'LTE075pe', 'LTE050pe', 'LTE025pe', 'LTE000pe' ] ),
-    ( 'Total Dead TEs vs Generation', 'gen', ['DTETOTAL'] ),
+                           'LTE075pe', 'LTE050pe', 'LTE025pe', 'LTE000pe' ], [] ),
+    ( 'Total Dead TEs vs Generation', 'gen', ['DTETOTAL'], [] ),
     ( 'Dead TE Percentiles vs Generation', 'gen', [ 'DTE100pe',
-                           'DTE075pe', 'DTE050pe', 'DTE025pe', 'DTE000pe' ] ),
+                           'DTE075pe', 'DTE050pe', 'DTE025pe', 'DTE000pe' ], [] ),
     ( 'Fitness Percentiles vs Generation', 'gen', [ 'FIT100pe',
-                           'FIT075pe', 'FIT050pe', 'FIT025pe', 'FIT000pe' ] ),
-    ( 'TE Deaths vs Generation', 'gen', [ 'TEDEATH' ] ),
-    ( 'TE Collisions vs Generation', 'gen', [ 'COLLISIO' ] ),
-    ( 'TE Jumps vs Generation', 'gen', [ 'TOTAL_JU' ] ),
-    ( 'TE Jump Effects vs Generation', 'gen', ['LETHAL_J', 'DELETE_J', 'NEUTRA_J', 'BENEFI_J' ] ),
-    ( 'TE and Gene Locations', 'gen', ['GSIZE100','GSIZE075','GSIZE050','GSIZE025','GSIZE000', 'GELOC100','GELOC075','GELOC050','GELOC025','GELOC000', 'TELOC100','TELOC075','TELOC050','TELOC025','TELOC000' ] ),
-    ( 'Live (autonomous and non-autonomous) TEs vs Generation', 'gen', ['LTEAUT', 'LTENAUT']) 
+                           'FIT075pe', 'FIT050pe', 'FIT025pe', 'FIT000pe' ], [] ),
+    ( 'TE Deaths vs Generation', 'gen', [ 'TEDEATH' ], [] ),
+    ( 'TE Collisions vs Generation', 'gen', [ 'COLLISIO' ], [] ),
+    ( 'TE Jumps vs Generation', 'gen', [ 'TOTAL_JU' ], [] ),
+    ( 'TE Jump Effects vs Generation', 'gen', ['LETHAL_J', 'DELETE_J', 'NEUTRA_J', 'BENEFI_J' ], [] ),
+    ( 'TE and Gene Locations', 'gen', ['GSIZE100','GSIZE075','GSIZE050','GSIZE025','GSIZE000', 'GELOC100','GELOC075','GELOC050','GELOC025','GELOC000', 'TELOC100','TELOC075','TELOC050','TELOC025','TELOC000' ], [] ),
+    ( 'Live (autonomous and non-autonomous) TEs vs Generation', 'gen', ['LTEAUT'], ['LTENAUT']) 
 ]
 
 class Trial:
@@ -52,29 +52,56 @@ class Trial:
         self.df.columns = [c.strip() for c in self.df.columns]
 
     def plot_all(self, configs):
-        for title, x_col, y_cols in configs:
-            self.create_plot(title, x_col, y_cols)
+        for title, x_col, y_left_cols, y_right_cols in configs:
+            self.create_plot(title, x_col, y_left_cols, y_right_cols)
 
-    def create_plot(self, title, x_col, y_cols):
+    def create_plot(self, title, x_col, y_cols_left, y_cols_right):
         # Check if required columns exist in this specific CSV
-        available_y = [y for y in y_cols if y in self.df.columns]
-        if not available_y or x_col not in self.df.columns:
+        available_y_left = [y for y in y_cols_left if y in self.df.columns]
+        available_y_right = [y for y in y_cols_right if y in self.df.columns]
+        if not available_y_left and not available_y_right or x_col not in self.df.columns:
             return
 
         # Create figure
-        plt.figure(figsize=(8, 2)) 
+        fig, ax = plt.subplots(figsize=(8, 2))
         
-        for y in available_y:
-            plt.plot(
-                self.df[x_col], 
-                self.df[y], 
-                label=csv2key.get(y, y), 
+        # Lines and labels for legend
+        lines = []
+        labels = []
+        
+        # Creates a dual axis if there are right-axis values provided
+        if y_cols_right:
+            ax2 = ax.twinx()
+        
+        for y in y_cols_left:
+            label = csv2key.get(y, y)
+            line = ax.plot(
+                self.df[x_col],
+                self.df[y],
+                label=label,
                 color=csv2lt.get(y, '#000000'),
                 linewidth=1
-            )
+            )[0]
+            
+            labels.append(label)
+            lines.append(line)
+            
+        for y in y_cols_right:
+            label = csv2key.get(y, y)
+            line = ax2.plot(
+                self.df[x_col],
+                self.df[y],
+                label=label,
+                color=csv2lt.get(y, '#000000'),
+                linewidth=1,
+                linestyle='dashed'  # Optional: distinguish lines
+            )[0]
+
+            labels.append(label)
+            lines.append(line)
 
         plt.title(title, fontsize=10, family='sans-serif')
-        plt.legend(loc='upper left', fontsize=8)
+        plt.legend(lines, labels, loc='upper left', fontsize=8)
         plt.tight_layout()
         
         # Save as SVG
@@ -83,7 +110,6 @@ class Trial:
         plt.close()
 
 def main():
-    # Find files like trace-001.csv
     files = sys.argv[1:]
     
     print(f"{len(files)} will be processed and graphed. Please wait...")
