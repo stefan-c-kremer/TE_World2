@@ -65,5 +65,6 @@ In the results overview plots the colours correspond with the following scenario
 - **Red:** Non-autonomous TE persistence
 - **Yellow:** TE extinction (both autonomous and non-autonomous)
 - **Purple:** Host extinction
+- **White:** No results for experiment
 
 ![Example results overview plot](example-results-overview-plot.png)

@@ -83,7 +83,6 @@ class Trial:
         plt.close()
 
 def main():
-    # Find files like trace-001.csv
     files = sys.argv[1:]
     
     print(f"{len(files)} will be processed and graphed. Please wait...")
