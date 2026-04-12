@@ -125,8 +125,8 @@ HIGH_LOW_PARAMS = [
   ( 'Initial_genes', ( '5000', '500' ) ),
   
   # 1->2 - NC_BP
-  ( 'Junk_BP', ( '14 * MILLION', 
-                 '1.4 * MILLION' ) ),
+  ( 'Junk_BP', ( '14000000', 
+                 '1400000' ) ),
 
   # 2->3,4 - Mutation_effect - high mutation effect is higher proliferation?
   ( 'Host_mutation', ( 'ProbabilityTable(0.4, lambda fit: 0.0, 0.3, lambda fit: fit - random.random() * 0.1, 0.15, lambda fit: fit, 0.15, lambda fit: fit + random.random() * 0.1)', 
@@ -208,8 +208,6 @@ def pair_check( code: str, pairs: list[tuple[int,int]] ) -> bool:
 
 def get_code( fn: str, d:dict ) -> str:
   """
-  DEPRECATED:  this function no longer works with new encoding.
-
   Converts the parameters in the dictionary d into a High/Low code string.
   fn is the file name for error reporting.
   """
@@ -217,30 +215,29 @@ def get_code( fn: str, d:dict ) -> str:
   for key, values in HIGH_LOW_PARAMS:
     if key not in d:
       d[key] = None;
-    if not d[key] in values:
+    if key!='Initial_NAut_TEs' and not d[key] in values:
       raise ValueError( f"{fn}: Invalid value for key {key}, expected one of {repr(values)}, got {repr(d[key])}." );
     if d[key] == values[0]:
-      if values[0]==values[1]:
-        code += "*";    # both values are same
-      else:
-        code += "H";
+      code += "H";
     elif d[key] == values[1]:
       code += "L";
     else:
-      code += "-";
+      code += "Z";
     
 
-  if not pair_check( code, [ (0,1), (3,4), (9,10), (11,12) ] ):
-    code = f"{code} ({code[0:2]}){code[2]}({code[3:5]}){code[5:9]}" + \
-           f"({code[9:11]})({code[11:13]}){code[13]}";
+  if not pair_check( code, [ (0,1), (3,4), (8,9) ] ):
+    code = ( f"{code} ({code[0:2]}){code[2]}({code[3:5]}){code[5:8]}"
+             f"({code[8:10]}){code[10]}{code[11]}" );
 
     print( d['Host_mutation_rate'] );
     print( HIGH_LOW_PARAMS[0] );
     raise ValueError( f"Inconsistent paired parameter {code}." );
   else:
-    code = code[0]+code[2:4]+code[5:10]+code[11]+code[13];    
+      code = code[0]+code[2:4]+code[5:9]+code[10:12];    
        # remove duplicate pairs
-    
+   
+  if code[7]=='Z':
+    code = code[:8];
   return code;
 
 
@@ -272,7 +269,7 @@ def check_dir( directory: str ):
 
 def code2str( code: str ) -> str: 
   """
-  Convert a 8 character of 9 character parameter code to a string
+  Convert a 8 character or 9 character parameter code to a string
   containing a parameters.py file.
   """
 
@@ -314,5 +311,5 @@ def code2str( code: str ) -> str:
 
 
 if __name__ == "__main__":
-  #check_dir( "TE-Experiments" );
-  print( code2str( "LHHHHHHLL" ) );
+  check_dir( "TE-Experiments" );
+  #print( code2str( "LHHHHHHLL" ) );
