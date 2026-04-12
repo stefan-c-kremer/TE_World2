@@ -13,6 +13,14 @@ This is the code to:
 
 ## To Run
 
+### Create Trace Graphs
+
+```
+python3 CreateTraceGraphs.py trace-1.csv trace-2.csv
+```
+
+This will generate graphs for the specified trace files, suffixed with '-1' and '-2'. You can specify an unlimited number of CSV files.
+
 ### Create Trials
 
 ```
