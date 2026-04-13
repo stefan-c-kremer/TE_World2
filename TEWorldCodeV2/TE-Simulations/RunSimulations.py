@@ -1,8 +1,10 @@
 import sys
+import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Callable
 from glob import glob
+from ResultsAnalyzer import ResultsAnalyzer, TEResult
 
 # Iterates through each TE configuration folder, running all of the experiments and stores them in trace files.
 # It leverages parallel processing to take advantage of the associated performance enhancements.
@@ -52,21 +54,39 @@ def simulate_all_experiments(n_iters: int, fast_mode: bool = False, iter: int|No
     
     # Sorting the folders such that "low" folders appear earlier
     folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
+    analyzer = ResultsAnalyzer()
+    total_exp_count = len(folder_names)
     
     # If `iter` has been specified, filter out all of the folders that already have a corresponding CSV file
     if iter:
+        print(f"Specified iteration #{iter}. Will filter out uncompleted experiments.")
         filtered_names = []
         
         for name in folder_names:
             trace_path = f"{name}/trace-{iter:03d}.csv"
             
+            # Obtain result, and mark to be re-run if error occurs
+            try:
+                result = analyzer.analyze_file(trace_path)["result"]
+            except Exception:
+                result = TEResult.OTHER
+                
+            
+            # For experiments that have not yet been started
             if len(glob(trace_path)) == 0:
+                filtered_names.append(name)
+            # For experiments that were started, but not finished
+            # Removes existing CSV file for trial, and replaces it with a new (truncated) one
+            elif result == TEResult.OTHER:
+                os.remove(trace_path)
                 filtered_names.append(name)
                 
         # Replace folder_names with the filtered_names value
         folder_names = filtered_names
-                
-    print(len(folder_names))
+        
+    exp_run_count = total_exp_count - (total_exp_count - len(folder_names))
+    
+    print(f"{exp_run_count}/{total_exp_count} valid experiments will be run.")
     
     # In fast mode, all iterations are grouped together
     # Cannot be performed when a specific iteration is specified to be run
