@@ -78,7 +78,6 @@ def simulate_all_experiments(n_iters: int, fast_mode: bool = False, iter: int|No
             # For experiments that were started, but not finished
             # Removes existing CSV file for trial, and replaces it with a new (truncated) one
             elif result == TEResult.OTHER:
-                os.remove(trace_path)
                 filtered_names.append(name)
                 
         # Replace folder_names with the filtered_names value
