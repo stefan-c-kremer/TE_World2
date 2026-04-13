@@ -58,8 +58,10 @@ The files will be subsequently created after running this command.
 python3 ./RunSimulations.py
 ```
 
-After running this, a validation prompt will verify that you wanted to run this script. Alternatively, you can provide `-s` to skip this message.
-Additionally `-f` will run the script in 'fast mode'.
+#### Command Line Arguments
+- `-s`: skip validation message for script.
+- `-f`: will run the script in 'fast mode'.
+- `-i <iter>` will run the script for the specified iteration number.
 
 ### Analyze Results
 

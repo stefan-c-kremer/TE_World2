@@ -20,6 +20,14 @@ def run(args: list[str]) -> None:
         
         if res.lower() != "y":
             return
+        
+    iter_override = None
+        
+    # Parse out specified iteration overrides
+    if len(args) > 1:
+        for i, arg in enumerate(args):
+            if arg == "-i":
+                iter_override = int(args[i + 1]) # assume that the next value is an integer
     
     # -f for fast mode
     fast_mode = False
@@ -29,34 +37,52 @@ def run(args: list[str]) -> None:
         
     print("Starting simulations...")
     
-    simulate_all_experiments(N_PASS_THROUGHS, fast_mode)
+    simulate_all_experiments(N_PASS_THROUGHS, fast_mode, iter_override)
         
     print("Completed all simulations!")
 
 
-def simulate_all_experiments(n_interations: int, fast_mode: bool = False) -> None:
+def simulate_all_experiments(n_iters: int, fast_mode: bool = False, iter: int|None = None) -> None:
     """
     Runs simulations for all experiments with parallel processing.
+    n_iters: number of iterations to be run, can be overwritten by iter
     fast_mode: enables iterations to be run simulataneously, instead of one after another
+    iter: override parameter to specify an explict iteration to run. In this case, it only runs experiments in that iteration that have no trace-<iter>.csv file.
     """
     
     # Sorting the folders such that "low" folders appear earlier
     folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
     
+    # If `iter` has been specified, filter out all of the folders that already have a corresponding CSV file
+    if iter:
+        filtered_names = []
+        
+        for name in folder_names:
+            trace_path = f"{name}/trace-{iter:03d}.csv"
+            
+            if len(glob(trace_path)) == 0:
+                filtered_names.append(name)
+                
+        # Replace folder_names with the filtered_names value
+        folder_names = filtered_names
+                
+    print(len(folder_names))
+    
     # In fast mode, all iterations are grouped together
-    if fast_mode:
+    # Cannot be performed when a specific iteration is specified to be run
+    if fast_mode and not iter:
         names = []
         
         # Adding all of the folder names together into an array (n times), such that we can run the iterations togeter
-        for _ in range(n_interations):
+        for _ in range(n_iters):
             names += folder_names
             
         run_in_parallel(run_experiment, names)
     else:
-        for i in range(1, 1 + n_interations):
-            print(f"Starting iteration {i}/{n_interations}...")
+        for i in range(1, 1 + n_iters):
+            print(f"Starting iteration {i}/{n_iters}...")
             run_in_parallel(run_experiment, folder_names)
-            print(f"Finished iteration {i}/{n_interations}.")
+            print(f"Finished iteration {i}/{n_iters}.")
             
 def run_in_parallel(func: Callable, names: list[str]):
     """
