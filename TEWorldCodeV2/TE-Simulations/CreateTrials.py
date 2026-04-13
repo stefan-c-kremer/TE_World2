@@ -1,10 +1,13 @@
+import sys
 import yaml
 import os
-import shutil
+from glob import glob
 
 """
-Creates 256 Python configuration files for TE experiments, with high and low parameters.
+Creates Python configuration files for TE experiments, with high and low parameters.
 """
+
+EXPERIMENTS_PATH = "../../TE-Experiments"
 
 # These are configurations that stay the same for all trials
 unchanged_fields = """
@@ -52,9 +55,6 @@ seed = None;   # if seed = None, the random number generator's initial state is
                # set "randomly"
 
 save_frequency = 50;    # Frequency with with which to save state of experiment
-
-saved = None;   # if saved = None then we start a new simulation from scratch
-                # if saves = string, then we open that file and resume a simulation
 """
 
 def generate_num_strings(n):
@@ -83,7 +83,28 @@ def is_high(permutation, i):
 def is_low(permutation, i):
     return permutation[i] == "0"
 
-def generate_configurations():
+def get_saved_field(name: str, iter: int|None = None):
+    """
+    Returns the configured field for `saved`
+    """
+    state_file_name = None
+    
+    # If an iteration override is specified, we want to obtain the latest state file associated with that iteration
+    if iter:
+        state_glob_path = f"{EXPERIMENTS_PATH}/IS-{name}-EXP/state-{iter:03d}-???????.gz"
+        state_files = sorted(glob(state_glob_path), reverse=True)
+        
+        # Take the most recent state file, and use it for future iterations
+        if len(state_files) > 0:
+            state_file_name = state_files[0].split("/")[-1]
+        
+    print(state_file_name)
+    if state_file_name:
+        return f"saved = '{state_file_name}'"
+    
+    return "saved = None"
+
+def generate_configurations(iter: int|None = None):
     """
     Generates all configurations and returns them as strings.
     """
@@ -98,6 +119,7 @@ def generate_configurations():
     for permutation in permutations:
         configuration_name = ""
         configuration_body = unchanged_fields
+        
         configuration_body += "\n# ********************************************"
         configuration_body += "\n# TRIAL FIELDS\n"
 
@@ -114,7 +136,6 @@ def generate_configurations():
                 configuration_name += "L"
             else:
                 configuration_name += "Z"
-                
                 
             # Add comment
             configuration_body += f"# Parameter: {config['name']}\n"
@@ -135,6 +156,9 @@ def generate_configurations():
                 
             configuration_body += "\n"
      
+        # Add `saved` field, after name has been determined
+        configuration_body += get_saved_field(configuration_name, iter)
+     
         # Add comment about dynamic configuration generation, for debugging purposes
         configuration_body += "\n\n# This configuration file was programmatically generated."
         configuration_body += "\n# Used permutation '{}', which corresponds to '{}'. Reference the configuration_mappings in the configuration file to determine what is 'high' and what is 'low'".format(permutation, configuration_name)
@@ -148,35 +172,32 @@ def generate_configurations():
         
     return configurations
 
-def create_configuration_files():
+def create_configuration_files(iter: int|None = None):
     """
     Creates configuration files.
     """
     print("Generating configurations...")
-    configurations = generate_configurations()
+    configurations = generate_configurations(iter)
     print("Finished generating configurations.")
-    experiments_path = "../../TE-Experiments"
+    
     
     # Create TE-Experiments folder, if it does not exist
-    if not os.path.exists(experiments_path):
-        os.mkdir(experiments_path)
+    if not os.path.exists(EXPERIMENTS_PATH):
+        os.mkdir(EXPERIMENTS_PATH)
     
     # Write all of the configurations to files in the TE-Experiments directory
     print("Writing trial configurations to files...")
     for configuration in configurations:
         name = configuration["name"]
-        print(name)
         body = configuration["body"]
-        dir_path = f"{experiments_path}/IS-{name}-EXP"
+        dir_path = f"{EXPERIMENTS_PATH}/IS-{name}-EXP"
         config_path = f"{dir_path}/parameters.py"
         
         print("Writing trial configuration to {}...".format(config_path))
         
-        # If the directory already exists, overwrite it
-        if os.path.exists(dir_path):
-            shutil.rmtree(dir_path)
-            
-        os.mkdir(dir_path)
+        # If the directory does not exist, create it
+        if not os.path.exists(dir_path):
+            os.mkdir(dir_path)
         
         with open(config_path, "w") as fp:
             fp.write(body)
@@ -198,4 +219,9 @@ def get_configuration_mappings():
     return configuration_mappings
         
 if __name__ == "__main__":
-    create_configuration_files()
+    iter_override = None
+    
+    if len(sys.argv) > 1 and "-i" in sys.argv:
+        iter_override = int(sys.argv[2])
+        
+    create_configuration_files(iter=iter_override)

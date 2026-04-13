@@ -10,7 +10,6 @@ import matplotlib.gridspec as gs
 import matplotlib.patches as pa
 from math import sqrt
 from glob import glob
-from RunSimulations import EXPERIMENTS_PATH
 from enum import Enum
 from CreateTraceGraphs import Trial
 
@@ -24,6 +23,7 @@ Extracts results from all of the TE-Experiments folders, reporting the following
 Additionally, it creates an Excel graph for this data.
 """
 
+EXPERIMENTS_PATH = "../../TE-Experiments/**"
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
 MAX_GENS = 1500
 DIM = 16
