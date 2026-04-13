@@ -57,7 +57,7 @@ def simulate_all_experiments(n_iters: int, fast_mode: bool = False, iter: int|No
     analyzer = ResultsAnalyzer()
     total_exp_count = len(folder_names)
     
-    # If `iter` has been specified, filter out all of the folders that already have a corresponding CSV file
+    # If `iter` has been specified, filter out all of the folders that already have a corresponding CSV file where an experiment is finished
     if iter:
         print(f"Specified iteration #{iter}. Will filter out uncompleted experiments.")
         filtered_names = []
