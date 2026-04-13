@@ -44,9 +44,6 @@ seed = None;   # if seed = None, the random number generator's initial state is
 
 save_frequency = 50;    # Frequency with with which to save state of experiment
 
-saved = None;   # if saved = None then we start a new simulation from scratch
-                # if saves = string, then we open that file and resume a simulation
-
 # ********************************************
 # TRIAL FIELDS
 # Parameter: Corrected Mutation Rate
@@ -79,7 +76,7 @@ Kidnapping_frequency = lambda live_aut, live_naut : 1 - 1/(1 + 0.07 * live_naut)
 # Parameter: Initial non-autonomous TEs
 Initial_NAut_TEs = 0
 
-
+saved = None
 
 # This configuration file was programmatically generated.
 # Used permutation '110001012', which corresponds to 'HHLLLHLHZ'. Reference the configuration_mappings in the configuration file to determine what is 'high' and what is 'low'

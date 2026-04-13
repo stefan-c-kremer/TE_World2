@@ -52,6 +52,9 @@ python3 CreateTrials.py
 
 The files will be subsequently created after running this command.
 
+#### Command Line Arguments
+- `-i <iter`: Creates `parameters.py` files in which the `saved` filed stores the most recent file name of a state file in the specified iteration.
+
 ### Run Simulations
 
 ```
