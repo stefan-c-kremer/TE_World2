@@ -26,6 +26,7 @@ Additionally, it creates an Excel graph for this data.
 EXPERIMENTS_PATH = "../../TE-Experiments/**"
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
 MAX_GENS = 1500
+PARTIAL_GENS = 200 # used for partial result reporting
 DIM = 16
 HEADER_DIM = 4
 N_PARAMS = int(sqrt(DIM))
@@ -38,9 +39,13 @@ class TEResult(Enum):
     TE_EXTINCTION = 1 # both autonomous and non-autonomous go extinct
     TE_NAUT_PERSISTENCE = 2 # autonomous TEs go extinct
     TE_AUT_PERSISTENCE = 3 # non-autonomous TEs go extinct
-    HOST_EXTINCTION = 4
+    HOST_EXTINCTION = 4 # hosts go extinct
     TE_PERSISTENCE = 5 # autonomous and non-autonomous persist
-    OTHER = 6 # normally the run was cancelled mid-way
+    # Partial persistence configurations
+    TE_NAUT_PAR_PERSISTENCE = 6
+    TE_AUT_PAR_PERSISTENCE = 7
+    TE_PAR_PERSISTENCE = 8
+    OTHER = 9 # normally the run was cancelled mid-way
     
 # Stores important information needed for data extraction, storage and graph relevant to all TE scenarios
 SCENARIO_MAPPINGS = {
@@ -48,6 +53,11 @@ SCENARIO_MAPPINGS = {
             "column": " LTETOTAL",
             "count_name": "te_extinction_count",
             "colour": "FFFF00"
+        },
+    TEResult.HOST_EXTINCTION.value: {
+            "column": " pop_size",
+            "count_name": "host_extinction_count",
+            "colour": "A02B93"
         },
     TEResult.TE_NAUT_PERSISTENCE.value: {
             "column": "   LTEAUT",
@@ -59,15 +69,25 @@ SCENARIO_MAPPINGS = {
             "count_name": "te_aut_persistence_count",
             "colour": "FF6F00"
         },
-    TEResult.HOST_EXTINCTION.value: {
-            "column": " pop_size",
-            "count_name": "host_extinction_count",
-            "colour": "A02B93"
-        },
     TEResult.TE_PERSISTENCE.value: {
             "column": GEN_COL,
             "count_name": "te_persistence_count",
             "colour": "00B0F0"
+    },
+    TEResult.TE_NAUT_PAR_PERSISTENCE.value: {
+            "column": "   LTEAUT",
+            "count_name": "te_naut_par_persistence_count",
+            "colour": "FF8787",
+        },
+    TEResult.TE_AUT_PAR_PERSISTENCE.value: {
+            "column": "  LTENAUT",
+            "count_name": "te_aut_par_persistence_count",
+            "colour": "FFBC8A"
+        },
+    TEResult.TE_PAR_PERSISTENCE.value: {
+            "column": GEN_COL,
+            "count_name": "te_par_persistence_count",
+            "colour": "6BA3B5"
     }
 }
 
@@ -95,18 +115,28 @@ class ResultsAnalyzer:
             result_type = None
             
             tes_persisted = df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] == MAX_GENS
+            tes_persisted_partial = df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] >= PARTIAL_GENS # used for partial results, if needed
             
             # The order of conditional statements matters (i.e. host extinction should be checked first)
             if df.iloc[-1][SCENARIO_MAPPINGS[TEResult.HOST_EXTINCTION.value]["column"]] == 0:
                 result_type = TEResult.HOST_EXTINCTION
             elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_EXTINCTION.value]["column"]] == 0:
                 result_type = TEResult.TE_EXTINCTION
-            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_PERSISTENCE.value]["column"]] == 0 and tes_persisted:
-                result_type = TEResult.TE_NAUT_PERSISTENCE
-            elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_AUT_PERSISTENCE.value]["column"]] == 0 and tes_persisted:
-                result_type = TEResult.TE_AUT_PERSISTENCE
-            elif tes_persisted: # both types of TEs persisted
-                result_type = TEResult.TE_PERSISTENCE
+            elif tes_persisted:
+                if df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_PERSISTENCE.value]["column"]] == 0:
+                    result_type = TEResult.TE_NAUT_PERSISTENCE
+                elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_AUT_PERSISTENCE.value]["column"]] == 0:
+                    result_type = TEResult.TE_AUT_PERSISTENCE
+                else: # both types of TEs persisted
+                    result_type = TEResult.TE_PERSISTENCE
+            # For partial persistence reporting
+            elif tes_persisted_partial:
+                if df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_PAR_PERSISTENCE.value]["column"]] == 0:
+                    result_type = TEResult.TE_NAUT_PAR_PERSISTENCE
+                elif df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_AUT_PAR_PERSISTENCE.value]["column"]] == 0:
+                    result_type = TEResult.TE_AUT_PAR_PERSISTENCE
+                else: # both types of TEs persisted
+                    result_type = TEResult.TE_PAR_PERSISTENCE
             else:
                 result_type = TEResult.OTHER
                 
@@ -138,6 +168,9 @@ class ResultsAnalyzer:
             "TE_AUT_PERSISTENCE": 0,
             "HOST_EXTINCTION": 0,
             "TE_PERSISTENCE": 0,
+            "TE_NAUT_PAR_PERSISTENCE": 0,
+            "TE_AUT_PAR_PERSISTENCE": 0,
+            "TE_PAR_PERSISTENCE": 0,
             "OTHER": 0
         }
         
@@ -154,6 +187,12 @@ class ResultsAnalyzer:
                 experiment_results["HOST_EXTINCTION"] += 1
             elif trial_result["result"] == TEResult.TE_PERSISTENCE:
                 experiment_results["TE_PERSISTENCE"] += 1
+            elif trial_result["result"] == TEResult.TE_NAUT_PAR_PERSISTENCE:
+                experiment_results["TE_NAUT_PAR_PERSISTENCE"] += 1
+            elif trial_result["result"] == TEResult.TE_AUT_PAR_PERSISTENCE:
+                experiment_results["TE_AUT_PAR_PERSISTENCE"] += 1
+            elif trial_result["result"] == TEResult.TE_PAR_PERSISTENCE:
+                experiment_results["TE_PAR_PERSISTENCE"] += 1
             else:
                 experiment_results["OTHER"] += 1
                 
@@ -169,10 +208,13 @@ class ResultsAnalyzer:
         row_names = []
         parasitism_names = []
         te_extinction_counts = []
+        host_extinction_counts = []
         te_naut_persistence_counts = []
         te_aut_persistence_counts = []
-        host_extinction_counts = []
         te_persistence_counts = []
+        te_naut_par_persistence_counts = []
+        te_aut_par_persistence_counts = []
+        te_par_persistence_counts = []
         other_counts = []
         
         name_pattern = re.compile('[HLZ]{9}')
@@ -194,10 +236,13 @@ class ResultsAnalyzer:
             row_names.append(row_name)
             parasitism_names.append(parasitism_name)
             te_extinction_counts.append(experiment_result["TE_EXTINCTION"])
+            host_extinction_counts.append(experiment_result["HOST_EXTINCTION"])
             te_naut_persistence_counts.append(experiment_result["TE_NAUT_PERSISTENCE"])
             te_aut_persistence_counts.append(experiment_result["TE_AUT_PERSISTENCE"])
-            host_extinction_counts.append(experiment_result["HOST_EXTINCTION"])
             te_persistence_counts.append(experiment_result["TE_PERSISTENCE"])
+            te_naut_par_persistence_counts.append(experiment_result["TE_NAUT_PAR_PERSISTENCE"])
+            te_aut_par_persistence_counts.append(experiment_result["TE_AUT_PAR_PERSISTENCE"])
+            te_par_persistence_counts.append(experiment_result["TE_PAR_PERSISTENCE"])
             other_counts.append(experiment_result["OTHER"])
 
         # Storage in data frame
@@ -207,10 +252,13 @@ class ResultsAnalyzer:
             "row_name": row_names,
             "parasitism_names": parasitism_names,
             "te_extinction_count": te_extinction_counts,
+            "host_extinction_count": host_extinction_counts,
             "te_naut_persistence_count": te_naut_persistence_counts,
             "te_aut_persistence_count": te_aut_persistence_counts,
-            "host_extinction_count": host_extinction_counts,
             "te_persistence_count": te_persistence_counts,
+            "te_naut_par_persistence_count": te_naut_par_persistence_counts,
+            "te_aut_par_persistence_count": te_aut_par_persistence_counts,
+            "te_par_persistence_count": te_par_persistence_counts,
             "other_count": other_counts
         }
         
@@ -408,7 +456,10 @@ class ResultsAnalyzer:
             TEResult.TE_AUT_PERSISTENCE.value: 0,
             TEResult.TE_EXTINCTION.value: 0,
             TEResult.TE_NAUT_PERSISTENCE.value: 0,
-            TEResult.TE_PERSISTENCE.value: 0
+            TEResult.TE_PERSISTENCE.value: 0,
+            TEResult.TE_AUT_PAR_PERSISTENCE.value: 0,
+            TEResult.TE_NAUT_PAR_PERSISTENCE.value: 0,
+            TEResult.TE_PAR_PERSISTENCE.value: 0
         }
         
         total_count = 0
@@ -462,7 +513,17 @@ class ResultsAnalyzer:
         """
         Obtains all TE persistence experiments and returns their corresponding names to be identified in folders.
         """
-        return self.results[(self.results.te_persistence_count > 0) | (self.results.te_naut_persistence_count > 0) | (self.results.te_aut_persistence_count > 0)]["name"].values
+        mask = (
+            (self.results.te_persistence_count > 0) | 
+            (self.results.te_naut_persistence_count > 0) | 
+            (self.results.te_aut_persistence_count > 0) | 
+            (self.results.te_par_persistence_count > 0) | 
+            (self.results.te_naut_par_persistence_count > 0) | 
+            (self.results.te_aut_par_persistence_count > 0)
+        )
+
+        # Use the mask to filter
+        return self.results.loc[mask, "name"].values
     
     def output_te_persistence_detailed_results(self, output_path: str) -> None:
         """
@@ -506,7 +567,10 @@ class ResultsAnalyzer:
                             (self.results.host_extinction_count > 0) | 
                             (self.results.te_persistence_count > 0) | 
                             (self.results.te_naut_persistence_count > 0) |
-                            (self.results.te_aut_persistence_count > 0)
+                            (self.results.te_aut_persistence_count > 0) |
+                            (self.results.te_par_persistence_count > 0) | 
+                            (self.results.te_naut_par_persistence_count > 0) |
+                            (self.results.te_aut_par_persistence_count > 0)
                         )
                     ]
         
