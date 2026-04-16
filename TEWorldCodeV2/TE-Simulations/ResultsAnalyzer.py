@@ -27,7 +27,7 @@ Additionally, it creates an Excel graph for this data.
 EXPERIMENTS_PATH = "../../TE-Experiments/**"
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
 MAX_GENS = 1500
-PARTIAL_GENS = 20 # used for partial result reporting
+PARTIAL_GENS = 300 # used for partial result reporting
 DIM = 16
 HEADER_DIM = 4
 N_PARAMS = int(sqrt(DIM))
