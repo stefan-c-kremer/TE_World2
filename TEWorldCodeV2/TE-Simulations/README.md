@@ -74,6 +74,9 @@ python3 ResultsAnalyzer.py
 
 The files (graphs, images, excel summaries) will be created and written to the `TE-Simulations/output` folder.
 
+#### Command Line Arguments
+- `-p`: enables partial results after a specified generation threshold (located in [`ResultsAnalyzer.py`](ResultsAnalyzer.py))
+
 ### Delete Simulation Results
 
 ```

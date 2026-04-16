@@ -3,6 +3,7 @@ import yaml
 import re
 import shutil
 import os
+import sys
 import pandas as pd
 import matplotlib.axes as ax
 import matplotlib.pyplot as plt
@@ -26,7 +27,7 @@ Additionally, it creates an Excel graph for this data.
 EXPERIMENTS_PATH = "../../TE-Experiments/**"
 EXPERIMENTS_PATH_SHORT = "../../TE-Experiments"
 MAX_GENS = 1500
-PARTIAL_GENS = 200 # used for partial result reporting
+PARTIAL_GENS = 20 # used for partial result reporting
 DIM = 16
 HEADER_DIM = 4
 N_PARAMS = int(sqrt(DIM))
@@ -77,17 +78,17 @@ SCENARIO_MAPPINGS = {
     TEResult.TE_NAUT_PAR_PERSISTENCE.value: {
             "column": "   LTEAUT",
             "count_name": "te_naut_par_persistence_count",
-            "colour": "FF8787",
+            "colour": "FF0000",
         },
     TEResult.TE_AUT_PAR_PERSISTENCE.value: {
             "column": "  LTENAUT",
             "count_name": "te_aut_par_persistence_count",
-            "colour": "FFBC8A"
+            "colour": "FF6F00"
         },
     TEResult.TE_PAR_PERSISTENCE.value: {
             "column": GEN_COL,
             "count_name": "te_par_persistence_count",
-            "colour": "6BA3B5"
+            "colour": "00B0F0"
     }
 }
 
@@ -102,9 +103,10 @@ class ResultsAnalyzer:
     def __init__(self):
         self.results = None
     
-    def analyze_file(self, path: str) -> dict:
+    def analyze_file(self, path: str, partial_results=False) -> dict:
         """
         Analyzes a given trace (result) file, and returns the corresponding result and generation count.
+        Can report partial results after `PARTIAL_GENS` generations. 
         """
         
         # Read CSV into data frame
@@ -115,7 +117,7 @@ class ResultsAnalyzer:
             result_type = None
             
             tes_persisted = df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] == MAX_GENS
-            tes_persisted_partial = df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] >= PARTIAL_GENS # used for partial results, if needed
+            tes_persisted_partial = partial_results and df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_PERSISTENCE.value]["column"]] >= PARTIAL_GENS # used for partial results, if needed
             
             # The order of conditional statements matters (i.e. host extinction should be checked first)
             if df.iloc[-1][SCENARIO_MAPPINGS[TEResult.HOST_EXTINCTION.value]["column"]] == 0:
@@ -129,7 +131,7 @@ class ResultsAnalyzer:
                     result_type = TEResult.TE_AUT_PERSISTENCE
                 else: # both types of TEs persisted
                     result_type = TEResult.TE_PERSISTENCE
-            # For partial persistence reporting
+            # For partial persistence reporting (if enabled)
             elif tes_persisted_partial:
                 if df.iloc[-1][SCENARIO_MAPPINGS[TEResult.TE_NAUT_PAR_PERSISTENCE.value]["column"]] == 0:
                     result_type = TEResult.TE_NAUT_PAR_PERSISTENCE
@@ -154,7 +156,7 @@ class ResultsAnalyzer:
         
         return analysis
     
-    def analyze_experiment(self, path: str) -> dict:
+    def analyze_experiment(self, path: str, partial_results=False) -> dict:
         """
         Analyzes an individual experiment and returns a result.
         """
@@ -175,7 +177,7 @@ class ResultsAnalyzer:
         }
         
         for file in files:
-            trial_result = self.analyze_file(file)
+            trial_result = self.analyze_file(file, partial_results)
             
             if trial_result["result"] == TEResult.TE_EXTINCTION:
                 experiment_results["TE_EXTINCTION"] += 1
@@ -198,7 +200,7 @@ class ResultsAnalyzer:
                 
         return experiment_results
             
-    def analyze_experiments(self) -> None:
+    def analyze_experiments(self, partial_results=False) -> None:
         """
         Analyzes all experiments, and stores a representation of the results.
         """
@@ -222,7 +224,7 @@ class ResultsAnalyzer:
         folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
         
         for folder in folder_names:
-            experiment_result = self.analyze_experiment(folder)
+            experiment_result = self.analyze_experiment(folder, partial_results)
             
             # Obtain names of experiments, corresponding to graph
             experiment_name = name_pattern.findall(folder)[0]
@@ -575,8 +577,11 @@ class ResultsAnalyzer:
                     ]
         
 if __name__ == "__main__":
+    # -p is a flag for partial results
+    partial_results_enabled = len(sys.argv) > 1 and "-p" in sys.argv
+    
     extractor = ResultsAnalyzer()
-    extractor.analyze_experiments()
+    extractor.analyze_experiments(partial_results_enabled)
     
     init_sine_tes = ["Z", "L", "H"]
     
