@@ -203,9 +203,11 @@ class SelectiveInsertTE(Element):
         new_te = self.birth()
         kidnapping_probability = self.chromosome.get_kidnapping_probability()
         
-        # Simulate kidnapping on newly created autonomous TE, to convert it to the non-autonomous
+        # Simlulate kidnapping of autonomous TE
         if random.random() < kidnapping_probability:
-          new_te.autonomous = False
+          # If kidnapped, replace new TE with a copy of the first returned non-autonomous TE
+          non_aut_te = self.chromosome.TEs(True, False, autonomous=False)[0]
+          new_te = non_aut_te.birth()
         
         jump_effects['COLLISIO'] += self.chromosome.insert( new_te );	# record TE collisions
       except ElementDestroyed as e:
