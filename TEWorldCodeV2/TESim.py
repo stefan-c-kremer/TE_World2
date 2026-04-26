@@ -17,12 +17,6 @@ sys.path[0] = ''; # replace directory where this program resides with the experi
                     # directory
 
 import parameters;
-
-
-################################################################################
-
-
-################################################################################
       
 JUNK = "Junk";
  
@@ -43,11 +37,11 @@ def Quartiles( key, numbers ):
   numbers.sort();
   l = (len(numbers)-1)/4.0;
   if l < 0:
-    return { key%0   :0,
-             key%25  :0,
-             key%50  :0,
-             key%75  :0,
-             key%100 :0 };
+    return { key % 0   :0,
+             key % 25  :0,
+             key % 50  :0,
+             key % 75  :0,
+             key % 100 :0 };
   quartiles = { key % (q*25,): numbers[int(q*l)] for q in range(0,5) };
 
   return quartiles;
@@ -671,8 +665,7 @@ class Population:
   def selection_and_drift( self ):
     total_fitness = sum( [ i.fitness for i in self.individual ]);
     if total_fitness > 0.0:
-      new_population = [ i for i in self.individual 
-                        if random.random() < parameters.Host_survival_rate( i.fitness/total_fitness ) ];
+      new_population = [ i for i in self.individual if random.random() < parameters.Host_survival_rate( i.fitness/total_fitness ) ];
     else:
       new_population = [];
 
@@ -843,15 +836,16 @@ class Tracefile:
 class Experiment:
   def __init__( self, statefile=None ):
     self.pop = None
+    random.seed(parameters.seed)
     
     if statefile:
       self.load( statefile );
       output( "LOADING", "Loaded %s" % statefile );
-    
+      
     # If there is no population (i.e. new simulation or the statefile has no data rows), create species and population
     if not self.pop:
       test_species1 = Species( 1, [TestChromosome2] );
-      self.pop = Population( parameters.Carrying_capacity, test_species1 );
+      self.pop = Population( parameters.Carrying_capacity, test_species1 );      
 
     c0 = self.pop[0].chromosome[0];  # find chromosome 0 in individual
     output( "INITIALIZATION", "Experiment.__init__: pop %d TEs %d genes %d" % \

@@ -13,6 +13,8 @@ EXPERIMENTS_PATH = "../../TE-Experiments"
 unchanged_fields = """
 from TEUtil import *;
 
+seed = None;   # if seed = None, the random number generator's initial state is set "randomly"
+
 output = {
 	"SPLAT":		False,
 	"SPLAT FITNESS":	False,
@@ -50,9 +52,6 @@ Host_survival_rate = lambda propfit: min( Carrying_capacity * propfit, 0.95 );
 
 Maximum_generations = 1500;
 Terminate_no_TEs = True;	# end simulation if there are no TEs left
-
-seed = None;   # if seed = None, the random number generator's initial state is
-               # set "randomly"
 
 save_frequency = 50;    # Frequency with with which to save state of experiment
 """
