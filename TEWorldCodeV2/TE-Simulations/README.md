@@ -66,6 +66,25 @@ python3 ./RunSimulations.py
 - `-f`: will run the script in 'fast mode'.
 - `-i <iter>` will run the script for the specified iteration number.
 
+#### Example: Re-running Simulations for a Specific Iteration
+
+This example demonstrates the steps to re-run all unfinished simulations from simulation #1.
+
+
+*Updates all parameters.py files, setting the `saved` field to point to the last state file for simulation #1.*
+
+```
+python3 CreateTrials.py -i 1
+```
+
+> **Note:** The above change will need to eventually be overridne when running the next iteration of experiments (i.e. run `CreateTrials.py` again without an specified iteration).
+
+*Re-start simulations for iteration #1, skipping the validation message.*
+
+```
+python3 RunSimulations -s -i 1
+```
+
 ### Analyze Results
 
 ```
