@@ -89,9 +89,7 @@ Initial_NAut_TEs = 3
 Maximum_generations = 50;
 Terminate_no_TEs = True;	# end simulation if there are no TEs left
 
-# seed = 0;
-seed = None;   # if seed = None, the random number generator's initial state is
-               # set "randomly"
+seed = None;   # if seed = None, the random number generator's initial state is set "randomly"
 
 save_frequency = 50;	# Frequency with with which to save state of experiment
 
