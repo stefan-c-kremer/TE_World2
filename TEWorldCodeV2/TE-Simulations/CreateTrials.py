@@ -96,8 +96,7 @@ def get_saved_field(name: str, iter: int|None = None):
         # Take the most recent state file, and use it for future iterations
         if len(state_files) > 0:
             state_file_name = state_files[0].split("/")[-1]
-        
-    print(state_file_name)
+
     if state_file_name:
         return f"saved = '{state_file_name}'"
     

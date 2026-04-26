@@ -580,7 +580,6 @@ if __name__ == "__main__":
     
     # -p is a flag for partial results
     for i, arg in enumerate(sys.argv):
-        print(arg)
         if arg == "-p":
             partial_results_threshold = int(sys.argv[i + 1])
     
