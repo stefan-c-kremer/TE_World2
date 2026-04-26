@@ -6,4 +6,5 @@
 #SBATCH --cpus-per-task=48
 module load ipython-kernel/3.10
 
+# Re-runs simulation #1
 python3 RunSimulations.py -s -i 1

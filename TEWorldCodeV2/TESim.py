@@ -842,11 +842,14 @@ class Tracefile:
 
 class Experiment:
   def __init__( self, statefile=None ):
+    self.pop = None
+    
     if statefile:
       self.load( statefile );
       output( "LOADING", "Loaded %s" % statefile );
-    else:
-
+    
+    # If there is no population (i.e. new simulation or the statefile has no data rows), create species and population
+    if not self.pop:
       test_species1 = Species( 1, [TestChromosome2] );
       self.pop = Population( parameters.Carrying_capacity, test_species1 );
 
