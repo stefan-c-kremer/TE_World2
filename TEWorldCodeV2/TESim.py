@@ -963,22 +963,18 @@ class Experiment:
 
 if __name__=="__main__":
   if len( sys.argv ) > 2:
-    sys.stderr.write( "You must run it as: python3 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the number of runs.\n");
+    sys.stderr.write( "You must run it as: python3 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the run number.\n");
     sys.exit(-1);
 
-  num_runs = 1
-
   if len(sys.argv) == 2:
-    num_runs = int(sys.argv[1])
+    run = int(sys.argv[1])
+  else:
+    run = 1
     
-  # Iterates by the specified number of runs, or once if unspecified
-  for i in range(num_runs):
-    run = i + 1
-    
-    # This ensures that the existing trace files are not overwritten (unless their file name is manually changed)
-    run_number = len(glob.glob("trace-???-???.csv")) + 1
-    run_explanation = f"The results and state files are stored in files denoted by trace-{run_number:03d}-{0:03d} (i.e. trace-{run_number:03d}-{0:03d}.csv) files."
-    print(f"Run {run} started. {run_explanation}")
-    Experiment( parameters.saved ).sim_generations(run_number, 0)
-    print(f"Run {run} completed. {run_explanation}")
+  # This ensures that the existing trace files are not overwritten (unless their file name is manually changed)
+  iter = len(glob.glob(f"trace-{run:03d}-???.csv")) + 1
+  run_explanation = f"The results and state files are stored in files denoted by trace-{run:03d}-{0:03d} (i.e. trace-{run:03d}-{0:03d}.csv) files."
+  print(f"Run {run} started. {run_explanation}")
+  Experiment( parameters.saved ).sim_generations(run, iter)
+  print(f"Run {run} completed. {run_explanation}")
 

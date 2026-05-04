@@ -30,25 +30,18 @@ def run(args: list[str]) -> None:
         for i, arg in enumerate(args):
             if arg == "-i":
                 iter_override = int(args[i + 1]) # assume that the next value is an integer
-    
-    # -f for fast mode
-    fast_mode = False
-    
-    if len(args) > 1 and "-f" in args:
-        fast_mode = True
         
     print("Starting simulations...")
     
-    simulate_all_experiments(N_PASS_THROUGHS, fast_mode, iter_override)
+    simulate_all_experiments(N_PASS_THROUGHS, iter_override)
         
     print("Completed all simulations!")
 
 
-def simulate_all_experiments(n_iters: int, fast_mode: bool = False, iter: int|None = None) -> None:
+def simulate_all_experiments(n_iters: int, iter: int = 1) -> None:
     """
     Runs simulations for all experiments with parallel processing.
     n_iters: number of iterations to be run, can be overwritten by iter
-    fast_mode: enables iterations to be run simulataneously, instead of one after another
     iter: override parameter to specify an explict iteration to run. In this case, it only runs experiments in that iteration that have no trace-<iter>.csv file.
     """
     
@@ -63,15 +56,20 @@ def simulate_all_experiments(n_iters: int, fast_mode: bool = False, iter: int|No
         filtered_names = []
         
         for name in folder_names:
-            trace_path = f"{name}/trace-{iter:03d}.csv"
+            # Identify all trace files for a given run, and then pick the latest one, if available
+            trace_glob_path = f"{name}/trace-{iter:03d}-???.csv"
+            trace_paths = sorted(glob(trace_glob_path), reverse=True)
+            trace_path = ""
             
-            # Obtain result, and mark to be re-run if error occurs
+            if len(trace_paths) > 0:
+                trace_path = trace_paths[0]
+            
+            # Obtain result, and mark to be re-run if error occurs (i.e. file does not exist)
             try:
                 result = analyzer.analyze_file(trace_path)["result"]
             except Exception:
                 result = TEResult.OTHER
-                
-            
+
             # For experiments that have not yet been started
             if len(glob(trace_path)) == 0:
                 filtered_names.append(name)
@@ -86,37 +84,27 @@ def simulate_all_experiments(n_iters: int, fast_mode: bool = False, iter: int|No
     exp_run_count = total_exp_count - (total_exp_count - len(folder_names))
     
     print(f"{exp_run_count}/{total_exp_count} valid experiments will be run.")
-    
-    # In fast mode, all iterations are grouped together
-    # Cannot be performed when a specific iteration is specified to be run
-    if fast_mode and not iter:
-        names = []
-        
-        # Adding all of the folder names together into an array (n times), such that we can run the iterations togeter
-        for _ in range(n_iters):
-            names += folder_names
+    print(f"Starting iteration #{iter}...")
+    run_in_parallel(run_experiment, folder_names, iter)
+    print(f"Finished iteration #{iter}.")
             
-        run_in_parallel(run_experiment, names)
-    else:
-        for i in range(1, 1 + n_iters):
-            print(f"Starting iteration {i}/{n_iters}...")
-            run_in_parallel(run_experiment, folder_names)
-            print(f"Finished iteration {i}/{n_iters}.")
-            
-def run_in_parallel(func: Callable, names: list[str]):
+def run_in_parallel(func: Callable, names: list[str], iter: int) -> None:
     """
     Helper function to run jobs in parallel.
     """
+    # Create iteration arguments
+    iters = [iter for _ in range(len(names))]
+    
     # Runs up to MAX_PARALLEL experiments in parallel
     with ThreadPoolExecutor(max_workers=MAX_PARALLEL) as executor:
-        executor.map(func, names)
+        executor.map(func, names, iters)
         
-def run_experiment(folder_name: str) -> None:
+def run_experiment(folder_name: str, iter: int) -> None:
     """
     Runs an simulation for an indvidual experiment.
     """
     print(f"Running experiment in {folder_name}...")
-    subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py"], cwd=folder_name)
+    subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py", str(iter)], cwd=folder_name)
     print(f"Running experiment in {folder_name}.")
 
 if __name__ == "__main__":

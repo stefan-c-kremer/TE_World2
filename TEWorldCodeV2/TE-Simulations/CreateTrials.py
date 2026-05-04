@@ -90,7 +90,9 @@ def get_saved_field(name: str, iter: int|None = None):
     
     # If an iteration override is specified, we want to obtain the latest state file associated with that iteration
     if iter:
-        state_glob_path = f"{EXPERIMENTS_PATH}/IS-{name}-EXP/state-{iter:03d}-???????.gz"
+        state_glob_path = f"{EXPERIMENTS_PATH}/IS-{name}-EXP/state-{iter:03d}-???-???????.gz"
+        
+        # Implicitly sorts in descending order, first by iteration, than by the latest state file
         state_files = sorted(glob(state_glob_path), reverse=True)
         
         # Take the most recent state file, and use it for future iterations
