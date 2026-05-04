@@ -8,8 +8,16 @@ This is the code to:
 - Graph the results of the simulations.
 
 ## Requirements
+
 - pip2
 - PyYAML
+
+## Naming Conventions
+
+Given the breadth of terms used to create these simulations, certain terms were standardized to establish a commond understanding:
+
+- **Run:** A full simulation of a given experiment, including all the iterations needed to finish it.
+- **Iteration:** A sequence of generations iterated through, making up a portion (and at most, the entire) experiment run/simulation.
 
 ## To Run
 
@@ -53,7 +61,7 @@ python3 CreateTrials.py
 The files will be subsequently created after running this command.
 
 #### Command Line Arguments
-- `-i <iter`: Creates `parameters.py` files in which the `saved` filed stores the most recent file name of a state file in the specified iteration.
+- `-r <run>`: Creates `parameters.py` files in which the `saved` filed stores the most recent file name of a state file in the specified experimental run.
 
 ### Run Simulations
 
@@ -64,9 +72,9 @@ python3 ./RunSimulations.py
 #### Command Line Arguments
 - `-s`: skip validation message for script.
 - `-f`: will run the script in 'fast mode'.
-- `-i <iter>` will run the script for the specified iteration number.
+- `-r <run>` will run the script for the specified experimental run number.
 
-#### Example: Re-running Simulations for a Specific Iteration
+#### Example: Re-running Simulations for a Specific Run
 
 This example demonstrates the steps to re-run all unfinished simulations from simulation #1.
 
@@ -74,15 +82,15 @@ This example demonstrates the steps to re-run all unfinished simulations from si
 *Updates all parameters.py files, setting the `saved` field to point to the last state file for simulation #1.*
 
 ```
-python3 CreateTrials.py -i 1
+python3 CreateTrials.py -r 1
 ```
 
-> **Note:** The above change will need to eventually be overridne when running the next iteration of experiments (i.e. run `CreateTrials.py` again without an specified iteration).
+> **Note:** The above change will need to eventually be overriden when running the next run of experiments (i.e. run `CreateTrials.py` again without an specified run).
 
-*Re-start simulations for iteration #1, skipping the validation message.*
+*Re-start simulations for run #1, skipping the validation message.*
 
 ```
-python3 RunSimulations -s -i 1
+python3 RunSimulations -s -r 1
 ```
 
 ### Analyze Results

@@ -810,14 +810,14 @@ class Tracefile:
   headerstr = ", ".join( [ "%8s" % item[0] for item in values ] ) + '\n';
   formatstr = ", ".join( [ "%%(%s)%s" % item for item in values ] ) + '\n';
 
-  def __init__( self, run ):
-    file_name = "trace-{:03d}.csv".format(run)
+  def __init__( self, run, iter ):
+    file_name = f"trace-{run:03d}-{iter:03d}.csv"
     
     if os.path.exists(file_name):
-      self.fp = open(file_name, "a", 1 );	# append
+      self.fp = open(file_name, "a", 1 );
     else:
-      self.fp = open(file_name, "w", 1 );	# create
-      self.fp.write( self.headerstr );
+      self.fp = open(file_name, "w", 1 );
+      self.fp.write(self.headerstr);
 
 
   def trace( self, valdict ):
@@ -851,8 +851,8 @@ class Experiment:
     output( "INITIALIZATION", "Experiment.__init__: pop %d TEs %d genes %d" % \
                 ( len(self.pop.individual), len( c0.TEs() ), len( c0.genes() ) ) );
 
-  def save(self, run):
-    fp = gzip.open( "state-%03d-%07d.gz" % (run, self.pop.generation_no), "w" );
+  def save(self, run: int, iter: int) -> None:
+    fp = gzip.open( "state-%03d-%03d-%07d.gz" % (run, iter, self.pop.generation_no), "w" );
     fp.write( bytes("random.setstate(%s);\n" % ( repr(random.getstate()), ), "utf-8") );
     fp.write( bytes("self.pop = %s;\n" % (repr(self.pop),), "utf-8") );
     fp.close();
@@ -862,9 +862,13 @@ class Experiment:
     exec( fp.read() );
     fp.close();
 
-  def sim_generations( self, run ):
-    tf = Tracefile(run);
-    self.save(run);	# save state and random state
+  def sim_generations( self, run: int, iter: int):
+    """
+    Simulates generation, storing the results in a trace file.
+    """
+    
+    tf = Tracefile(run, iter);
+    self.save(run, iter);	# save state and random state
 
     tracedict = self.get_tracedict();	# trace entry for initial conditions
     tf.trace( tracedict );
@@ -888,7 +892,7 @@ class Experiment:
         if hasattr( parameters, "Terminate_no_TEs" ) and parameters.Terminate_no_TEs:
           break;
       if self.pop.generation_no % parameters.save_frequency == 0:
-        self.save(run);
+        self.save(run, iter);
 
     tf.close();
 
@@ -959,22 +963,18 @@ class Experiment:
 
 if __name__=="__main__":
   if len( sys.argv ) > 2:
-    sys.stderr.write( "You must run it as: python3 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the number of runs.\n");
+    sys.stderr.write( "You must run it as: python3 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the run number.\n");
     sys.exit(-1);
 
-  num_runs = 1
-
   if len(sys.argv) == 2:
-    num_runs = int(sys.argv[1])
+    run = int(sys.argv[1])
+  else:
+    run = 1
     
-  # Iterates by the specified number of runs, or once if unspecified
-  for i in range(num_runs):
-    run = i + 1
-    
-    # This ensures that the existing trace files are not overwritten (unless their file name is manually changed)
-    run_number = len(glob.glob("trace-???.csv")) + 1
-    run_explanation = "The results and state files are stored in files denoted by '-{:03d}' (i.e. trace-{:03d}.csv) files.".format(run_number, run_number)
-    print("Run {} started. {}".format(run, run_explanation))
-    Experiment( parameters.saved ).sim_generations(run_number)
-    print("Run {} completed. {}".format(run, run_explanation))
+  # This ensures that the existing trace files are not overwritten (unless their file name is manually changed)
+  iter = len(glob.glob(f"trace-{run:03d}-???.csv")) + 1
+  run_explanation = f"The results and state files are stored in files denoted by trace-{run:03d}-{0:03d} (i.e. trace-{run:03d}-{0:03d}.csv) files."
+  print(f"Run {run} started. {run_explanation}")
+  Experiment( parameters.saved ).sim_generations(run, iter)
+  print(f"Run {run} completed. {run_explanation}")
 

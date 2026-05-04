@@ -82,18 +82,20 @@ def is_high(permutation, i):
 def is_low(permutation, i):
     return permutation[i] == "0"
 
-def get_saved_field(name: str, iter: int|None = None):
+def get_saved_field(name: str, run: int|None = None):
     """
     Returns the configured field for `saved`
     """
     state_file_name = None
     
-    # If an iteration override is specified, we want to obtain the latest state file associated with that iteration
-    if iter:
-        state_glob_path = f"{EXPERIMENTS_PATH}/IS-{name}-EXP/state-{iter:03d}-???????.gz"
+    # If an experimental run override is specified, we want to obtain the latest state file associated with that run
+    if run:
+        state_glob_path = f"{EXPERIMENTS_PATH}/IS-{name}-EXP/state-{run:03d}-???-???????.gz"
+        
+        # Implicitly sorts in descending order, first by run, than by the latest state file
         state_files = sorted(glob(state_glob_path), reverse=True)
         
-        # Take the most recent state file, and use it for future iterations
+        # Take the most recent state file, and use it for future runs
         if len(state_files) > 0:
             state_file_name = state_files[0].split("/")[-1]
 
@@ -102,7 +104,7 @@ def get_saved_field(name: str, iter: int|None = None):
     
     return "saved = None"
 
-def generate_configurations(iter: int|None = None):
+def generate_configurations(run: int|None = None):
     """
     Generates all configurations and returns them as strings.
     """
@@ -155,7 +157,7 @@ def generate_configurations(iter: int|None = None):
             configuration_body += "\n"
      
         # Add `saved` field, after name has been determined
-        configuration_body += get_saved_field(configuration_name, iter)
+        configuration_body += get_saved_field(configuration_name, run)
      
         # Add comment about dynamic configuration generation, for debugging purposes
         configuration_body += "\n\n# This configuration file was programmatically generated."
@@ -170,12 +172,12 @@ def generate_configurations(iter: int|None = None):
         
     return configurations
 
-def create_configuration_files(iter: int|None = None):
+def create_configuration_files(run: int|None = None):
     """
     Creates configuration files.
     """
     print("Generating configurations...")
-    configurations = generate_configurations(iter)
+    configurations = generate_configurations(run)
     print("Finished generating configurations.")
     
     
@@ -217,9 +219,9 @@ def get_configuration_mappings():
     return configuration_mappings
         
 if __name__ == "__main__":
-    iter_override = None
+    run_override = None
     
-    if len(sys.argv) > 1 and "-i" in sys.argv:
-        iter_override = int(sys.argv[2])
+    if len(sys.argv) > 1 and "-r" in sys.argv:
+        run_override = int(sys.argv[2])
         
-    create_configuration_files(iter=iter_override)
+    create_configuration_files(run=run_override)

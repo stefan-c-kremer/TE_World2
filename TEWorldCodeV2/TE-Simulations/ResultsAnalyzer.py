@@ -163,6 +163,17 @@ class ResultsAnalyzer:
         folder_path = f"{path}/*.csv"
         files = sorted(glob(folder_path))
         
+        # find and store latest iterations
+        last_iteration_files = {}
+        run_pattern = re.compile('trace-[0-9]{3}')
+        
+        for file in files:
+            run_prefix = run_pattern.findall(file)[0]
+            
+            if not last_iteration_files.get(run_prefix) or last_iteration_files.get(run_prefix) < file:
+                last_iteration_files[run_prefix] = file
+        
+        # For each trace file prefix (corresponding to an individual run, select the )
         experiment_results = {
             "TE_EXTINCTION": 0,
             "TE_NAUT_PERSISTENCE": 0,
@@ -175,7 +186,8 @@ class ResultsAnalyzer:
             "OTHER": 0
         }
         
-        for file in files:
+        # Using the last file for each experimental run for classification purposes, to avoid duplicated result reporting
+        for file in last_iteration_files.values():
             trial_result = self.analyze_file(file, results_threshold)
             
             if trial_result["result"] == TEResult.TE_EXTINCTION:
@@ -526,7 +538,7 @@ class ResultsAnalyzer:
         # Use the mask to filter
         return self.results.loc[mask, "name"].values
     
-    def output_te_persistence_detailed_results(self, output_path: str) -> None:
+    def output_te_persistence_detailed_results(self) -> None:
         """
         Obtains all trace files corresponding with an experiment that had TE persistence, and copies them to an output path.
         Also runs the individual trace graphing functionality.
@@ -595,4 +607,4 @@ if __name__ == "__main__":
         extractor.export_results_to_excel(f"output/results-{permutation.lower()}.xlsx", permutation)
         extractor.export_results_to_plot(f"output/graph-{permutation.lower()}.png", permutation)
     
-    extractor.output_te_persistence_detailed_results(OUTPUT_PATH)
+    extractor.output_te_persistence_detailed_results()
