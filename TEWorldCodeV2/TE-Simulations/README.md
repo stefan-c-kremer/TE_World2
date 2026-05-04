@@ -8,8 +8,16 @@ This is the code to:
 - Graph the results of the simulations.
 
 ## Requirements
+
 - pip2
 - PyYAML
+
+## Naming Conventions
+
+Given the breadth of terms used to create these simulations, certain terms were standardized to establish a commond understanding:
+
+- **Run:** A full simulation of a given experiment, including all the iterations needed to finish it.
+- **Iteration:** A sequence of generations iterated through, making up a portion (and at most, the entire) experiment run/simulation.
 
 ## To Run
 

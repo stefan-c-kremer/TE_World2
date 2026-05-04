@@ -14,26 +14,32 @@ EXPERIMENTS_PATH = "../../TE-Experiments/**"
 MAX_PARALLEL = 120
 
 def run(args: list[str]) -> None:
+    run = None
+    
+    # Parse out specified iteration overrides
+    if len(args) > 1:
+        for i, arg in enumerate(args):
+            if arg == "-i":
+                run = int(args[i + 1]) # assume that the next value is an integer
+                break
+            
+    # If no run is specified, write results to run #1 by default
+    if not run:
+        run = 1
+    
     # -s indicates skipping validation prompt (for sharknet.sh batch script)
     if len(args) == 1 or "-s" not in args:
+
         # Safety validation script, to prevent accidental runs
-        print("Are you sure you want to run directly from the terminal (y/n)?")
+        print(f"Are you sure you want to run (experiment run #{run}) directly from the terminal (y/n)?")
         res = input("> ")
         
         if res.lower() != "y":
             return
         
-    iter_override = None
-        
-    # Parse out specified iteration overrides
-    if len(args) > 1:
-        for i, arg in enumerate(args):
-            if arg == "-i":
-                iter_override = int(args[i + 1]) # assume that the next value is an integer
-        
     print("Starting simulations...")
     
-    simulate_all_experiments(N_PASS_THROUGHS, iter_override)
+    simulate_all_experiments(N_PASS_THROUGHS, run)
         
     print("Completed all simulations!")
 
