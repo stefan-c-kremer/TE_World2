@@ -7,4 +7,4 @@
 module load ipython-kernel/3.10
 
 # Re-runs simulation #1
-python3 RunSimulations.py -s -i 1
+python3 RunSimulations.py -s -r 1

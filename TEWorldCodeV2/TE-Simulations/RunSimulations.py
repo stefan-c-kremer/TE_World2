@@ -16,10 +16,10 @@ MAX_PARALLEL = 120
 def run(args: list[str]) -> None:
     run = None
     
-    # Parse out specified iteration overrides
+    # Parse out specified simulation run overrides
     if len(args) > 1:
         for i, arg in enumerate(args):
-            if arg == "-i":
+            if arg == "-r":
                 run = int(args[i + 1]) # assume that the next value is an integer
                 break
             
@@ -39,16 +39,15 @@ def run(args: list[str]) -> None:
         
     print("Starting simulations...")
     
-    simulate_all_experiments(N_PASS_THROUGHS, run)
+    simulate_all_experiments(run)
         
     print("Completed all simulations!")
 
 
-def simulate_all_experiments(n_iters: int, iter: int = 1) -> None:
+def simulate_all_experiments(run: int = 1) -> None:
     """
     Runs simulations for all experiments with parallel processing.
-    n_iters: number of iterations to be run, can be overwritten by iter
-    iter: override parameter to specify an explict iteration to run. In this case, it only runs experiments in that iteration that have no trace-<iter>.csv file.
+    run: override parameter to specify an explict experimental run. In this case, it only runs experiments in that experimental run that have no trace-<run>-<iteration>.csv file, or experiments that have not finished.
     """
     
     # Sorting the folders such that "low" folders appear earlier
@@ -56,14 +55,14 @@ def simulate_all_experiments(n_iters: int, iter: int = 1) -> None:
     analyzer = ResultsAnalyzer()
     total_exp_count = len(folder_names)
     
-    # If `iter` has been specified, filter out all of the folders that already have a corresponding CSV file where an experiment is finished
-    if iter:
-        print(f"Specified iteration #{iter}. Will filter out uncompleted experiments.")
+    # If `run` has been specified, filter out all of the folders that already have a corresponding CSV file where an experiment is finished
+    if run:
+        print(f"Specified experimental run #{run}. Will filter out uncompleted experiments.")
         filtered_names = []
         
         for name in folder_names:
             # Identify all trace files for a given run, and then pick the latest one, if available
-            trace_glob_path = f"{name}/trace-{iter:03d}-???.csv"
+            trace_glob_path = f"{name}/trace-{run:03d}-???.csv"
             trace_paths = sorted(glob(trace_glob_path), reverse=True)
             trace_path = ""
             
@@ -90,27 +89,27 @@ def simulate_all_experiments(n_iters: int, iter: int = 1) -> None:
     exp_run_count = total_exp_count - (total_exp_count - len(folder_names))
     
     print(f"{exp_run_count}/{total_exp_count} valid experiments will be run.")
-    print(f"Starting iteration #{iter}...")
-    run_in_parallel(run_experiment, folder_names, iter)
-    print(f"Finished iteration #{iter}.")
+    print(f"Starting experimental run #{run}...")
+    run_in_parallel(run_experiment, folder_names, run)
+    print(f"Finished experimental run #{run}.")
             
-def run_in_parallel(func: Callable, names: list[str], iter: int) -> None:
+def run_in_parallel(func: Callable, names: list[str], run: int) -> None:
     """
     Helper function to run jobs in parallel.
     """
-    # Create iteration arguments
-    iters = [iter for _ in range(len(names))]
+    # Create experimental run arguments
+    runs = [run for _ in range(len(names))]
     
     # Runs up to MAX_PARALLEL experiments in parallel
     with ThreadPoolExecutor(max_workers=MAX_PARALLEL) as executor:
-        executor.map(func, names, iters)
+        executor.map(func, names, runs)
         
-def run_experiment(folder_name: str, iter: int) -> None:
+def run_experiment(folder_name: str, run: int) -> None:
     """
     Runs an simulation for an indvidual experiment.
     """
     print(f"Running experiment in {folder_name}...")
-    subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py", str(iter)], cwd=folder_name)
+    subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py", str(run)], cwd=folder_name)
     print(f"Running experiment in {folder_name}.")
 
 if __name__ == "__main__":
