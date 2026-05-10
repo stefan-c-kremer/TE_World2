@@ -1,5 +1,4 @@
 import sys
-import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Callable
