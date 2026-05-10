@@ -90,7 +90,7 @@ python3 CreateTrials.py -r 1
 *Re-start simulations for run #1, skipping the validation message.*
 
 ```
-python3 RunSimulations -s -r 1
+python3 RunSimulations.py -s -r 1
 ```
 
 ### Analyze Results
