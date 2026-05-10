@@ -1,10 +1,16 @@
 import sys
-import os
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Callable
 from glob import glob
 from ResultsAnalyzer import ResultsAnalyzer, TEResult
+
+# Importing functions from parent directory (using different method to avoid relative path issues)
+from pathlib import Path
+parent_dir = str(Path(__file__).resolve().parents[1])
+sys.path.append(parent_dir)
+print(parent_dir)
+from TESim import output
 
 # Iterates through each TE configuration folder, running all of the experiments and stores them in trace files.
 # It leverages parallel processing to take advantage of the associated performance enhancements.
@@ -31,17 +37,17 @@ def run(args: list[str]) -> None:
     if len(args) == 1 or "-s" not in args:
 
         # Safety validation script, to prevent accidental runs
-        print(f"Are you sure you want to run (experiment run #{run}) directly from the terminal (y/n)?")
+        output("BULK SIM", f"Are you sure you want to run (experiment run #{run}) directly from the terminal (y/n)?")
         res = input("> ")
         
         if res.lower() != "y":
             return
         
-    print("Starting simulations...")
+    output("BULK SIM", "Starting simulations...")
     
     simulate_all_experiments(run)
         
-    print("Completed all simulations!")
+    output("BULK SIM", "Completed all simulations!")
 
 
 def simulate_all_experiments(run: int = 1) -> None:
@@ -57,7 +63,7 @@ def simulate_all_experiments(run: int = 1) -> None:
     
     # If `run` has been specified, filter out all of the folders that already have a corresponding CSV file where an experiment is finished
     if run:
-        print(f"Specified experimental run #{run}. Will filter out uncompleted experiments.")
+        output("BULK SIM", f"Specified experimental run #{run}. Will filter out uncompleted experiments.")
         filtered_names = []
         
         for name in folder_names:
@@ -88,10 +94,10 @@ def simulate_all_experiments(run: int = 1) -> None:
         
     exp_run_count = total_exp_count - (total_exp_count - len(folder_names))
     
-    print(f"{exp_run_count}/{total_exp_count} valid experiments will be run.")
-    print(f"Starting experimental run #{run}...")
+    output("BULK SIM", f"{exp_run_count}/{total_exp_count} valid experiments will be run.")
+    output("BULK SIM", f"Starting experimental run #{run}...")
     run_in_parallel(run_experiment, folder_names, run)
-    print(f"Finished experimental run #{run}.")
+    output("BULK SIM", f"Finished experimental run #{run}.")
             
 def run_in_parallel(func: Callable, names: list[str], run: int) -> None:
     """
@@ -108,9 +114,9 @@ def run_experiment(folder_name: str, run: int) -> None:
     """
     Runs an simulation for an indvidual experiment.
     """
-    print(f"Running experiment in {folder_name}...")
+    output("BULK SIM", f"Running experiment in {folder_name}...")
     subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py", str(run)], cwd=folder_name)
-    print(f"Running experiment in {folder_name}.")
+    output("BULK SIM", f"Running experiment in {folder_name}.")
 
 if __name__ == "__main__":
     run(sys.argv)
