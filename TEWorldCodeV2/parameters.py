@@ -20,6 +20,7 @@ output = {
         "TRIAL NO":		True,
         "GENE INIT":		False,
 	"TE INIT":		False,
+	"BULK SIM":     False
 	};
 
 TE_Insertion_Distribution = Triangle( pmax=0, pzero=2.0/3.0 );

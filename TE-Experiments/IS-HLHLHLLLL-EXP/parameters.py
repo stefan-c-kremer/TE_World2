@@ -13,6 +13,7 @@ output = {
         "TRIAL NO":		True,
         "GENE INIT":		False,
 	"TE INIT":		False,
+	"BULK SIM":     True
 	};
 
 Gene_length = 1000;
