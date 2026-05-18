@@ -835,8 +835,9 @@ class Tracefile:
 ############################################################################### 
 
 class Experiment:
-  def __init__( self, statefile=None ):
+  def __init__( self, statefile=None, name="unnamed"):
     self.pop = None
+    self.name = name
     random.seed(parameters.seed)
     
     if statefile:
@@ -875,8 +876,7 @@ class Experiment:
     tf.trace( tracedict );
 
     while self.pop.generation_no < parameters.Maximum_generations:
-
-      output( "GENERATION", "Generation: %d" % self.pop.generation_no );
+      output("GENERATION", f"Generation: {self.pop.generation_no} (experiment: {self.name})")
       te_effects = self.pop.generation();	# run a generation and collect effects
 
       tracedict = self.get_tracedict();	# trace entry, post generation
@@ -963,19 +963,21 @@ class Experiment:
 ################################################################################
 
 if __name__=="__main__":
-  if len( sys.argv ) > 2:
+  if len( sys.argv ) > 3:
     sys.stderr.write( "You must run it as: python3 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the run number.\n");
     sys.exit(-1);
 
-  if len(sys.argv) == 2:
+  if len(sys.argv) == 3:
     run = int(sys.argv[1])
+    name = sys.argv[2]
   else:
     run = 1
+    name = "unnamed"
     
   # This ensures that the existing trace files are not overwritten (unless their file name is manually changed)
   iter = len(glob.glob(f"trace-{run:03d}-???.csv")) + 1
   run_explanation = f"The results and state files are stored in files denoted by trace-{run:03d}-{0:03d} (i.e. trace-{run:03d}-{0:03d}.csv) files."
   print(f"Run {run} started. {run_explanation}")
-  Experiment( parameters.saved ).sim_generations(run, iter)
+  Experiment( parameters.saved, name ).sim_generations(run, iter)
   print(f"Run {run} completed. {run_explanation}")
 
