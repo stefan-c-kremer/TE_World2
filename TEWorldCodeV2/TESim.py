@@ -50,10 +50,11 @@ def Quartiles( key, numbers ):
 
 def output( keyword, message ):
   """
-  Print outputs.
+  Outputs messages in a formatted statement.
   """
+  # Output all messages with a keyword specified in the parameters file (set to 'True') or keywords that don't exist at all
   if not keyword in parameters.output or parameters.output[keyword]:
-    print("[%s]: %s" % (keyword, message));
+    print("[%s]: %s" % (keyword, message), flush=True);
   
 ################################################################################
   
