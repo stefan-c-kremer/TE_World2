@@ -116,7 +116,7 @@ def run_experiment(folder_name: str, run: int) -> None:
     """
     output("BULK SIM", f"Running experiment in {folder_name}...")
     subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py", str(run), folder_name], cwd=folder_name)
-    output("BULK SIM", f"Running experiment in {folder_name}.")
+    output("BULK SIM", f"Finished experiment in {folder_name}.")
 
 if __name__ == "__main__":
     run(sys.argv)
