@@ -17,7 +17,7 @@ from TESim import output
 
 N_PASS_THROUGHS = 1
 EXPERIMENTS_PATH = "../../TE-Experiments/**"
-MAX_PARALLEL = 120
+MAX_PARALLEL = 32
 
 def run(args: list[str]) -> None:
     run = None
