@@ -56,6 +56,27 @@ def simulate_all_experiments(run: int = 1) -> None:
     run: override parameter to specify an explict experimental run. In this case, it only runs experiments in that experimental run that have no trace-<run>-<iteration>.csv file, or experiments that have not finished.
     """
     
+    def get_generation(name):
+        """
+        Return the current generation of the simulation, from the Excel spreadsheet.
+        """
+        trace_glob_path = f"{name}/trace-{run:03d}-???.csv"
+        trace_paths = sorted(glob(trace_glob_path), reverse=True)
+        trace_path = ""
+        
+        if len(trace_paths) > 0:
+            trace_path = trace_paths[0]
+            
+        analyzer = ResultsAnalyzer()
+        generations = None
+        
+        try:
+            generations = analyzer.analyze_file(trace_path)["generations"]
+        except Exception:
+            generations = 0
+        
+        return generations
+    
     # Sorting the folders such that "low" folders appear earlier
     folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
     analyzer = ResultsAnalyzer()
@@ -93,6 +114,9 @@ def simulate_all_experiments(run: int = 1) -> None:
         folder_names = filtered_names
         
     exp_run_count = total_exp_count - (total_exp_count - len(folder_names))
+    
+    # Sort based on generation
+    folder_names.sort(key=get_generation)
     
     output("BULK SIM", f"{exp_run_count}/{total_exp_count} valid experiments will be run.")
     output("BULK SIM", f"Starting experimental run #{run}...")
