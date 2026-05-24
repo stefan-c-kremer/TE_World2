@@ -6,5 +6,5 @@
 #SBATCH --cpus-per-task=48
 module load ipython-kernel/3.10
 
-# Re-runs simulation #1
-python3 RunSimulations.py -s -r 1
+# Re-runs simulation #1 only for experiments that have less than 300 generations
+python3 RunSimulations.py -s -r 1 -g 300
