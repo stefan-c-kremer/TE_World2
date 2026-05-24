@@ -17,17 +17,19 @@ from TESim import output
 
 N_PASS_THROUGHS = 1
 EXPERIMENTS_PATH = "../../TE-Experiments/**"
-MAX_PARALLEL = 120
+MAX_PARALLEL = 32
 
 def run(args: list[str]) -> None:
     run = None
+    max_generations = None
     
     # Parse out specified simulation run overrides
     if len(args) > 1:
         for i, arg in enumerate(args):
             if arg == "-r":
                 run = int(args[i + 1]) # assume that the next value is an integer
-                break
+            elif arg == "-g":
+                max_generations = int(args[i + 1]) # assume that the next value is an integer
             
     # If no run is specified, write results to run #1 by default
     if not run:
@@ -45,16 +47,38 @@ def run(args: list[str]) -> None:
         
     output("BULK SIM", "Starting simulations...")
     
-    simulate_all_experiments(run)
+    print("RESULTS THRESHOLD", max_generations)
+    simulate_all_experiments(run, max_generations)
         
     output("BULK SIM", "Completed all simulations!")
 
 
-def simulate_all_experiments(run: int = 1) -> None:
+def simulate_all_experiments(run: int = 1, max_generations: int|None = None) -> None:
     """
     Runs simulations for all experiments with parallel processing.
     run: override parameter to specify an explict experimental run. In this case, it only runs experiments in that experimental run that have no trace-<run>-<iteration>.csv file, or experiments that have not finished.
     """
+    
+    def get_generation(name):
+        """
+        Return the current generation of the simulation, from the Excel spreadsheet.
+        """
+        trace_glob_path = f"{name}/trace-{run:03d}-???.csv"
+        trace_paths = sorted(glob(trace_glob_path), reverse=True)
+        trace_path = ""
+        
+        if len(trace_paths) > 0:
+            trace_path = trace_paths[0]
+            
+        analyzer = ResultsAnalyzer()
+        generations = None
+        
+        try:
+            generations = analyzer.analyze_file(trace_path)["generations"]
+        except Exception:
+            generations = 0
+        
+        return generations
     
     # Sorting the folders such that "low" folders appear earlier
     folder_names = sorted(glob(EXPERIMENTS_PATH), reverse=True)
@@ -77,7 +101,7 @@ def simulate_all_experiments(run: int = 1) -> None:
             
             # Obtain result, and mark to be re-run if error occurs (i.e. file does not exist)
             try:
-                result = analyzer.analyze_file(trace_path)["result"]
+                result = analyzer.analyze_file(trace_path, results_threshold=max_generations)["result"]
             except Exception:
                 result = TEResult.OTHER
 
@@ -93,6 +117,9 @@ def simulate_all_experiments(run: int = 1) -> None:
         folder_names = filtered_names
         
     exp_run_count = total_exp_count - (total_exp_count - len(folder_names))
+    
+    # Sort based on generation
+    folder_names.sort(key=get_generation)
     
     output("BULK SIM", f"{exp_run_count}/{total_exp_count} valid experiments will be run.")
     output("BULK SIM", f"Starting experimental run #{run}...")
@@ -116,7 +143,7 @@ def run_experiment(folder_name: str, run: int) -> None:
     """
     output("BULK SIM", f"Running experiment in {folder_name}...")
     subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py", str(run), folder_name], cwd=folder_name)
-    output("BULK SIM", f"Running experiment in {folder_name}.")
+    output("BULK SIM", f"Finished experiment in {folder_name}.")
 
 if __name__ == "__main__":
     run(sys.argv)
