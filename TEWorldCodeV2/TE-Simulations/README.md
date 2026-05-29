@@ -73,6 +73,7 @@ python3 ./RunSimulations.py
 - `-s`: skip validation message for script.
 - `-f`: will run the script in 'fast mode'.
 - `-r <run>` will run the script for the specified experimental run number.
+- `-g`: maximum generation threshold to restart simulations for (i.e. if `-g 300` is specified, no simulations will be restarted for any experiments above 300 generations).
 
 #### Example: Re-running Simulations for a Specific Run
 

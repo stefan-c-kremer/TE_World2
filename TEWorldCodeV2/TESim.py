@@ -680,28 +680,14 @@ class Population:
     """
     Simulate one generation of the population.
     """
-
-    livetes =[ (len(individual.chromosome[0].TEs(live=True,dead=False))) 
-                                        for individual in self.individual];
     self.replication();   # first replicate individuals (double population)
-
-    livetes =[ (len(individual.chromosome[0].TEs(live=True,dead=False))) 
-                                        for individual in self.individual];
     te_effects = \
          self.jump_and_mutate();       # apply jumping and mutation
-
-    livetes =[ (len(individual.chromosome[0].TEs(live=True,dead=False))) 
-                                        for individual in self.individual];
-
     self.selection_and_drift();   # apply selection and drift 
                                   # (population goes back down)
-
-    livetes =[ (len(individual.chromosome[0].TEs(live=True,dead=False))) 
-                                        for individual in self.individual];
     self.generation_no += 1;
     return te_effects;
 
-     
   def __str__( self ):
     result = "Population size: %d\n" % (len(self.individual));
     

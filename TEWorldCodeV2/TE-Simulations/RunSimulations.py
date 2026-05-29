@@ -142,8 +142,9 @@ def run_experiment(folder_name: str, run: int) -> None:
     Runs an simulation for an indvidual experiment.
     """
     output("BULK SIM", f"Running experiment in {folder_name}...")
-    subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py", str(run), folder_name], cwd=folder_name)
-    output("BULK SIM", f"Finished experiment in {folder_name}.")
+    completed_process = subprocess.run(['python3', "../../TEWorldCodeV2/TESim.py", str(run), folder_name], cwd=folder_name)
+    return_code = completed_process.returncode
+    output("BULK SIM", f"Finished experiment in {folder_name} with return code: {return_code}.")
 
 if __name__ == "__main__":
     run(sys.argv)
