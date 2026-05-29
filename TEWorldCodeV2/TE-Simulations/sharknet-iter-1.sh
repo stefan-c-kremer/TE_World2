@@ -2,7 +2,7 @@
 
 #SBATCH --time=4-00:00 # D-HH:MM
 #SBATCH --account=def-skremer
-#SBATCH --mem=16G
+#SBATCH --mem=64G
 #SBATCH --cpus-per-task=48
 module load ipython-kernel/3.10
 
