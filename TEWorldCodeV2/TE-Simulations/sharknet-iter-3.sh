@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --time=8-00:00 # D-HH:MM
+#SBATCH --time=7-00:00 # D-HH:MM
 #SBATCH --account=def-skremer
 #SBATCH --mem=64G
 #SBATCH --cpus-per-task=48
