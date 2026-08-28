@@ -245,9 +245,7 @@ class SelectiveInsertTE(Element):
     return baby;
   
   def copy( self ):
-    te_copy = SelectiveInsertTE( self.start );    
-    te_copy.dead = self.dead;
-    te_copy.autonomous = self.autonomous
+    te_copy = SelectiveInsertTE( self.start, self.dead, self.autonomous );
     te_copy.chromosome = self.chromosome;
     return te_copy;
 
