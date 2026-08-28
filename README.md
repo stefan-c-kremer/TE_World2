@@ -22,6 +22,33 @@ Nibi. Each task runs one experiment with one CPU, rather than starting several
 Python processes inside a single large allocation. This lets SLURM distribute
 experiments across nodes and isolates failures and memory growth.
 
+Two simulation backends are available. `TESim.py` is the reference
+implementation. `TESimCompact.py` preserves its model and random-number call
+order while storing coordinates in NumPy arrays and using a compact binary
+checkpoint. Production array jobs use the compact backend by default. NumPy
+must be installed in the selected Python module or virtual environment.
+
+For a local compact run, use the same arguments as the reference simulator:
+
+```
+python3 /path/to/TEWorldCodeV2/TESimCompact.py 4 experiment-name --seed 12345
+```
+
+Seeded equivalence tests compare every scientific trace field between the two
+backends; only the wall-clock trace column is allowed to differ. On a local
+three-generation sample using an actual 5,000-gene, 300-host experiment file,
+the compact backend ran in 0.84 seconds versus 8.63 seconds for the reference
+backend. These timings are validation measurements, not Nibi performance
+estimates.
+
+For a dedicated environment, create it once on the Nibi login node:
+
+```
+module load python/3.10.13
+python3 -m venv .venv-nibi
+.venv-nibi/bin/python -m pip install -r requirements-compact.txt
+```
+
 From `TEWorldCodeV2/TE-Simulations`, submit a new replicate number with:
 
 ```
@@ -38,6 +65,18 @@ MAX_CONCURRENT=32 MEMORY_PER_TASK=16G WALL_TIME=3-00:00 \
 PYTHON_MODULE=python/3.10.13 SLURM_ACCOUNT=def-skremer \
 ./submit-nibi-array.sh 4
 ```
+
+If NumPy is installed in a virtual environment, set `PYTHON_EXECUTABLE` to its
+Python executable when submitting; SLURM exports that setting to each task:
+
+```
+PYTHON_EXECUTABLE="$PWD/../../.venv-nibi/bin/python" \
+./submit-nibi-array.sh 4
+```
+
+Set `SIMULATION_BACKEND=reference` to run the original backend through the
+same array machinery. This is useful for small validation runs, but is not
+recommended for the full production grid.
 
 Use a new run number for corrected production simulations. If an array task is
 resubmitted, it skips experiments whose provenance says they completed and

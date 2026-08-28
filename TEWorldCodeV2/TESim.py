@@ -6,6 +6,7 @@ import random;
 import bisect;
 import glob
 import argparse
+import pickle
 
 ################################################################################
 # Launch code
@@ -19,6 +20,12 @@ sys.path[0] = ''; # replace directory where this program resides with the experi
                     # directory
 
 import parameters;
+
+SIMULATION_BACKEND = "reference"
+ENTRYPOINT_FILE = __file__
+BACKEND_FILE = __file__
+BACKEND_RUNTIME = {}
+CHECKPOINT_FORMAT = "legacy_repr_gzip"
       
 JUNK = "Junk";
  
@@ -944,16 +951,43 @@ class Experiment:
                 ( len(self.pop.individual), len( c0.TEs() ), len( c0.genes() ) ) );
 
   def save(self, run: int, iter: int) -> None:
-    fp = gzip.open( "state-%03d-%03d-%07d.gz" % (run, iter, self.pop.generation_no), "w" );
-    fp.write( bytes("self.initial_seed = %s;\n" % ( repr(self.initial_seed), ), "utf-8") );
-    fp.write( bytes("random.setstate(%s);\n" % ( repr(random.getstate()), ), "utf-8") );
-    fp.write( bytes("self.pop = %s;\n" % (repr(self.pop),), "utf-8") );
+    state_path = "state-%03d-%03d-%07d.gz" % (run, iter, self.pop.generation_no)
+    if CHECKPOINT_FORMAT == "pickle_gzip_v1":
+      # Level 1 avoids spending simulation-scale CPU time recompressing packed
+      # numeric arrays; checkpoints remain substantially smaller than RAM.
+      with gzip.open(state_path, "wb", compresslevel=1) as fp:
+        pickle.dump(
+          {
+            "format": CHECKPOINT_FORMAT,
+            "initial_seed": self.initial_seed,
+            "random_state": random.getstate(),
+            "population": self.pop,
+          },
+          fp,
+          protocol=pickle.HIGHEST_PROTOCOL,
+        )
+      return
+
+    fp = gzip.open(state_path, "w");
+    fp.write(bytes("self.initial_seed = %s;\n" % (repr(self.initial_seed),), "utf-8"));
+    fp.write(bytes("random.setstate(%s);\n" % (repr(random.getstate()),), "utf-8"));
+    fp.write(bytes("self.pop = %s;\n" % (repr(self.pop),), "utf-8"));
     fp.close();
 
   def load( self, statefile ):
-    fp = gzip.open( statefile, "r" );
-    exec( fp.read() );
-    fp.close();
+    with gzip.open(statefile, "rb") as fp:
+      state_data = fp.read()
+    if state_data.startswith(b"\x80"):
+      if SIMULATION_BACKEND == "reference":
+        raise RuntimeError(
+          "Compact binary checkpoints must be resumed with TESimCompact.py"
+        )
+      checkpoint = pickle.loads(state_data)
+      self.initial_seed = checkpoint["initial_seed"]
+      random.setstate(checkpoint["random_state"])
+      self.pop = checkpoint["population"]
+    else:
+      exec(state_data)
 
   def sim_generations( self, run: int, iter: int):
     """
@@ -969,7 +1003,12 @@ class Experiment:
       initial_seed=self.initial_seed,
       seed_source=self.seed_source,
       parameter_file=parameters.__file__,
-      simulator_file=__file__,
+      simulator_file=ENTRYPOINT_FILE,
+      backend_name=SIMULATION_BACKEND,
+      backend_file=BACKEND_FILE,
+      engine_file=__file__,
+      backend_runtime=BACKEND_RUNTIME,
+      checkpoint_format=CHECKPOINT_FORMAT,
       utility_file=TEUtil.__file__,
       resumed_from=self.statefile,
     )
@@ -1032,12 +1071,40 @@ class Experiment:
 
     for individual in self.pop.individual:
       chromosome = individual.chromosome[0]
+      compact_summary = getattr(chromosome, "trace_summary", None)
+      if compact_summary is not None:
+        summary = compact_summary()
+        live_autonomous = summary["live_autonomous"]
+        live_non_autonomous = summary["live_non_autonomous"]
+        dead_autonomous = summary["dead_autonomous"]
+        dead_non_autonomous = summary["dead_non_autonomous"]
+        telocs.extend(summary["te_starts"])
+        gelocs.extend(summary["gene_starts"])
+        live_tes.append(live_autonomous + live_non_autonomous)
+        live_autonomous_tes.append(live_autonomous)
+        live_non_autonomous_tes.append(live_non_autonomous)
+        dead_tes.append(dead_autonomous + dead_non_autonomous)
+        dead_autonomous_tes.append(dead_autonomous)
+        dead_non_autonomous_tes.append(dead_non_autonomous)
+        fitnesses.append(individual.fitness)
+        genomesizes.append(chromosome.length)
+        continue
+
       live_autonomous = 0
       live_non_autonomous = 0
       dead_autonomous = 0
       dead_non_autonomous = 0
 
-      for element in chromosome.elements:
+      element_iterator = getattr(chromosome, "iter_elements_with_starts", None)
+      if element_iterator is None:
+        elements_with_starts = (
+          (element, element.start) for element in chromosome.elements
+        )
+      else:
+        elements_with_starts = element_iterator()
+
+      for element, element_start in elements_with_starts:
+        element_start = int(element_start)
         if isinstance(element, SelectiveInsertTE):
           if element.dead:
             if element.autonomous:
@@ -1045,13 +1112,13 @@ class Experiment:
             else:
               dead_non_autonomous += 1
           else:
-            telocs.append(element.start)
+            telocs.append(element_start)
             if element.autonomous:
               live_autonomous += 1
             else:
               live_non_autonomous += 1
         elif isinstance(element, ProkGene1):
-          gelocs.append(element.start)
+          gelocs.append(element_start)
 
       live_tes.append(live_autonomous + live_non_autonomous)
       live_autonomous_tes.append(live_autonomous)
@@ -1123,8 +1190,8 @@ def parse_arguments(args=None):
   return parser.parse_args(args)
 
 
-if __name__=="__main__":
-  cli_args = parse_arguments()
+def main(args=None):
+  cli_args = parse_arguments(args)
   run = cli_args.run
   name = cli_args.name
     
@@ -1135,3 +1202,7 @@ if __name__=="__main__":
   statefile = cli_args.state if cli_args.state is not None else parameters.saved
   Experiment( statefile, name, cli_args.seed ).sim_generations(run, iter)
   print(f"Run {run} completed. {run_explanation}")
+
+
+if __name__=="__main__":
+  main()

@@ -79,6 +79,34 @@ class NibiRunnerTests(unittest.TestCase):
             self.assertEqual(return_code, 0)
             self.assertIn("Skipping completed experiment", output.getvalue())
 
+    def test_compact_backend_is_default_and_reference_is_selectable(self):
+        with tempfile.TemporaryDirectory() as directory_name:
+            root = Path(directory_name)
+            experiment = root / "IS-A-EXP"
+            experiment.mkdir()
+            (experiment / "parameters.py").write_text("", encoding="utf-8")
+
+            for extra_arguments, expected_launcher in [
+                ([], "TESimCompact.py"),
+                (["--backend", "reference"], "TESim.py"),
+            ]:
+                output = StringIO()
+                with redirect_stdout(output):
+                    return_code = nibi_runner.main(
+                        [
+                            "--run",
+                            "4",
+                            "--index",
+                            "0",
+                            "--experiment-root",
+                            str(root),
+                            "--dry-run",
+                            *extra_arguments,
+                        ]
+                    )
+                self.assertEqual(return_code, 0)
+                self.assertIn(expected_launcher, output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

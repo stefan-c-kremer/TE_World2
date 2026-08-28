@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SLURM_ENVIRONMENT_KEYS = (
     "SLURM_JOB_ID",
@@ -99,12 +99,19 @@ def build_provenance(
     seed_source: str,
     parameter_file: str,
     simulator_file: str,
+    backend_name: str,
+    backend_file: str,
+    engine_file: str,
+    backend_runtime: dict[str, Any],
+    checkpoint_format: str,
     utility_file: str,
     resumed_from: str | None,
 ) -> dict[str, Any]:
     """Build a self-contained description of the inputs to a simulation."""
     parameter_path = Path(parameter_file)
     simulator_path = Path(simulator_file)
+    backend_path = Path(backend_file)
+    engine_path = Path(engine_file)
     utility_path = Path(utility_file)
     code_directory = simulator_path.parent
 
@@ -137,10 +144,15 @@ def build_provenance(
         "initial_seed": initial_seed,
         "seed_source": seed_source,
         "random_generator": "python.random.MersenneTwister",
+        "simulation_backend": backend_name,
+        "checkpoint_format": checkpoint_format,
+        "backend_runtime": backend_runtime,
         "resumed_from": resumed_record,
         "code": {
             "git_commit": _git_commit(code_directory),
             "simulator": _source_record(simulator_path),
+            "backend": _source_record(backend_path),
+            "engine": _source_record(engine_path),
             "utilities": _source_record(utility_path),
         },
         # Parameter files contain callables that cannot be faithfully converted

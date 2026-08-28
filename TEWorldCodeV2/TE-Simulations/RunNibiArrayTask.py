@@ -49,6 +49,11 @@ def parse_arguments(args=None):
     parser.add_argument("--index", type=int)
     parser.add_argument("--experiment-root", type=Path, default=default_root)
     parser.add_argument("--resume-latest", action="store_true")
+    parser.add_argument(
+        "--backend",
+        choices=("compact", "reference"),
+        default="compact",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--count", action="store_true")
     return parser.parse_args(args)
@@ -82,7 +87,8 @@ def main(args=None) -> int:
         print(f"Skipping completed experiment {experiment.name}: {completed.name}")
         return 0
 
-    simulator = Path(__file__).resolve().parent.parent / "TESim.py"
+    simulator_name = "TESimCompact.py" if options.backend == "compact" else "TESim.py"
+    simulator = Path(__file__).resolve().parent.parent / simulator_name
     command = [
         sys.executable,
         str(simulator),
