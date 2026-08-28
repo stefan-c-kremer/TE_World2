@@ -17,6 +17,38 @@ To run on Compute Canada, you will need to load the following Python3 module.
 module load python/3.10.13
 ```
 
+Production simulations are intended to run as independent SLURM array tasks on
+Nibi. Each task runs one experiment with one CPU, rather than starting several
+Python processes inside a single large allocation. This lets SLURM distribute
+experiments across nodes and isolates failures and memory growth.
+
+From `TEWorldCodeV2/TE-Simulations`, submit a new replicate number with:
+
+```
+./submit-nibi-array.sh 4
+```
+
+The submission script discovers the number of experiment directories and
+creates the matching array automatically. It defaults to 64 concurrent tasks,
+8 GB per task, a two-day time limit, account `def-skremer`, and the
+`python/3.10.13` module. These can be adjusted without editing the scripts:
+
+```
+MAX_CONCURRENT=32 MEMORY_PER_TASK=16G WALL_TIME=3-00:00 \
+PYTHON_MODULE=python/3.10.13 SLURM_ACCOUNT=def-skremer \
+./submit-nibi-array.sh 4
+```
+
+Use a new run number for corrected production simulations. If an array task is
+resubmitted, it skips experiments whose provenance says they completed and
+resumes incomplete experiments from their latest checkpoint. SLURM job and
+array identifiers, cluster, node, CPU, memory, account, partition, and submit
+context are recorded in each provenance file.
+
+See the Alliance documentation for [Nibi](https://docs.alliancecan.ca/wiki/Nibi),
+[running jobs](https://docs.alliancecan.ca/wiki/Running_jobs), and
+[Python environments](https://docs.alliancecan.ca/wiki/Python).
+
 ## Running Individual Experiments
 
 1. You can run a pre-created experiment by changing into the `TE-Experiments` or `Paper-Experiments` sub-folders.

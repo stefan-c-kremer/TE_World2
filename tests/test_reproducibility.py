@@ -3,11 +3,13 @@ import gzip
 import hashlib
 import json
 import shutil
+import os
 import subprocess
 import sys
 import tempfile
 import textwrap
 import unittest
+from unittest import mock
 from pathlib import Path
 
 
@@ -77,6 +79,35 @@ def scientific_trace(path: Path):
 
 
 class ReproducibilityTests(unittest.TestCase):
+    def test_slurm_environment_is_recorded_when_present(self):
+        sys.path.insert(0, str(CODE_DIRECTORY))
+        try:
+            import provenance
+        finally:
+            sys.path.pop(0)
+
+        with mock.patch.dict(
+            os.environ,
+            {
+                "SLURM_JOB_ID": "12345",
+                "SLURM_ARRAY_JOB_ID": "12300",
+                "SLURM_ARRAY_TASK_ID": "17",
+                "SLURM_CLUSTER_NAME": "nibi",
+                "SLURM_CPUS_PER_TASK": "1",
+            },
+            clear=False,
+        ):
+            self.assertEqual(
+                provenance.slurm_context(),
+                {
+                    "SLURM_JOB_ID": "12345",
+                    "SLURM_ARRAY_JOB_ID": "12300",
+                    "SLURM_ARRAY_TASK_ID": "17",
+                    "SLURM_CLUSTER_NAME": "nibi",
+                    "SLURM_CPUS_PER_TASK": "1",
+                },
+            )
+
     def test_generated_seed_can_replay_identical_scientific_trace(self):
         with tempfile.TemporaryDirectory() as first_name, tempfile.TemporaryDirectory() as replay_name:
             first = Path(first_name)
@@ -215,6 +246,12 @@ class ReproducibilityTests(unittest.TestCase):
                         )
                         assert chromosome._live_autonomous_tes == autonomous
                         assert chromosome._live_non_autonomous_tes == non_autonomous
+                        assert all(
+                            first.start <= second.start
+                            for first, second in zip(
+                                chromosome.elements, chromosome.elements[1:]
+                            )
+                        )
                     if generation < 4:
                         experiment.pop.generation()
                 """
@@ -226,6 +263,85 @@ class ReproducibilityTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
             )
+
+    def test_gene_collision_append_mode_preserves_sorted_non_overlapping_genes(self):
+        self._assert_gene_collision_mode(
+            append_gene=True,
+            samples=[0.1, 0.1],
+            expected_starts="500 540",
+        )
+
+    def test_gene_collision_retry_mode_does_not_modify_rejected_attempt(self):
+        self._assert_gene_collision_mode(
+            append_gene=False,
+            samples=[0.1, 0.1, 0.2],
+            expected_starts="500 1008",
+        )
+
+    def test_interval_lookup_preserves_earliest_overlapping_element(self):
+        with tempfile.TemporaryDirectory() as directory_name:
+            directory = Path(directory_name)
+            write_parameters(directory)
+            program = textwrap.dedent(
+                f"""
+                import sys
+                sys.path.insert(0, {str(CODE_DIRECTORY)!r})
+                import TESim
+
+                first = TESim.Element(length=40, start=100)
+                second = TESim.Element(length=30, start=110)
+                chromosome = TESim.Chromosome(elements=[first, second])
+                assert chromosome[115] is first
+                assert chromosome[139] is first
+                assert chromosome[140] is TESim.JUNK
+                assert chromosome[99] is TESim.JUNK
+                """
+            )
+            subprocess.run(
+                [sys.executable, "-c", program],
+                cwd=directory,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+    def _assert_gene_collision_mode(self, append_gene, samples, expected_starts):
+        with tempfile.TemporaryDirectory() as directory_name:
+            directory = Path(directory_name)
+            write_parameters(directory)
+            program = textwrap.dedent(
+                f"""
+                import sys
+                sys.path.insert(0, {str(CODE_DIRECTORY)!r})
+                import TESim
+
+                class FixedDistribution:
+                    def __init__(self, values):
+                        self.values = iter(values)
+                    def sample(self):
+                        return next(self.values)
+
+                TESim.parameters.Append_gene = {append_gene!r}
+                TESim.parameters.Gene_Insertion_Distribution = FixedDistribution({samples!r})
+                chromosome = TESim.TestChromosome2(length=5000)
+                chromosome.initial_aut_tes = 0
+                chromosome.initial_naut_tes = 0
+                chromosome.add_elements(genes=2)
+                genes = chromosome.genes()
+                assert all(a.start <= b.start for a, b in zip(genes, genes[1:]))
+                assert all(a.end <= b.start for a, b in zip(genes, genes[1:]))
+                print(" ".join(str(gene.start) for gene in genes))
+                print(chromosome.length)
+                """
+            )
+            result = subprocess.run(
+                [sys.executable, "-c", program],
+                cwd=directory,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.stdout.splitlines(), [expected_starts, "5080"])
 
 
 if __name__ == "__main__":

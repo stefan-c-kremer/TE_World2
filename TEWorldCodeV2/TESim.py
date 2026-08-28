@@ -166,7 +166,7 @@ class SelectiveInsertTE(Element):
                      'NEUTRA_J': 0, # neutral
                      'BENEFI_J': 0 };	# beneficial
 
-    if self not in self.chromosome.elements:	
+    if id(self) not in self.chromosome._element_ids:
 					# this happens if another element jumped into this element
       return jump_effects;
 
@@ -283,6 +283,11 @@ class Chromosome:
     self._recount_live_tes()
 
   def _recount_live_tes(self):
+    self._element_ids = {id(element) for element in self.elements}
+    self._max_element_length = max(
+      (element.length for element in self.elements),
+      default=0,
+    )
     self._live_autonomous_tes = 0
     self._live_non_autonomous_tes = 0
     self._non_autonomous_parent = None
@@ -296,6 +301,8 @@ class Chromosome:
             self._non_autonomous_parent = element
 
   def _track_inserted_element(self, element):
+    self._element_ids.add(id(element))
+    self._max_element_length = max(self._max_element_length, element.length)
     if isinstance(element, SelectiveInsertTE) and not element.dead:
       if element.autonomous:
         self._live_autonomous_tes += 1
@@ -305,6 +312,7 @@ class Chromosome:
           self._non_autonomous_parent = element
 
   def _track_removed_element(self, element):
+    self._element_ids.discard(id(element))
     if isinstance(element, SelectiveInsertTE) and not element.dead:
       if element.autonomous:
         self._live_autonomous_tes -= 1
@@ -381,11 +389,11 @@ class Chromosome:
     
     # Adjust start and end of all elements that come after
     # the newly inserted on.
-    for old_element in self.elements:
-      if old_element.start >= element.start:
-        new_start = old_element.start + element.length;
-        old_element.start = new_start;
-        old_element.end += element.length;
+    insertion_index = bisect.bisect_left(self.elements, element)
+    for old_element in self.elements[insertion_index:]:
+      new_start = old_element.start + element.length;
+      old_element.start = new_start;
+      old_element.end += element.length;
     
     # Insert the new element in sorted order into the list
     # of elements.
@@ -419,9 +427,22 @@ class Chromosome:
     at the index.
     """
   
-    # Gene collisions can deliberately leave overlapping intervals. Preserve
-    # the model's rule that the earliest-starting overlapping element wins.
-    for element in self.elements:
+    # Gene collisions can deliberately leave overlapping intervals. Elements
+    # are sorted by start, so limit the scan to elements long enough to reach
+    # this coordinate while preserving the earliest-starting winner.
+    earliest_start = index - self._max_element_length + 1
+    low = 0
+    high = len(self.elements)
+    while low < high:
+      middle = (low + high) // 2
+      if self.elements[middle].start < earliest_start:
+        low = middle + 1
+      else:
+        high = middle
+
+    for element in self.elements[low:]:
+      if element.start > index:
+        break
       if element.start <= index < element.end: # start of element in region
         return element;
 
@@ -532,19 +553,24 @@ class TestChromosome2(Chromosome):
   def add_elements( self, genes=gene_no, n_aut_tes=initial_aut_tes ):
     gene_count = len(self.genes())
     while gene_count < genes:
-      try:
-        start = self.genestart();      
-        gene = ProkGene1(start = start);
-        self.insert( gene );
-        gene_count += 1
-      except ElementDestroyed as e: # most recent gene overwrote another
-        # insert() has already inserted the new gene before raising.
-        gene_count += 1
-        if hasattr( parameters, "Append_gene" ) and parameters.Append_gene:
-          gene.start = e.whats_there.end;	# move gene to end of previous
-          gene.end = gene.start + gene.length;
-        else:
-          continue;  # while loop (try again)
+      gene = ProkGene1(start=self.genestart())
+      collided_element = self[gene.start]
+
+      if isinstance(collided_element, ProkGene1):
+        if not (hasattr(parameters, "Append_gene") and parameters.Append_gene):
+          # Reject the attempted placement without modifying the chromosome.
+          continue
+
+        # Append after the collided gene. If genes are directly adjacent,
+        # continue to the end of the adjacent block before inserting.
+        gene.start = collided_element.end
+        gene.end = gene.start + gene.length
+        while isinstance(self[gene.start], ProkGene1):
+          gene.start = self[gene.start].end
+          gene.end = gene.start + gene.length
+
+      self.insert(gene)
+      gene_count += 1
     
     # Insert initial autonomous, and non-autonomous TEs, if provided
     self.add_initial_tes(self.initial_aut_tes, True)
@@ -893,6 +919,7 @@ class Experiment:
   def __init__( self, statefile=None, name="unnamed", seed=None):
     self.pop = None
     self.name = name
+    self.statefile = statefile
     if seed is not None:
       self.seed_source = "command_line"
     elif parameters.seed is not None:
@@ -902,10 +929,10 @@ class Experiment:
     self.initial_seed = provenance.resolve_seed(seed if seed is not None else parameters.seed)
     random.seed(self.initial_seed)
     
-    if statefile:
-      self.load( statefile );
+    if self.statefile:
+      self.load( self.statefile );
       self.seed_source = "checkpoint"
-      output( "LOADING", "Loaded %s" % statefile );
+      output( "LOADING", "Loaded %s" % self.statefile );
       
     # If there is no population (i.e. new simulation or the statefile has no data rows), create species and population
     if not self.pop:
@@ -944,7 +971,7 @@ class Experiment:
       parameter_file=parameters.__file__,
       simulator_file=__file__,
       utility_file=TEUtil.__file__,
-      resumed_from=parameters.saved,
+      resumed_from=self.statefile,
     )
     provenance.write_provenance(provenance_path, provenance_record)
     self.save(run, iter);	# save state and random state
@@ -1088,6 +1115,11 @@ def parse_arguments(args=None):
     default=None,
     help="Override parameters.seed with a concrete seed for reproducible replay",
   )
+  parser.add_argument(
+    "--state",
+    default=None,
+    help="Resume from an explicit state checkpoint instead of parameters.saved",
+  )
   return parser.parse_args(args)
 
 
@@ -1100,5 +1132,6 @@ if __name__=="__main__":
   iter = len(glob.glob(f"trace-{run:03d}-???.csv")) + 1
   run_explanation = f"The results and state files are stored in files denoted by trace-{run:03d}-{0:03d} (i.e. trace-{run:03d}-{0:03d}.csv) files."
   print(f"Run {run} started. {run_explanation}")
-  Experiment( parameters.saved, name, cli_args.seed ).sim_generations(run, iter)
+  statefile = cli_args.state if cli_args.state is not None else parameters.saved
+  Experiment( statefile, name, cli_args.seed ).sim_generations(run, iter)
   print(f"Run {run} completed. {run_explanation}")

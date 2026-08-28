@@ -8,6 +8,8 @@ import json
 import os
 import platform
 import secrets
+import shlex
+import socket
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +17,22 @@ from typing import Any
 
 
 SCHEMA_VERSION = 1
+
+SLURM_ENVIRONMENT_KEYS = (
+    "SLURM_JOB_ID",
+    "SLURM_ARRAY_JOB_ID",
+    "SLURM_ARRAY_TASK_ID",
+    "SLURM_JOB_NAME",
+    "SLURM_CLUSTER_NAME",
+    "SLURM_JOB_ACCOUNT",
+    "SLURM_JOB_PARTITION",
+    "SLURM_JOB_NODELIST",
+    "SLURMD_NODENAME",
+    "SLURM_CPUS_PER_TASK",
+    "SLURM_MEM_PER_NODE",
+    "SLURM_SUBMIT_DIR",
+    "SLURM_SUBMIT_HOST",
+)
 
 
 def resolve_seed(requested_seed: Any = None) -> int:
@@ -62,6 +80,16 @@ def _git_commit(code_directory: Path) -> str | None:
         return None
 
 
+def slurm_context() -> dict[str, str] | None:
+    """Return the scheduler context when running inside a SLURM allocation."""
+    context = {
+        key: os.environ[key]
+        for key in SLURM_ENVIRONMENT_KEYS
+        if key in os.environ
+    }
+    return context or None
+
+
 def build_provenance(
     *,
     experiment_name: str,
@@ -88,6 +116,17 @@ def build_provenance(
             "sha256": None,
         }
 
+    replay_arguments = [
+        sys.executable,
+        str(simulator_path.resolve()),
+        str(run),
+        experiment_name,
+    ]
+    if resumed_from:
+        replay_arguments.extend(["--state", str(Path(resumed_from).resolve())])
+    else:
+        replay_arguments.extend(["--seed", str(initial_seed)])
+
     return {
         "schema_version": SCHEMA_VERSION,
         "status": "running",
@@ -111,19 +150,19 @@ def build_provenance(
             "python_version": platform.python_version(),
             "python_implementation": platform.python_implementation(),
             "platform": platform.platform(),
+            "hostname": socket.gethostname(),
+            "cpu_count": os.cpu_count(),
             "executable": sys.executable,
             "argv": list(sys.argv),
             "working_directory": os.getcwd(),
+            "slurm": slurm_context(),
         },
         "outputs": {
             "trace": f"trace-{run:03d}-{iteration:03d}.csv",
             "provenance": f"provenance-{run:03d}-{iteration:03d}.json",
         },
         "determinism": {
-            "replay_command": (
-                f"{sys.executable} {simulator_path.resolve()} "
-                f"{run} {experiment_name} --seed {initial_seed}"
-            ),
+            "replay_command": shlex.join(replay_arguments),
             "note": (
                 "Scientific results are reproducible with the recorded seed, "
                 "parameter source, and code hashes. Wall-clock timing fields "
