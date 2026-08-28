@@ -5,6 +5,7 @@ import gzip;
 import random;
 import bisect;
 import glob
+import argparse
 
 ################################################################################
 # Launch code
@@ -12,6 +13,7 @@ import glob
 
 
 import TEUtil;
+import provenance;
 
 sys.path[0] = ''; # replace directory where this program resides with the experiment's
                     # directory
@@ -89,6 +91,7 @@ class Element:
       raise "Error:  TE start location is not an integer";
     self.start = start;
     self.end = self.start + self.length;
+    self.chromosome = None
 
       
   def __repr__( self ):
@@ -169,6 +172,7 @@ class SelectiveInsertTE(Element):
 
     if random.random() < parameters.TE_death_rate:    # mutation or host defenses
       self.dead = True;
+      self.chromosome.note_te_death(self)
       jump_effects['TEDEATH'] += 1;
       
     # Should return if the TE is now dead or non-autonomous
@@ -196,12 +200,11 @@ class SelectiveInsertTE(Element):
       jump_effects['TOTAL_JU'] += 1;
       try:
         new_te = self.birth()
-        kidnapping_probability = self.chromosome.get_kidnapping_probability()
+        kidnapping_probability, non_aut_te = self.chromosome.get_kidnapping_state()
         
         # Simlulate kidnapping of autonomous TE
         if random.random() < kidnapping_probability:
           # If kidnapped, replace new TE with a copy of the first returned non-autonomous TE
-          non_aut_te = self.chromosome.TEs(True, False, autonomous=False)[0]
           new_te = non_aut_te.birth()
         
         jump_effects['COLLISIO'] += self.chromosome.insert( new_te );	# record TE collisions
@@ -275,6 +278,49 @@ class Chromosome:
       self.elements = elements; 
       for element in self.elements:
         element.chromosome = self;
+
+    self.host = None
+    self._recount_live_tes()
+
+  def _recount_live_tes(self):
+    self._live_autonomous_tes = 0
+    self._live_non_autonomous_tes = 0
+    self._non_autonomous_parent = None
+    for element in self.elements:
+      if isinstance(element, SelectiveInsertTE) and not element.dead:
+        if element.autonomous:
+          self._live_autonomous_tes += 1
+        else:
+          self._live_non_autonomous_tes += 1
+          if self._non_autonomous_parent is None:
+            self._non_autonomous_parent = element
+
+  def _track_inserted_element(self, element):
+    if isinstance(element, SelectiveInsertTE) and not element.dead:
+      if element.autonomous:
+        self._live_autonomous_tes += 1
+      else:
+        self._live_non_autonomous_tes += 1
+        if self._non_autonomous_parent is None:
+          self._non_autonomous_parent = element
+
+  def _track_removed_element(self, element):
+    if isinstance(element, SelectiveInsertTE) and not element.dead:
+      if element.autonomous:
+        self._live_autonomous_tes -= 1
+      else:
+        self._live_non_autonomous_tes -= 1
+        if self._non_autonomous_parent is element:
+          self._non_autonomous_parent = None
+
+  def note_te_death(self, element):
+    """Update live-TE bookkeeping after a TE becomes dead."""
+    if element.autonomous:
+      self._live_autonomous_tes -= 1
+    else:
+      self._live_non_autonomous_tes -= 1
+      if self._non_autonomous_parent is element:
+        self._non_autonomous_parent = None
    
   def place( self, element ):
     """
@@ -292,6 +338,7 @@ class Chromosome:
     # Insert the new element in sorted order into the list
     # of elements.
     bisect.insort_left( self.elements, element );
+    self._track_inserted_element(element)
 
  
   def insert( self, element ):
@@ -335,7 +382,6 @@ class Chromosome:
     # Adjust start and end of all elements that come after
     # the newly inserted on.
     for old_element in self.elements:
-      # could make this more efficient via binary search
       if old_element.start >= element.start:
         new_start = old_element.start + element.length;
         old_element.start = new_start;
@@ -344,6 +390,7 @@ class Chromosome:
     # Insert the new element in sorted order into the list
     # of elements.
     bisect.insort_left( self.elements, element );
+    self._track_inserted_element(element)
     
     # update the chromosome length
     self.length += element.length;
@@ -357,7 +404,9 @@ class Chromosome:
         old_element.end -= element.length;
 
     try:
-      self.elements.remove(element);	# removed the element
+      removed_index = self.elements.index(element)
+      removed_element = self.elements.pop(removed_index)
+      self._track_removed_element(removed_element)
     except ValueError as e:
       print(">>>325>>>", element);
       raise;
@@ -370,7 +419,8 @@ class Chromosome:
     at the index.
     """
   
-    # could make this more efficient via binary search
+    # Gene collisions can deliberately leave overlapping intervals. Preserve
+    # the model's rule that the earliest-starting overlapping element wins.
     for element in self.elements:
       if element.start <= index < element.end: # start of element in region
         return element;
@@ -382,17 +432,35 @@ class Chromosome:
     Deletes the item from the list of elements but leaves the base pairs there
     effectively turning the DNA into Junk.
     """
-    self.elements.remove( item );
+    removed_index = self.elements.index(item)
+    removed_element = self.elements.pop(removed_index)
+    self._track_removed_element(removed_element)
     
   def get_kidnapping_probability(self):
     """
     Computes the probability that a SINE will kidnap a LINE's retransposition protein, so that it can reproduce.
     """
     # Obtain the number of parasitic TEs, to obtain a ratio to be used for kidnapping probability
-    n_autonomous = len(self.TEs(live=True, dead=False, autonomous=True))
-    n_non_autonomous = len(self.TEs(live=True, dead=False, autonomous=False))
+    probability, _ = self.get_kidnapping_state()
+    return probability
+
+  def get_kidnapping_state(self):
+    """Return kidnapping probability and the first eligible non-autonomous TE."""
+    if self._non_autonomous_parent is None and self._live_non_autonomous_tes > 0:
+      self._non_autonomous_parent = next(
+        element for element in self.elements
+        if isinstance(element, SelectiveInsertTE)
+        and not element.dead
+        and not element.autonomous
+      )
     
-    return parameters.Kidnapping_frequency(n_autonomous, n_non_autonomous)
+    return (
+      parameters.Kidnapping_frequency(
+        self._live_autonomous_tes,
+        self._live_non_autonomous_tes,
+      ),
+      self._non_autonomous_parent,
+    )
     
   def __repr__( self ):
     """
@@ -436,13 +504,9 @@ class Chromosome:
     """
     # create deep copy of this chromosome
     
-    result = self.__class__( length=self.length );  # create new chromosome instance
-
-    
-    for e in self.elements:
-      ne = e.copy();  # create new element with identical properties
-      ne.chromosome = result;
-      result.elements.append( ne );
+    copied_elements = [element.copy() for element in self.elements]
+    result = self.__class__(length=self.length, elements=copied_elements)
+    result.host = host
     return result;
    
 ################################################################################
@@ -462,13 +526,20 @@ class TestChromosome2(Chromosome):
   initial_naut_tes = parameters.Initial_NAut_TEs
   length = parameters.Junk_BP
   
+  def __init__(self, length=None, elements=None):
+    Chromosome.__init__(self, length=length or self.length, elements=elements)
+
   def add_elements( self, genes=gene_no, n_aut_tes=initial_aut_tes ):
-    while len( self.genes() ) < genes:
+    gene_count = len(self.genes())
+    while gene_count < genes:
       try:
         start = self.genestart();      
         gene = ProkGene1(start = start);
         self.insert( gene );
+        gene_count += 1
       except ElementDestroyed as e: # most recent gene overwrote another
+        # insert() has already inserted the new gene before raising.
+        gene_count += 1
         if hasattr( parameters, "Append_gene" ) and parameters.Append_gene:
           gene.start = e.whats_there.end;	# move gene to end of previous
           gene.end = gene.start + gene.length;
@@ -819,13 +890,21 @@ class Tracefile:
 ############################################################################### 
 
 class Experiment:
-  def __init__( self, statefile=None, name="unnamed"):
+  def __init__( self, statefile=None, name="unnamed", seed=None):
     self.pop = None
     self.name = name
-    random.seed(parameters.seed)
+    if seed is not None:
+      self.seed_source = "command_line"
+    elif parameters.seed is not None:
+      self.seed_source = "parameters"
+    else:
+      self.seed_source = "generated"
+    self.initial_seed = provenance.resolve_seed(seed if seed is not None else parameters.seed)
+    random.seed(self.initial_seed)
     
     if statefile:
       self.load( statefile );
+      self.seed_source = "checkpoint"
       output( "LOADING", "Loaded %s" % statefile );
       
     # If there is no population (i.e. new simulation or the statefile has no data rows), create species and population
@@ -839,6 +918,7 @@ class Experiment:
 
   def save(self, run: int, iter: int) -> None:
     fp = gzip.open( "state-%03d-%03d-%07d.gz" % (run, iter, self.pop.generation_no), "w" );
+    fp.write( bytes("self.initial_seed = %s;\n" % ( repr(self.initial_seed), ), "utf-8") );
     fp.write( bytes("random.setstate(%s);\n" % ( repr(random.getstate()), ), "utf-8") );
     fp.write( bytes("self.pop = %s;\n" % (repr(self.pop),), "utf-8") );
     fp.close();
@@ -854,44 +934,106 @@ class Experiment:
     """
     
     tf = Tracefile(run, iter);
+    provenance_path = "provenance-%03d-%03d.json" % (run, iter)
+    provenance_record = provenance.build_provenance(
+      experiment_name=self.name,
+      run=run,
+      iteration=iter,
+      initial_seed=self.initial_seed,
+      seed_source=self.seed_source,
+      parameter_file=parameters.__file__,
+      simulator_file=__file__,
+      utility_file=TEUtil.__file__,
+      resumed_from=parameters.saved,
+    )
+    provenance.write_provenance(provenance_path, provenance_record)
     self.save(run, iter);	# save state and random state
 
     tracedict = self.get_tracedict();	# trace entry for initial conditions
     tf.trace( tracedict );
 
-    while self.pop.generation_no < parameters.Maximum_generations:
-      output("GENERATION", f"Generation: {self.pop.generation_no} (experiment: {self.name})")
-      te_effects = self.pop.generation();	# run a generation and collect effects
+    completion_status = "maximum_generations"
+    try:
+      while self.pop.generation_no < parameters.Maximum_generations:
+        output("GENERATION", f"Generation: {self.pop.generation_no} (experiment: {self.name})")
+        te_effects = self.pop.generation();	# run a generation and collect effects
 
-      tracedict = self.get_tracedict();	# trace entry, post generation
-      tracedict.update( te_effects );	# add effects
-      tf.trace( tracedict );
+        tracedict = self.get_tracedict();	# trace entry, post generation
+        tracedict.update( te_effects );	# add effects
+        tf.trace( tracedict );
 
 
-      if not len( self.pop.individual ) > 0:
-        output( "HOST EXTINCTION", "Host extinction after %s generations...sorry :(" % self.pop.generation_no );
-        break;
-
-      if not tracedict['LTETOTAL'] > 0:
-        output( "TE EXTINCTION", "TE extinction after %s generations...sorry :(" % self.pop.generation_no );
-        if hasattr( parameters, "Terminate_no_TEs" ) and parameters.Terminate_no_TEs:
+        if not len( self.pop.individual ) > 0:
+          completion_status = "host_extinction"
+          output( "HOST EXTINCTION", "Host extinction after %s generations...sorry :(" % self.pop.generation_no );
           break;
-      if self.pop.generation_no % parameters.save_frequency == 0:
-        self.save(run, iter);
 
-    tf.close();
+        if not tracedict['LTETOTAL'] > 0:
+          output( "TE EXTINCTION", "TE extinction after %s generations...sorry :(" % self.pop.generation_no );
+          if hasattr( parameters, "Terminate_no_TEs" ) and parameters.Terminate_no_TEs:
+            completion_status = "te_extinction"
+            break;
+        if self.pop.generation_no % parameters.save_frequency == 0:
+          self.save(run, iter);
+    except BaseException:
+      completion_status = "failed"
+      raise
+    finally:
+      tf.close();
+      provenance.finalize_provenance(
+        provenance_record,
+        status=completion_status,
+        final_generation=self.pop.generation_no,
+        final_population_size=len(self.pop.individual),
+      )
+      provenance.write_provenance(provenance_path, provenance_record)
+
 
   def get_tracedict( self ):
-    # We collect TE data, as well as autonomous/non-autonomous specific data
-    live_tes =[ (len(individual.chromosome[0].TEs(live=True, dead=False))) for individual in self.pop.individual];
-    live_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=True, dead=False, autonomous=True))) for individual in self.pop.individual];
-    live_non_autonomous_tes = [ (len(individual.chromosome[0].TEs(live=True, dead=False, autonomous=False))) for individual in self.pop.individual];
+    # Preserve the complete trace while collecting all chromosome statistics
+    # in one pass per host.
+    live_tes = []
+    live_autonomous_tes = []
+    live_non_autonomous_tes = []
+    dead_tes = []
+    dead_autonomous_tes = []
+    dead_non_autonomous_tes = []
+    fitnesses = []
+    genomesizes = []
+    telocs = []
+    gelocs = []
 
-    dead_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True))) for individual in self.pop.individual];
-    dead_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True, autonomous=True))) for individual in self.pop.individual];
-    dead_non_autonomous_tes =[ (len(individual.chromosome[0].TEs(live=False, dead=True, autonomous=False))) for individual in self.pop.individual];
+    for individual in self.pop.individual:
+      chromosome = individual.chromosome[0]
+      live_autonomous = 0
+      live_non_autonomous = 0
+      dead_autonomous = 0
+      dead_non_autonomous = 0
 
-    fitnesses = [ individual.fitness for individual in self.pop.individual ];
+      for element in chromosome.elements:
+        if isinstance(element, SelectiveInsertTE):
+          if element.dead:
+            if element.autonomous:
+              dead_autonomous += 1
+            else:
+              dead_non_autonomous += 1
+          else:
+            telocs.append(element.start)
+            if element.autonomous:
+              live_autonomous += 1
+            else:
+              live_non_autonomous += 1
+        elif isinstance(element, ProkGene1):
+          gelocs.append(element.start)
+
+      live_tes.append(live_autonomous + live_non_autonomous)
+      live_autonomous_tes.append(live_autonomous)
+      live_non_autonomous_tes.append(live_non_autonomous)
+      dead_tes.append(dead_autonomous + dead_non_autonomous)
+      dead_autonomous_tes.append(dead_autonomous)
+      dead_non_autonomous_tes.append(dead_non_autonomous)
+      fitnesses.append(individual.fitness)
+      genomesizes.append(chromosome.length)
 
     tracedict = {
       'time':     time.perf_counter(),
@@ -920,19 +1062,9 @@ class Experiment:
     tracedict.update( Quartiles('DTENAUT%03dpe', dead_non_autonomous_tes) );
     tracedict.update( Quartiles('FIT%03dpe', fitnesses) );
 
-    genomesizes = [ individual.chromosome[0].length for individual \
-                                in self.pop.individual ];
-
     tracedict.update( Quartiles('GSIZE%03d',genomesizes) );
 
-    telocs = [ te.start for individual in self.pop.individual \
-                        for te in \
-                          individual.chromosome[0].TEs(live=True,dead=False) ];
-
     tracedict.update( Quartiles('TELOC%03d',telocs) );
-
-    gelocs = [ ge.start for individual in self.pop.individual \
-                        for ge in individual.chromosome[0].genes() ];
 
     tracedict.update( Quartiles('GELOC%03d',gelocs) );
 
@@ -946,21 +1078,27 @@ class Experiment:
 # Main code; program starts here
 ################################################################################
 
-if __name__=="__main__":
-  if len( sys.argv ) > 3:
-    sys.stderr.write( "You must run it as: python3 ../../TEWorldCode/TESim.py, with an optional numerical argument that specifies the run number.\n");
-    sys.exit(-1);
+def parse_arguments(args=None):
+  parser = argparse.ArgumentParser(description="Run a TE World simulation")
+  parser.add_argument("run", nargs="?", type=int, default=1)
+  parser.add_argument("name", nargs="?", default="unnamed")
+  parser.add_argument(
+    "--seed",
+    type=int,
+    default=None,
+    help="Override parameters.seed with a concrete seed for reproducible replay",
+  )
+  return parser.parse_args(args)
 
-  if len(sys.argv) == 3:
-    run = int(sys.argv[1])
-    name = sys.argv[2]
-  else:
-    run = 1
-    name = "unnamed"
+
+if __name__=="__main__":
+  cli_args = parse_arguments()
+  run = cli_args.run
+  name = cli_args.name
     
   # This ensures that the existing trace files are not overwritten (unless their file name is manually changed)
   iter = len(glob.glob(f"trace-{run:03d}-???.csv")) + 1
   run_explanation = f"The results and state files are stored in files denoted by trace-{run:03d}-{0:03d} (i.e. trace-{run:03d}-{0:03d}.csv) files."
   print(f"Run {run} started. {run_explanation}")
-  Experiment( parameters.saved, name ).sim_generations(run, iter)
+  Experiment( parameters.saved, name, cli_args.seed ).sim_generations(run, iter)
   print(f"Run {run} completed. {run_explanation}")

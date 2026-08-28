@@ -38,6 +38,24 @@ Unless, the `seed` field has been pre-configured for that experiment's `paramete
 A trace file will be created for the associated experiment.
 These CSV files store relevant data about TE accumulation.
 
+### Reproducibility and provenance
+
+Every simulation writes a `provenance-<run>-<iteration>.json` file next to its
+trace. The record includes the concrete initial random seed, the exact
+`parameters.py` source and checksum, simulator and utility checksums, Git commit,
+Python/runtime information, checkpoint origin, and completion status.
+
+When `parameters.seed` is `None`, the simulator generates a concrete integer
+seed and records it before initializing the population. To replay a run, use the
+recorded seed with the same parameter source and code revision:
+
+```
+python3 ../../TEWorldCodeV2/TESim.py 1 experiment-name --seed 123456789
+```
+
+The biological and statistical trace columns will be identical. The `time`
+column measures wall-clock performance and is therefore not deterministic.
+
 ## Creating a New Experiment
 
 1. Copy the default [`parameters.py`](TEWorldCodeV2/parameters.py) file.
