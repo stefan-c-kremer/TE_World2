@@ -11,7 +11,7 @@ script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 experiment_root=$(cd "$script_directory/../.." && pwd)/TE-Experiments
 log_directory="$script_directory/logs"
 max_concurrent=${MAX_CONCURRENT:-64}
-slurm_account=${SLURM_ACCOUNT:-def-skremer}
+slurm_account=${SLURM_ACCOUNT:-def-skremer_cpu}
 wall_time=${WALL_TIME:-2-00:00}
 memory=${MEMORY_PER_TASK:-8G}
 

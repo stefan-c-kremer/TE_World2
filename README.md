@@ -142,6 +142,12 @@ Production runs are submitted as SLURM arrays on the Alliance Nibi cluster.
 Each array task runs one experiment with one CPU. This distributes independent
 experiments across nodes and isolates failures and memory growth.
 
+Run `diskusage_report` before staging a run. Simulation outputs are written
+inside the experiment directories, so the repository's filesystem must have
+adequate space and file quota. Scratch is appropriate for pilots and temporary
+production output but is not archival storage; preserve completed results in
+an appropriate backed-up location according to Alliance storage policy.
+
 ### Prepare the environment
 
 Create the environment once on a Nibi login node, from the repository root:
@@ -180,7 +186,7 @@ measure elapsed time and peak memory:
 ```bash
 mkdir -p logs
 sbatch \
-  --account=def-skremer \
+  --account=def-skremer_cpu \
   --time=02:00:00 \
   --mem=8G \
   --array=0,109,219,329,438,548,658,767%4 \
@@ -199,7 +205,7 @@ the full-run memory and wall-time requests.
 ```
 
 The defaults are 64 concurrent tasks, 8 GiB per task, a two-day time limit,
-account `def-skremer`, module `python/3.10.13`, and the compact backend. Override
+account `def-skremer_cpu`, module `python/3.10.13`, and the compact backend. Override
 them without editing the scripts:
 
 ```bash
@@ -207,7 +213,7 @@ MAX_CONCURRENT=32 \
 MEMORY_PER_TASK=16G \
 WALL_TIME=3-00:00 \
 PYTHON_MODULE=python/3.10.13 \
-SLURM_ACCOUNT=def-skremer \
+SLURM_ACCOUNT=def-skremer_cpu \
 SIMULATION_BACKEND=compact \
 ./submit-nibi-array.sh 4
 ```
