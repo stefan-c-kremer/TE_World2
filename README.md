@@ -154,8 +154,8 @@ Create the environment once on a Nibi login node, from the repository root:
 
 ```bash
 module load python/3.10.13
-python3 -m venv .venv-nibi
-.venv-nibi/bin/python -m pip install -r requirements-compact.txt
+virtualenv --no-download .venv-nibi
+.venv-nibi/bin/python -m pip install --no-index -r requirements-compact.txt
 ```
 
 Then enter the submission directory and export the absolute environment path:
