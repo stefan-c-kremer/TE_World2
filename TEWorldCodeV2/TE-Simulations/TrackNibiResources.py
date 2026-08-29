@@ -207,6 +207,10 @@ def trace_metrics(directory: Path, provenance_record: dict) -> dict[str, str]:
 
 def collect(manifest: Path, submission_file: Path, output: Path, job_ids: list[str]) -> None:
     manifest_rows = {int(row["task_index"]): row for row in read_csv(manifest)}
+    ledger = {
+        (row["job_id"], row["task_index"]): row
+        for row in read_csv(output)
+    }
     submissions = [
         row for row in read_csv(submission_file)
         if not job_ids or row["job_id"] in job_ids
@@ -264,7 +268,10 @@ def collect(manifest: Path, submission_file: Path, output: Path, job_ids: list[s
             row["failure_class"] = classify_failure(
                 stderr_text, row.get("scheduler_state", ""), scientific_status
             )
-            upsert(output, ATTEMPT_FIELDS, row, ("job_id", "task_index"))
+            normalized = {field: str(row.get(field, "")) for field in ATTEMPT_FIELDS}
+            ledger[(normalized["job_id"], normalized["task_index"])] = normalized
+    rows = sorted(ledger.values(), key=lambda item: (item["job_id"], int(item["task_index"])))
+    write_csv(output, ATTEMPT_FIELDS, rows)
 
 
 def parse_arguments(args=None):
