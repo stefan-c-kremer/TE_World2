@@ -16,7 +16,7 @@ from pathlib import Path
 SUBMISSION_FIELDS = (
     "job_id", "submitted_at_utc", "manifest", "manifest_sha256",
     "array_indices", "max_concurrent", "account", "wall_time", "memory",
-    "cpus_per_task", "backend", "git_commit",
+    "cpus_per_task", "backend", "dependency", "git_commit",
 )
 ATTEMPT_FIELDS = (
     "job_id", "task_index", "condition_code", "replicate", "run", "seed",
@@ -287,6 +287,7 @@ def parse_arguments(args=None):
     record.add_argument("--memory", required=True)
     record.add_argument("--cpus-per-task", default="1")
     record.add_argument("--backend", default="compact")
+    record.add_argument("--dependency", default="")
     record.add_argument("--git-commit", default="")
     record.add_argument("--output", type=Path)
     collector = subparsers.add_parser("collect")
@@ -314,6 +315,7 @@ def main(args=None) -> int:
             "memory": options.memory,
             "cpus_per_task": options.cpus_per_task,
             "backend": options.backend,
+            "dependency": options.dependency,
             "git_commit": options.git_commit,
         }
         upsert(output, SUBMISSION_FIELDS, row, ("job_id",))

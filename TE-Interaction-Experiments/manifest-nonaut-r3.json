@@ -1,0 +1,37 @@
+{
+  "condition_code_format": "[HL]{7}-(HH|HL|LH|LL|Z)",
+  "condition_count": 512,
+  "interaction_codes": {
+    "HH": {
+      "initial_non_autonomous_tes": 3,
+      "kidnapping_coefficient": 0.07
+    },
+    "HL": {
+      "initial_non_autonomous_tes": 1,
+      "kidnapping_coefficient": 0.07
+    },
+    "LH": {
+      "initial_non_autonomous_tes": 3,
+      "kidnapping_coefficient": 0.02
+    },
+    "LL": {
+      "initial_non_autonomous_tes": 1,
+      "kidnapping_coefficient": 0.02
+    }
+  },
+  "manifest": "manifest-nonaut-r3.csv",
+  "master_seed": "21ccca45fd278118ed5a77bb8b2c71e58c7e339c849205de59f43459c63671da",
+  "parameter_order": [
+    "TE_progeny",
+    "TE_death_rate",
+    "Insertion_bias",
+    "Corrected_mutation_rate",
+    "NC_BP",
+    "Mutation_effect",
+    "Carrying_capacity"
+  ],
+  "replicates": 3,
+  "schema_version": 1,
+  "seed_derivation": "first 64 bits of SHA-256(master_seed\\0condition\\0replicate)",
+  "simulation_count": 1536
+}

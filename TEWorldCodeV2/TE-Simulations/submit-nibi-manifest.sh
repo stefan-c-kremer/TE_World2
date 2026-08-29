@@ -14,6 +14,8 @@ slurm_account=${SLURM_ACCOUNT:-def-skremer_cpu}
 wall_time=${WALL_TIME:-00:30:00}
 memory=${MEMORY_PER_TASK:-4G}
 signal_seconds=${CHECKPOINT_SIGNAL_SECONDS:-300}
+job_name=${SLURM_JOB_NAME:-te-world2}
+dependency=${SLURM_DEPENDENCY:-}
 
 if [[ ! -f $manifest ]]; then
   echo "Manifest does not exist: $manifest" >&2
@@ -34,7 +36,14 @@ echo "Submitting manifest $manifest."
 echo "Array indices: $array_indices; maximum concurrency: $max_concurrent."
 echo "Resources per task: $wall_time, $memory, one CPU."
 
+dependency_argument=()
+if [[ -n $dependency ]]; then
+  dependency_argument=(--dependency="$dependency")
+  echo "SLURM dependency: $dependency."
+fi
+
 submission_id=$(sbatch --parsable \
+  --job-name="$job_name" \
   --account="$slurm_account" \
   --time="$wall_time" \
   --mem="$memory" \
@@ -42,6 +51,7 @@ submission_id=$(sbatch --parsable \
   --array="${array_indices}%${max_concurrent}" \
   --output="$log_directory/%A_%a.out" \
   --error="$log_directory/%A_%a.err" \
+  "${dependency_argument[@]}" \
   --chdir="$script_directory" \
   --export="ALL,TE_SIMULATION_SCRIPT_DIR=$script_directory,TE_SIMULATION_MANIFEST=$manifest" \
   "$script_directory/nibi-manifest-job.sh")
@@ -58,4 +68,5 @@ python3 "$script_directory/TrackNibiResources.py" record-submission \
   --wall-time "$wall_time" \
   --memory "$memory" \
   --backend "${SIMULATION_BACKEND:-compact}" \
+  --dependency "$dependency" \
   --git-commit "$git_commit" >/dev/null
