@@ -275,6 +275,33 @@ ARRAY_INDICES=0,1,2,189,190,191,381,382,383 MAX_CONCURRENT=3 \
 Do not treat `checkpointed` as a completed biological replicate. Only
 `maximum_generations`, `host_extinction`, and `te_extinction` are final states.
 
+### Resource and failure ledger
+
+Every manifest submission made through `submit-nibi-manifest.sh` is recorded
+in `submission-ledger.csv` beside the manifest. The record includes the SLURM
+job ID, exact array indices, requested time and memory, concurrency, account,
+backend, manifest checksum, and Git revision.
+
+After or during a job, update the per-attempt resource ledger with:
+
+```bash
+python3 TrackNibiResources.py collect \
+  --manifest ../../TE-Interaction-Experiments/manifest-z-r3.csv
+```
+
+`resource-attempts.csv` contains one row per SLURM array attempt, not merely
+one row per biological replicate. It joins the seven parameter settings and
+replicate seed to requested resources, elapsed time, peak RSS/virtual memory,
+SLURM state, failure class, scientific outcome, last trace generation and TE
+count, checkpoint origin, backend, and Git revision. Re-running the collector
+updates existing `(job_id, task_index)` rows without duplicating them.
+
+The collector still records provenance, logs, traces, requested resources,
+and failure causes when the SLURM accounting database is temporarily
+unavailable. Run it again later to add authoritative `sacct` elapsed-time and
+peak-memory fields. These ledgers are generated study data and are intentionally
+ignored by Git; preserve them with the simulation results.
+
 ### Run a legacy-directory pilot array
 
 Before a complete production launch, run several representative tasks and

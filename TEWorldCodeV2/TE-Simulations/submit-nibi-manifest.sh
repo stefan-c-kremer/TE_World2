@@ -34,7 +34,7 @@ echo "Submitting manifest $manifest."
 echo "Array indices: $array_indices; maximum concurrency: $max_concurrent."
 echo "Resources per task: $wall_time, $memory, one CPU."
 
-sbatch \
+submission_id=$(sbatch --parsable \
   --account="$slurm_account" \
   --time="$wall_time" \
   --mem="$memory" \
@@ -44,4 +44,18 @@ sbatch \
   --error="$log_directory/%A_%a.err" \
   --chdir="$script_directory" \
   --export="ALL,TE_SIMULATION_SCRIPT_DIR=$script_directory,TE_SIMULATION_MANIFEST=$manifest" \
-  "$script_directory/nibi-manifest-job.sh"
+  "$script_directory/nibi-manifest-job.sh")
+submission_id=${submission_id%%;*}
+echo "Submitted batch job $submission_id"
+
+git_commit=$(git -C "$script_directory" rev-parse HEAD 2>/dev/null || true)
+python3 "$script_directory/TrackNibiResources.py" record-submission \
+  --job-id "$submission_id" \
+  --manifest "$manifest" \
+  --array-indices "$array_indices" \
+  --max-concurrent "$max_concurrent" \
+  --account "$slurm_account" \
+  --wall-time "$wall_time" \
+  --memory "$memory" \
+  --backend "${SIMULATION_BACKEND:-compact}" \
+  --git-commit "$git_commit" >/dev/null
