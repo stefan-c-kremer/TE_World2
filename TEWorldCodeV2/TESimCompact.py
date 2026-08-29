@@ -18,4 +18,4 @@ TESim.CHECKPOINT_FORMAT = "pickle_gzip_v1"
 
 
 if __name__ == "__main__":
-    TESim.main()
+    raise SystemExit(TESim.main())

@@ -1,0 +1,25 @@
+{
+  "condition_code_format": "[HL]{7}-(HH|HL|LH|LL|Z)",
+  "condition_count": 128,
+  "interaction_codes": {
+    "Z": {
+      "initial_non_autonomous_tes": 0,
+      "kidnapping_coefficient": 0.0
+    }
+  },
+  "manifest": "manifest-z-r3.csv",
+  "master_seed": "21ccca45fd278118ed5a77bb8b2c71e58c7e339c849205de59f43459c63671da",
+  "parameter_order": [
+    "TE_progeny",
+    "TE_death_rate",
+    "Insertion_bias",
+    "Corrected_mutation_rate",
+    "NC_BP",
+    "Mutation_effect",
+    "Carrying_capacity"
+  ],
+  "replicates": 3,
+  "schema_version": 1,
+  "seed_derivation": "first 64 bits of SHA-256(master_seed\\0condition\\0replicate)",
+  "simulation_count": 384
+}

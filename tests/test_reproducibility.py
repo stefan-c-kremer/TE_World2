@@ -108,6 +108,35 @@ class ReproducibilityTests(unittest.TestCase):
                 },
             )
 
+    def test_manifest_study_environment_is_recorded(self):
+        sys.path.insert(0, str(CODE_DIRECTORY))
+        try:
+            import provenance
+        finally:
+            sys.path.pop(0)
+
+        with mock.patch.dict(
+            os.environ,
+            {
+                "TE_STUDY_MANIFEST": "/scratch/study/manifest.csv",
+                "TE_STUDY_MANIFEST_SHA256": "abc123",
+                "TE_STUDY_TASK_INDEX": "17",
+                "TE_STUDY_CONDITION": "HLHLHLH-Z",
+                "TE_STUDY_REPLICATE": "R03",
+            },
+            clear=False,
+        ):
+            self.assertEqual(
+                provenance.study_context(),
+                {
+                    "TE_STUDY_MANIFEST": "/scratch/study/manifest.csv",
+                    "TE_STUDY_MANIFEST_SHA256": "abc123",
+                    "TE_STUDY_TASK_INDEX": "17",
+                    "TE_STUDY_CONDITION": "HLHLHLH-Z",
+                    "TE_STUDY_REPLICATE": "R03",
+                },
+            )
+
     def test_generated_seed_can_replay_identical_scientific_trace(self):
         with tempfile.TemporaryDirectory() as first_name, tempfile.TemporaryDirectory() as replay_name:
             first = Path(first_name)
@@ -172,6 +201,36 @@ class ReproducibilityTests(unittest.TestCase):
             with gzip.open(state_path, "rt", encoding="utf-8") as state_file:
                 state = state_file.read()
             self.assertIn("self.initial_seed = 8675309;", state)
+
+    def test_signal_request_checkpoints_at_generation_boundary(self):
+        with tempfile.TemporaryDirectory() as directory_name:
+            directory = Path(directory_name)
+            write_parameters(directory)
+            program = textwrap.dedent(
+                f"""
+                import json
+                import signal
+                import sys
+                sys.path.insert(0, {str(CODE_DIRECTORY)!r})
+                import TESim
+                experiment = TESim.Experiment(None, "signal-test", 424242)
+                TESim.request_checkpoint(signal.SIGUSR1, None)
+                status = experiment.sim_generations(8, 1)
+                assert status == "checkpointed"
+                """
+            )
+            subprocess.run(
+                [sys.executable, "-c", program],
+                cwd=directory,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            provenance = json.loads(
+                (directory / "provenance-008-001.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(provenance["status"], "checkpointed")
+            self.assertTrue((directory / "state-008-001-0000000.gz").is_file())
 
     def test_resume_preserves_seed_and_random_state(self):
         with tempfile.TemporaryDirectory() as original_name, tempfile.TemporaryDirectory() as resumed_name:

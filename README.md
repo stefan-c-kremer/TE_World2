@@ -136,11 +136,63 @@ python3 -m unittest discover -s tests -v
 The reference-versus-compact equivalence tests are the release gate for the
 compact backend.
 
+## Corrected interaction experiment
+
+New experiments live in [`TE-Interaction-Experiments`](TE-Interaction-Experiments)
+and use condition names of the form:
+
+```text
+PDBMNEC-XX
+```
+
+The seven `H`/`L` positions are, in order:
+
+1. `TE_progeny`
+2. `TE_death_rate`
+3. `Insertion_bias`
+4. `Corrected_mutation_rate`
+5. non-coding base pairs (`NC_BP`, implemented as `Junk_BP`)
+6. `Mutation_effect`
+7. `Carrying_capacity`
+
+The suffix is `HH`, `HL`, `LH`, or `LL`, with kidnapping frequency first and
+the initial non-autonomous TE count second. `Z` denotes no initial
+non-autonomous TEs and a not-applicable kidnapping frequency. The complete
+design contains `2^7 * 5 = 640` conditions.
+
+The first study phase is the autonomous-only `???????-Z` control grid. It has
+128 conditions and three biological replicates, for 384 simulations. Its
+versioned task definition is
+[`manifest-z-r3.csv`](TE-Interaction-Experiments/manifest-z-r3.csv), with study
+metadata and the recorded master seed in
+[`manifest-z-r3.json`](TE-Interaction-Experiments/manifest-z-r3.json).
+Replicates `R01`, `R02`, and `R03` use simulator run numbers 1, 2, and 3;
+checkpoint iterations remain a separate concept.
+
+Regenerate that phase deterministically with:
+
+```bash
+python3 TEWorldCodeV2/TE-Simulations/CreateInteractionTrials.py \
+  --interaction Z \
+  --replicates 3 \
+  --master-seed 21ccca45fd278118ed5a77bb8b2c71e58c7e339c849205de59f43459c63671da \
+  --manifest-name manifest-z-r3.csv
+```
+
+The generator refuses to replace an existing differing parameter or manifest
+file. Generate the other four interaction suffixes only after the `Z` phase
+has been reviewed.
+
 ## Running on Nibi with SLURM
 
 Production runs are submitted as SLURM arrays on the Alliance Nibi cluster.
 Each array task runs one experiment with one CPU. This distributes independent
 experiments across nodes and isolates failures and memory growth.
+
+The manifest runner launches one simulation per task. This is intentional:
+extinction runs may finish in seconds while a small proliferating tail can run
+much longer, so bundling conditions would leave resources idle behind the
+slowest member of each bundle.
 
 Run `diskusage_report` before staging a run. Simulation outputs are written
 inside the experiment directories, so the repository's filesystem must have
@@ -179,7 +231,50 @@ Inspect a task without starting a simulation:
 The current experiment tree contains 768 tasks, but the submission script
 discovers the count dynamically.
 
-### Run a pilot array
+Inspect a new manifest task without running it:
+
+```bash
+"$PYTHON_EXECUTABLE" RunNibiArrayTask.py \
+  --manifest ../../TE-Interaction-Experiments/manifest-z-r3.csv \
+  --index 0 --dry-run
+```
+
+### Run the autonomous-only manifest
+
+From `TEWorldCodeV2/TE-Simulations`, submit the manifest with:
+
+```bash
+./submit-nibi-manifest.sh \
+  ../../TE-Interaction-Experiments/manifest-z-r3.csv
+```
+
+The first pass defaults to one CPU, 4 GiB, 30 minutes, at most 64 concurrent
+tasks, and account `def-skremer_cpu`. Five minutes before the limit, SLURM sends
+`SIGUSR1` to the simulator. It writes a checkpoint at the next generation
+boundary, records provenance status `checkpointed`, and exits with status 75.
+
+On resubmission, the helper submits only unfinished manifest indices. Finished
+replicates are skipped and checkpointed replicates resume. A longer second
+pass can be requested without changing the study definition:
+
+```bash
+WALL_TIME=02:00:00 MEMORY_PER_TASK=8G \
+./submit-nibi-manifest.sh \
+  ../../TE-Interaction-Experiments/manifest-z-r3.csv
+```
+
+Use `ARRAY_INDICES` to submit a pilot subset, for example:
+
+```bash
+ARRAY_INDICES=0,1,2,189,190,191,381,382,383 MAX_CONCURRENT=3 \
+./submit-nibi-manifest.sh \
+  ../../TE-Interaction-Experiments/manifest-z-r3.csv
+```
+
+Do not treat `checkpointed` as a completed biological replicate. Only
+`maximum_generations`, `host_extinction`, and `te_extinction` are final states.
+
+### Run a legacy-directory pilot array
 
 Before a complete production launch, run several representative tasks and
 measure elapsed time and peak memory:
@@ -199,7 +294,7 @@ sbatch \
 Review the pilot logs, provenance files, and SLURM accounting before choosing
 the full-run memory and wall-time requests.
 
-### Submit the complete array
+### Submit the complete legacy-directory array
 
 ```bash
 ./submit-nibi-array.sh 4

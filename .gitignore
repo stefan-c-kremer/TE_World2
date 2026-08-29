@@ -1,6 +1,7 @@
 *.pyc
 **/**/*.gz
 **/**/*.csv
+!TE-Interaction-Experiments/manifest-*.csv
 **/provenance-*.json
 TEWorldCodeV2/TE-Simulations/output
 *.out

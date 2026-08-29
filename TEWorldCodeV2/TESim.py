@@ -7,6 +7,7 @@ import bisect;
 import glob
 import argparse
 import pickle
+import signal
 
 ################################################################################
 # Launch code
@@ -26,6 +27,8 @@ ENTRYPOINT_FILE = __file__
 BACKEND_FILE = __file__
 BACKEND_RUNTIME = {}
 CHECKPOINT_FORMAT = "legacy_repr_gzip"
+CHECKPOINT_EXIT_CODE = 75
+_checkpoint_signal = None
       
 JUNK = "Junk";
  
@@ -64,6 +67,12 @@ def output( keyword, message ):
   # Output all messages with a keyword specified in the parameters file (set to 'True') or keywords that don't exist at all
   if not keyword in parameters.output or parameters.output[keyword]:
     print("[%s]: %s" % (keyword, message), flush=True);
+
+
+def request_checkpoint(signum, frame):
+  """Request a safe checkpoint at the next generation boundary."""
+  global _checkpoint_signal
+  _checkpoint_signal = signum
   
 ################################################################################
   
@@ -1021,6 +1030,14 @@ class Experiment:
     completion_status = "maximum_generations"
     try:
       while self.pop.generation_no < parameters.Maximum_generations:
+        if _checkpoint_signal is not None:
+          self.save(run, iter)
+          completion_status = "checkpointed"
+          output(
+            "CHECKPOINT",
+            f"Checkpoint requested before generation {self.pop.generation_no}",
+          )
+          break
         output("GENERATION", f"Generation: {self.pop.generation_no} (experiment: {self.name})")
         te_effects = self.pop.generation();	# run a generation and collect effects
 
@@ -1041,6 +1058,14 @@ class Experiment:
             break;
         if self.pop.generation_no % parameters.save_frequency == 0:
           self.save(run, iter);
+        if _checkpoint_signal is not None:
+          self.save(run, iter)
+          completion_status = "checkpointed"
+          output(
+            "CHECKPOINT",
+            f"Checkpoint requested after generation {self.pop.generation_no}",
+          )
+          break
     except BaseException:
       completion_status = "failed"
       raise
@@ -1053,6 +1078,8 @@ class Experiment:
         final_population_size=len(self.pop.individual),
       )
       provenance.write_provenance(provenance_path, provenance_record)
+
+    return completion_status
 
 
   def get_tracedict( self ):
@@ -1191,6 +1218,10 @@ def parse_arguments(args=None):
 
 
 def main(args=None):
+  global _checkpoint_signal
+  _checkpoint_signal = None
+  if hasattr(signal, "SIGUSR1"):
+    signal.signal(signal.SIGUSR1, request_checkpoint)
   cli_args = parse_arguments(args)
   run = cli_args.run
   name = cli_args.name
@@ -1200,9 +1231,13 @@ def main(args=None):
   run_explanation = f"The results and state files are stored in files denoted by trace-{run:03d}-{0:03d} (i.e. trace-{run:03d}-{0:03d}.csv) files."
   print(f"Run {run} started. {run_explanation}")
   statefile = cli_args.state if cli_args.state is not None else parameters.saved
-  Experiment( statefile, name, cli_args.seed ).sim_generations(run, iter)
+  status = Experiment( statefile, name, cli_args.seed ).sim_generations(run, iter)
+  if status == "checkpointed":
+    print(f"Run {run} checkpointed for resumption. {run_explanation}")
+    return CHECKPOINT_EXIT_CODE
   print(f"Run {run} completed. {run_explanation}")
+  return 0
 
 
 if __name__=="__main__":
-  main()
+  raise SystemExit(main())

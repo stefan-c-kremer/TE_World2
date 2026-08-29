@@ -1,4 +1,5 @@
 import importlib.util
+import csv
 import json
 import tempfile
 import unittest
@@ -106,6 +107,76 @@ class NibiRunnerTests(unittest.TestCase):
                     )
                 self.assertEqual(return_code, 0)
                 self.assertIn(expected_launcher, output.getvalue())
+
+    def test_manifest_selects_replicate_and_seed(self):
+        with tempfile.TemporaryDirectory() as directory_name:
+            root = Path(directory_name)
+            experiment = root / "HHHHHHH-Z"
+            experiment.mkdir()
+            (experiment / "parameters.py").write_text("", encoding="utf-8")
+            manifest = root / "manifest.csv"
+            with manifest.open("w", newline="", encoding="utf-8") as destination:
+                writer = csv.DictWriter(
+                    destination,
+                    fieldnames=[
+                        "task_index",
+                        "condition_code",
+                        "replicate",
+                        "run",
+                        "seed",
+                        "experiment_directory",
+                    ],
+                )
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "task_index": 0,
+                        "condition_code": "HHHHHHH-Z",
+                        "replicate": "R02",
+                        "run": 2,
+                        "seed": 123456789,
+                        "experiment_directory": "HHHHHHH-Z",
+                    }
+                )
+
+            output = StringIO()
+            with redirect_stdout(output):
+                return_code = nibi_runner.main(
+                    ["--manifest", str(manifest), "--index", "0", "--dry-run"]
+                )
+
+            self.assertEqual(return_code, 0)
+            self.assertIn("replicate=R02", output.getvalue())
+            self.assertIn("--seed 123456789", output.getvalue())
+
+    def test_manifest_pending_indices_exclude_only_completed_runs(self):
+        with tempfile.TemporaryDirectory() as directory_name:
+            root = Path(directory_name)
+            experiment = root / "HHHHHHH-Z"
+            experiment.mkdir()
+            (experiment / "parameters.py").write_text("", encoding="utf-8")
+            manifest = root / "manifest.csv"
+            manifest.write_text(
+                "task_index,condition_code,replicate,run,seed,experiment_directory\n"
+                "0,HHHHHHH-Z,R01,1,10,HHHHHHH-Z\n"
+                "1,HHHHHHH-Z,R02,2,20,HHHHHHH-Z\n",
+                encoding="utf-8",
+            )
+            (experiment / "provenance-001-001.json").write_text(
+                json.dumps({"status": "maximum_generations"}), encoding="utf-8"
+            )
+            (experiment / "provenance-002-001.json").write_text(
+                json.dumps({"status": "checkpointed"}), encoding="utf-8"
+            )
+
+            output = StringIO()
+            with redirect_stdout(output):
+                return_code = nibi_runner.main(
+                    ["--manifest", str(manifest), "--pending-indices"]
+                )
+
+            self.assertEqual(return_code, 0)
+            self.assertEqual(output.getvalue().strip(), "1")
 
 
 if __name__ == "__main__":

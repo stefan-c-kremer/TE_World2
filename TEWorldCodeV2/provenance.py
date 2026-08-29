@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 SLURM_ENVIRONMENT_KEYS = (
     "SLURM_JOB_ID",
@@ -32,6 +32,14 @@ SLURM_ENVIRONMENT_KEYS = (
     "SLURM_MEM_PER_NODE",
     "SLURM_SUBMIT_DIR",
     "SLURM_SUBMIT_HOST",
+)
+
+STUDY_ENVIRONMENT_KEYS = (
+    "TE_STUDY_MANIFEST",
+    "TE_STUDY_MANIFEST_SHA256",
+    "TE_STUDY_TASK_INDEX",
+    "TE_STUDY_CONDITION",
+    "TE_STUDY_REPLICATE",
 )
 
 
@@ -85,6 +93,16 @@ def slurm_context() -> dict[str, str] | None:
     context = {
         key: os.environ[key]
         for key in SLURM_ENVIRONMENT_KEYS
+        if key in os.environ
+    }
+    return context or None
+
+
+def study_context() -> dict[str, str] | None:
+    """Return manifest identity supplied by a study task runner."""
+    context = {
+        key: os.environ[key]
+        for key in STUDY_ENVIRONMENT_KEYS
         if key in os.environ
     }
     return context or None
@@ -147,6 +165,7 @@ def build_provenance(
         "simulation_backend": backend_name,
         "checkpoint_format": checkpoint_format,
         "backend_runtime": backend_runtime,
+        "study": study_context(),
         "resumed_from": resumed_record,
         "code": {
             "git_commit": _git_commit(code_directory),
