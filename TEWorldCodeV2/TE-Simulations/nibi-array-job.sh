@@ -12,10 +12,12 @@ fi
 run_number=$1
 script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 python_module=${PYTHON_MODULE:-python/3.10.13}
+standard_environment_module=${STANDARD_ENV_MODULE:-StdEnv/2023}
 simulation_backend=${SIMULATION_BACKEND:-compact}
 python_executable=${PYTHON_EXECUTABLE:-python3}
 
 module --force purge
+module load "$standard_environment_module"
 module load "$python_module"
 
 if [[ $simulation_backend == compact ]]; then

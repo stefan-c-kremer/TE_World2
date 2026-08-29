@@ -153,7 +153,8 @@ an appropriate backed-up location according to Alliance storage policy.
 Create the environment once on a Nibi login node, from the repository root:
 
 ```bash
-module load python/3.10.13
+module --force purge
+module load StdEnv/2023 python/3.10.13
 virtualenv --no-download .venv-nibi
 .venv-nibi/bin/python -m pip install --no-index -r requirements-compact.txt
 ```
@@ -213,6 +214,7 @@ MAX_CONCURRENT=32 \
 MEMORY_PER_TASK=16G \
 WALL_TIME=3-00:00 \
 PYTHON_MODULE=python/3.10.13 \
+STANDARD_ENV_MODULE=StdEnv/2023 \
 SLURM_ACCOUNT=def-skremer_cpu \
 SIMULATION_BACKEND=compact \
 ./submit-nibi-array.sh 4
