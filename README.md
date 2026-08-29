@@ -250,8 +250,9 @@ From `TEWorldCodeV2/TE-Simulations`, submit the manifest with:
 
 The first pass defaults to one CPU, 4 GiB, 30 minutes, at most 64 concurrent
 tasks, and account `def-skremer_cpu`. Five minutes before the limit, SLURM sends
-`SIGUSR1` to the simulator. It writes a checkpoint at the next generation
-boundary, records provenance status `checkpointed`, and exits with status 75.
+`SIGUSR1` to the batch shell. The shell and manifest runner forward it to the
+simulator, which writes a checkpoint at the next generation boundary, records
+provenance status `checkpointed`, and exits with status 75.
 
 On resubmission, the helper submits only unfinished manifest indices. Finished
 replicates are skipped and checkpointed replicates resume. A longer second

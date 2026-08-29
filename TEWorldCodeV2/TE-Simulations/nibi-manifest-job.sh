@@ -31,10 +31,28 @@ if [[ $simulation_backend == compact ]]; then
   }
 fi
 
-# The srun step receives SLURM's pre-timeout USR1 signal. The simulator saves
-# at the next generation boundary and exits with status 75 for later resumption.
-srun --ntasks=1 "$python_executable" "$script_directory/RunNibiArrayTask.py" \
+# SLURM signals this batch shell. It forwards USR1 to the manifest runner,
+# which forwards it to the simulator. Interrupted wait calls are retried until
+# the simulator has saved at a generation boundary and exited.
+runner_pid=""
+forward_checkpoint() {
+  if [[ -n $runner_pid ]] && kill -0 "$runner_pid" 2>/dev/null; then
+    kill -USR1 "$runner_pid"
+  fi
+}
+trap forward_checkpoint USR1
+
+set +e
+"$python_executable" "$script_directory/RunNibiArrayTask.py" \
   --manifest "$manifest" \
   --index "$SLURM_ARRAY_TASK_ID" \
   --backend "$simulation_backend" \
-  --resume-latest
+  --resume-latest &
+runner_pid=$!
+while kill -0 "$runner_pid" 2>/dev/null; do
+  wait "$runner_pid"
+  runner_status=$?
+done
+wait "$runner_pid" 2>/dev/null
+runner_status=${runner_status:-$?}
+exit "$runner_status"

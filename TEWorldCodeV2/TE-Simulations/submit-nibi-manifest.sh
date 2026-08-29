@@ -38,7 +38,7 @@ sbatch \
   --account="$slurm_account" \
   --time="$wall_time" \
   --mem="$memory" \
-  --signal="USR1@${signal_seconds}" \
+  --signal="B:USR1@${signal_seconds}" \
   --array="${array_indices}%${max_concurrent}" \
   --output="$log_directory/%A_%a.out" \
   --error="$log_directory/%A_%a.err" \

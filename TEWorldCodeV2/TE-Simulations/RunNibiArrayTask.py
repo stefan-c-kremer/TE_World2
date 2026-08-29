@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -52,6 +53,25 @@ def sha256(path: Path) -> str:
         for block in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def run_with_checkpoint_forwarding(command, *, cwd: Path, env: dict[str, str]) -> int:
+    """Forward the scheduler checkpoint signal to the simulator child."""
+    process = subprocess.Popen(command, cwd=cwd, env=env)
+    previous_handler = None
+    if hasattr(signal, "SIGUSR1"):
+        previous_handler = signal.getsignal(signal.SIGUSR1)
+
+        def forward(signum, frame):
+            if process.poll() is None:
+                process.send_signal(signum)
+
+        signal.signal(signal.SIGUSR1, forward)
+    try:
+        return process.wait()
+    finally:
+        if previous_handler is not None:
+            signal.signal(signal.SIGUSR1, previous_handler)
 
 
 def completed_provenance(experiment: Path, run: int) -> Path | None:
@@ -181,12 +201,11 @@ def main(args=None) -> int:
                 "TE_STUDY_REPLICATE": str(task["replicate"]),
             }
         )
-    return subprocess.run(
+    return run_with_checkpoint_forwarding(
         command,
         cwd=experiment,
         env=environment,
-        check=False,
-    ).returncode
+    )
 
 
 if __name__ == "__main__":

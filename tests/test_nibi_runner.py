@@ -1,8 +1,10 @@
 import importlib.util
 import csv
 import json
+import signal
 import tempfile
 import unittest
+from unittest import mock
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
@@ -22,6 +24,33 @@ spec.loader.exec_module(nibi_runner)
 
 
 class NibiRunnerTests(unittest.TestCase):
+    @unittest.skipUnless(hasattr(signal, "SIGUSR1"), "requires SIGUSR1")
+    def test_checkpoint_signal_is_forwarded_to_simulator_child(self):
+        process = mock.Mock()
+        process.poll.return_value = None
+        registered = {}
+
+        def register(signum, handler):
+            if callable(handler):
+                registered[signum] = handler
+
+        def wait():
+            registered[signal.SIGUSR1](signal.SIGUSR1, None)
+            return 75
+
+        process.wait.side_effect = wait
+        with (
+            mock.patch.object(nibi_runner.subprocess, "Popen", return_value=process),
+            mock.patch.object(nibi_runner.signal, "getsignal", return_value=signal.SIG_DFL),
+            mock.patch.object(nibi_runner.signal, "signal", side_effect=register),
+        ):
+            status = nibi_runner.run_with_checkpoint_forwarding(
+                ["simulator"], cwd=Path("/tmp"), env={}
+            )
+
+        self.assertEqual(status, 75)
+        process.send_signal.assert_called_once_with(signal.SIGUSR1)
+
     def test_experiments_are_mapped_to_stable_sorted_indices(self):
         with tempfile.TemporaryDirectory() as directory_name:
             root = Path(directory_name)
