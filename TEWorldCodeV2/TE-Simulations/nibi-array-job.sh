@@ -10,7 +10,11 @@ if [[ $# -ne 1 ]]; then
 fi
 
 run_number=$1
-script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+script_directory=${TE_SIMULATION_SCRIPT_DIR:-${SLURM_SUBMIT_DIR:-}}
+if [[ ! -f $script_directory/RunNibiArrayTask.py ]]; then
+  echo "Cannot find RunNibiArrayTask.py under $script_directory" >&2
+  exit 1
+fi
 python_module=${PYTHON_MODULE:-python/3.10.13}
 standard_environment_module=${STANDARD_ENV_MODULE:-StdEnv/2023}
 simulation_backend=${SIMULATION_BACKEND:-compact}

@@ -37,4 +37,6 @@ sbatch \
   --array="0-${last_index}%${max_concurrent}" \
   --output="$log_directory/%A_%a.out" \
   --error="$log_directory/%A_%a.err" \
+  --chdir="$script_directory" \
+  --export="ALL,TE_SIMULATION_SCRIPT_DIR=$script_directory" \
   "$script_directory/nibi-array-job.sh" "$run_number"
