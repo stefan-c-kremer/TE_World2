@@ -24,6 +24,12 @@ spec.loader.exec_module(nibi_runner)
 
 
 class NibiRunnerTests(unittest.TestCase):
+    def test_slurm_indices_are_compacted_into_ranges(self):
+        self.assertEqual(
+            nibi_runner.compact_indices([7, 3, 2, 1, 6, 10, 10]),
+            "1-3,6-7,10",
+        )
+
     @unittest.skipUnless(hasattr(signal, "SIGUSR1"), "requires SIGUSR1")
     def test_checkpoint_signal_is_forwarded_to_simulator_child(self):
         process = mock.Mock()
@@ -206,6 +212,32 @@ class NibiRunnerTests(unittest.TestCase):
 
             self.assertEqual(return_code, 0)
             self.assertEqual(output.getvalue().strip(), "1")
+
+    def test_manifest_pending_indices_compact_long_contiguous_runs(self):
+        with tempfile.TemporaryDirectory() as directory_name:
+            root = Path(directory_name)
+            experiment = root / "HHHHHHH-Z"
+            experiment.mkdir()
+            (experiment / "parameters.py").write_text("", encoding="utf-8")
+            manifest = root / "manifest.csv"
+            manifest.write_text(
+                "task_index,condition_code,replicate,run,seed,experiment_directory\n"
+                + "".join(
+                    f"{index},HHHHHHH-Z,R{index + 1:02d},{index + 1},"
+                    f"{index + 10},HHHHHHH-Z\n"
+                    for index in range(4)
+                ),
+                encoding="utf-8",
+            )
+
+            output = StringIO()
+            with redirect_stdout(output):
+                return_code = nibi_runner.main(
+                    ["--manifest", str(manifest), "--pending-indices"]
+                )
+
+            self.assertEqual(return_code, 0)
+            self.assertEqual(output.getvalue().strip(), "0-3")
 
 
 if __name__ == "__main__":

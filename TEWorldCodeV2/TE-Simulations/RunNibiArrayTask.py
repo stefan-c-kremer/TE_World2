@@ -96,6 +96,21 @@ def latest_checkpoint(experiment: Path, run: int) -> Path | None:
     return max(checkpoints, default=(None, None, None))[2]
 
 
+def compact_indices(indices) -> str:
+    """Format sorted integer indices as a compact SLURM array specification."""
+    values = sorted(set(indices))
+    ranges = []
+    for value in values:
+        if not ranges or value > ranges[-1][1] + 1:
+            ranges.append([value, value])
+        else:
+            ranges[-1][1] = value
+    return ",".join(
+        str(start) if start == end else f"{start}-{end}"
+        for start, end in ranges
+    )
+
+
 def parse_arguments(args=None):
     script_directory = Path(__file__).resolve().parent
     default_root = script_directory.parents[1] / "TE-Experiments"
@@ -132,11 +147,11 @@ def main(args=None) -> int:
         if tasks is None:
             raise SystemExit("--pending-indices requires --manifest")
         pending = [
-            str(task["index"])
+            task["index"]
             for task in tasks
             if completed_provenance(task["experiment"], task["run"]) is None
         ]
-        print(",".join(pending))
+        print(compact_indices(pending))
         return 0
 
     if options.run is None and tasks is None:
