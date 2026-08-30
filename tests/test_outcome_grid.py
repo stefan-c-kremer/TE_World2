@@ -27,6 +27,33 @@ class OutcomeGridTests(unittest.TestCase):
         self.assertEqual(len(positions), 128)
         self.assertTrue(all(column % 8 >= 4 for column, _ in positions))
 
+    def test_first_experiment_transcription_has_six_slots_in_every_cell(self):
+        positions = outcome_grid.first_experiment_positions()
+        self.assertEqual(len(positions), 256)
+        self.assertTrue(all(len(statuses) == 6 for statuses in positions.values()))
+
+        totals = {
+            status: sum(statuses.count(status) for statuses in positions.values())
+            for status in outcome_grid.COLORS
+        }
+        self.assertEqual(totals["incomplete"], 768)
+        self.assertEqual(totals["host_extinction"], 169)
+        self.assertEqual(totals["maximum_generations"], 23)
+        self.assertEqual(totals["te_extinction"], 576)
+
+    def test_renderer_uses_requested_number_of_slots(self):
+        positions = {(0, 0): ["incomplete", "host_extinction", "te_extinction"]}
+        svg = outcome_grid.render_svg(
+            positions,
+            slots_per_cell=3,
+            title="Title",
+            subtitle="Subtitle",
+            description="Description",
+            note="Note",
+        )
+        self.assertEqual(svg.count('class="slot"'), 16 * 16 * 3)
+        self.assertIn("Subtitle", svg)
+
 
 if __name__ == "__main__":
     unittest.main()

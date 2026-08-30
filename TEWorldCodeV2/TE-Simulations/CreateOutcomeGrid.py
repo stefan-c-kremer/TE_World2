@@ -24,6 +24,35 @@ STATUS_ORDER = {
     "te_extinction": 3,
 }
 
+# Lossless categorical transcription of the corrected first-experiment figure.
+# One line per grid row, one six-replicate cell per column.  Symbols are:
+# G = not conducted, H = host extinction, A = TE accumulation, T = TE extinction.
+FIRST_EXPERIMENT_GRID = """
+TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG HHTTTT HHHHTT GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG TTTTTT
+GGGGGG HHHHHT HHHHHT GGGGGG HHHTTT GGGGGG GGGGGG HHHHHH TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG TTTTTT TTTTTT GGGGGG
+GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG TTTTTT TTTTTT GGGGGG
+HHHTTT GGGGGG GGGGGG HHHTTT GGGGGG HHTTTT HHHHTT GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG TTTTTT
+GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG TTTTTT TTTTTT GGGGGG
+TTTTTT GGGGGG GGGGGG HTTTTT GGGGGG HHTTTT HHHHHH GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG TTTTTT
+TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG TTTTTT TTTTTT GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG TTTTTT
+GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG HHATTT TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG TTTTTT TTTTTT GGGGGG
+GGGGGG HTTTTT HHHHHT GGGGGG HHHHAT GGGGGG GGGGGG HHHHHT TTTTTT GGGGGG GGGGGG HTTTTT GGGGGG HHAAAT HAAATT GGGGGG
+HHHHTT GGGGGG GGGGGG HHHHHH GGGGGG HHHHHH HHHHHH GGGGGG GGGGGG TTTTTT HTTTTT GGGGGG HATTTT GGGGGG GGGGGG HHAAAT
+HTTTTT GGGGGG GGGGGG HHHHHT GGGGGG TTTTTT HHHAAT GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG TTTTTT
+GGGGGG HHHTTT HHHHHH GGGGGG HHHHHT GGGGGG GGGGGG HHHHHH TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG TTTTTT HATTTT GGGGGG
+TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG HHHHTT HHHHHH GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG ATTTTT GGGGGG GGGGGG AAATTT
+GGGGGG HHTTTT HHHHHH GGGGGG HHHHTT GGGGGG GGGGGG HHHHHH TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG TTTTTT AAATTT GGGGGG
+GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG ATTTTT TTTTTT GGGGGG GGGGGG TTTTTT GGGGGG TTTTTT TTTTTT GGGGGG
+HHHHTT GGGGGG GGGGGG HHHHHT GGGGGG HHHTTT HHHHHH GGGGGG GGGGGG TTTTTT TTTTTT GGGGGG TTTTTT GGGGGG GGGGGG TTTTTT
+"""
+
+FIRST_EXPERIMENT_SYMBOLS = {
+    "G": "incomplete",
+    "H": "host_extinction",
+    "A": "maximum_generations",
+    "T": "te_extinction",
+}
+
 
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as source:
@@ -68,7 +97,27 @@ def esc(value: object) -> str:
     return html.escape(str(value), quote=True)
 
 
-def render_svg(outcomes: dict[str, list[str]]) -> str:
+def first_experiment_positions() -> dict[tuple[int, int], list[str]]:
+    rows = [line.split() for line in FIRST_EXPERIMENT_GRID.strip().splitlines()]
+    if len(rows) != 16 or any(len(row) != 16 for row in rows):
+        raise ValueError("First-experiment grid must contain 16 rows of 16 cells")
+    return {
+        (column, row): [FIRST_EXPERIMENT_SYMBOLS[symbol] for symbol in cell]
+        for row, cells in enumerate(rows)
+        for column, cell in enumerate(cells)
+    }
+
+
+def render_svg(
+    positions: dict[tuple[int, int], list[str]],
+    *,
+    slots_per_cell: int,
+    title: str,
+    subtitle: str,
+    description: str,
+    note: str,
+    grey_label: str = "Not conducted or incomplete",
+) -> str:
     width, height = 1240, 1120
     grid_x, grid_y = 220, 205
     cell_w, cell_h = 49.75, 49.75
@@ -77,12 +126,12 @@ def render_svg(outcomes: dict[str, list[str]]) -> str:
     right_x = grid_x + grid_w + 18
     lines = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-labelledby="title desc">',
-        '<title id="title">TE accumulation outcomes for corrected -Z experiments</title>',
-        '<desc id="desc">Original-paper parameter grid with excision rate fixed Low. High-excision columns and unfinished replicate slots are grey.</desc>',
+        f'<title id="title">{esc(title)}</title>',
+        f'<desc id="desc">{esc(description)}</desc>',
         '<rect width="1240" height="1120" fill="#ffffff"/>',
         '<style>text{font-family:Arial,Helvetica,sans-serif;fill:#222}.title{font-size:21px;font-weight:700}.subtitle{font-size:13px}.factor{font-size:14px}.bit{font-size:14px;font-weight:700}.legend{font-size:13px}.note{font-size:12px}.frame{fill:none;stroke:#333;stroke-width:1.5}.header{fill:#fafafa;stroke:#8b8b8b;stroke-width:1.2}.slot{stroke:#fff;stroke-width:.7;shape-rendering:crispEdges}</style>',
-        '<text class="title" x="620" y="30" text-anchor="middle">TE accumulation outcomes for corrected -Z experiments</text>',
-        '<text class="subtitle" x="620" y="53" text-anchor="middle">Excision rate fixed Low; six replicate slots per original-paper parameter combination</text>',
+        f'<text class="title" x="620" y="30" text-anchor="middle">{esc(title)}</text>',
+        f'<text class="subtitle" x="620" y="53" text-anchor="middle">{esc(subtitle)}</text>',
         '<rect class="frame" x="210" y="70" width="985" height="943" rx="8"/>',
     ]
 
@@ -119,21 +168,23 @@ def render_svg(outcomes: dict[str, list[str]]) -> str:
             lines.append(f'<rect class="header" x="{x:.2f}" y="{y:.2f}" width="34" height="{box_h:.2f}"/>')
             lines.append(f'<text class="bit" x="{x + 17:.2f}" y="{y + box_h / 2 + 5:.2f}" text-anchor="middle">{value}</text>')
 
-    positions = {grid_position(condition): statuses for condition, statuses in outcomes.items()}
-    totals = Counter()
     for row in range(16):
         for column in range(16):
             statuses = positions.get((column, row))
-            slots = ["incomplete"] * 6
+            slots = ["incomplete"] * slots_per_cell
             if statuses is not None:
-                slots = ["incomplete"] * (6 - len(statuses)) + list(statuses)
-                totals.update(statuses)
+                if len(statuses) != slots_per_cell:
+                    raise ValueError(
+                        f"Cell {(column, row)} has {len(statuses)} slots; "
+                        f"expected {slots_per_cell}"
+                    )
+                slots = list(statuses)
             slots.sort(key=STATUS_ORDER.__getitem__)
             x = grid_x + column * cell_w
             y = grid_y + row * cell_h
             inner_x, inner_y = x + 1.5, y + 1.5
             inner_w, inner_h = cell_w - 4, cell_h - 4
-            slot_h = inner_h / 6
+            slot_h = inner_h / slots_per_cell
             lines.append(f'<g data-column="{column}" data-row="{row}">')
             for slot, status in enumerate(slots):
                 slot_y = inner_y + slot * slot_h
@@ -148,16 +199,13 @@ def render_svg(outcomes: dict[str, list[str]]) -> str:
         ("host_extinction", "Host extinction", 220),
         ("maximum_generations", "TE accumulation", 440),
         ("te_extinction", "TE extinction", 660),
-        ("incomplete", "Not conducted or incomplete", 880),
+        ("incomplete", grey_label, 880),
     ]
     for status, label, x in legend_items:
         lines.append(f'<rect x="{x}" y="{legend_y - 10}" width="24" height="16" fill="{COLORS[status]}" stroke="#777" stroke-width=".6"/>')
         lines.append(f'<text class="legend" x="{x + 32}" y="{legend_y + 3}">{esc(label)}</text>')
 
-    incomplete = totals["incomplete"]
-    lines.append(
-        f'<text class="note" x="620" y="1098" text-anchor="middle">128 -Z configurations; 3 runs each; 384 total runs; {incomplete} incomplete</text>'
-    )
+    lines.append(f'<text class="note" x="620" y="1098" text-anchor="middle">{esc(note)}</text>')
     lines.append('</svg>')
     return "\n".join(lines) + "\n"
 
@@ -167,6 +215,7 @@ def parse_arguments(args=None):
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--ledger", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--first-experiment-output", type=Path)
     return parser.parse_args(args)
 
 
@@ -176,10 +225,48 @@ def main(args=None) -> int:
     if len(outcomes) != 128 or any(len(statuses) != 3 for statuses in outcomes.values()):
         raise SystemExit("Expected 128 -Z conditions with three replicates each")
     options.output.parent.mkdir(parents=True, exist_ok=True)
-    options.output.write_text(render_svg(outcomes), encoding="utf-8")
     totals = Counter(status for statuses in outcomes.values() for status in statuses)
+    positions = {grid_position(condition): statuses for condition, statuses in outcomes.items()}
+    options.output.write_text(
+        render_svg(
+            positions,
+            slots_per_cell=3,
+            title="TE accumulation outcomes for corrected -Z experiments",
+            subtitle="Excision rate fixed Low; three replicate slots per parameter combination",
+            description=(
+                "Original-paper parameter grid with excision rate fixed Low. "
+                "High-excision columns and incomplete simulations are grey."
+            ),
+            note=(
+                "128 -Z configurations; 3 runs each; 384 total runs; "
+                f"{totals['incomplete']} incomplete"
+            ),
+        ),
+        encoding="utf-8",
+    )
     print(options.output)
     print(dict(sorted(totals.items())))
+    if options.first_experiment_output:
+        options.first_experiment_output.parent.mkdir(parents=True, exist_ok=True)
+        options.first_experiment_output.write_text(
+            render_svg(
+                first_experiment_positions(),
+                slots_per_cell=6,
+                title="TE accumulation outcomes for corrected first experiment",
+                subtitle="Six replicate slots per original-paper parameter combination",
+                description=(
+                    "Corrected reconstruction of the first experiment with six "
+                    "replicate slots per parameter combination."
+                ),
+                note=(
+                    "128 conducted configurations; 6 runs each; 768 total runs; "
+                    "128 configurations not conducted"
+                ),
+                grey_label="Not conducted",
+            ),
+            encoding="utf-8",
+        )
+        print(options.first_experiment_output)
     return 0
 
 
