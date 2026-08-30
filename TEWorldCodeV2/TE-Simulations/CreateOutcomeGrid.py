@@ -59,19 +59,21 @@ def read_csv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(source))
 
 
-def final_outcomes(manifest: Path, ledger: Path) -> dict[str, list[str]]:
+def final_outcomes(
+    manifest: Path, ledger: Path, suffix: str = "Z"
+) -> dict[str, list[str]]:
     manifest_rows = read_csv(manifest)
     terminal_by_run: dict[tuple[str, str], str] = {}
     for row in read_csv(ledger):
         condition = row.get("condition_code", "")
         status = row.get("scientific_status", "")
-        if condition.endswith("-Z") and status in TERMINAL_STATUSES:
+        if condition.endswith(f"-{suffix}") and status in TERMINAL_STATUSES:
             terminal_by_run[(condition, row["run"])] = status
 
     outcomes: dict[str, list[str]] = defaultdict(list)
     for row in manifest_rows:
         condition = row["condition_code"]
-        if not condition.endswith("-Z"):
+        if not condition.endswith(f"-{suffix}"):
             continue
         outcomes[condition].append(
             terminal_by_run.get((condition, row["run"]), "incomplete")
@@ -81,7 +83,7 @@ def final_outcomes(manifest: Path, ledger: Path) -> dict[str, list[str]]:
 
 def grid_position(condition: str) -> tuple[int, int]:
     bits, suffix = condition.split("-")
-    if suffix != "Z" or len(bits) != 7 or set(bits) - {"H", "L"}:
+    if suffix not in {"Z", "LL", "LH", "HL", "HH"} or len(bits) != 7 or set(bits) - {"H", "L"}:
         raise ValueError(f"Unsupported condition code: {condition}")
 
     high = [bit == "H" for bit in bits]
@@ -215,15 +217,18 @@ def parse_arguments(args=None):
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--ledger", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--suffix", choices=("Z", "LL", "LH", "HL", "HH"), default="Z")
     parser.add_argument("--first-experiment-output", type=Path)
     return parser.parse_args(args)
 
 
 def main(args=None) -> int:
     options = parse_arguments(args)
-    outcomes = final_outcomes(options.manifest, options.ledger)
+    outcomes = final_outcomes(options.manifest, options.ledger, options.suffix)
     if len(outcomes) != 128 or any(len(statuses) != 3 for statuses in outcomes.values()):
-        raise SystemExit("Expected 128 -Z conditions with three replicates each")
+        raise SystemExit(
+            f"Expected 128 -{options.suffix} conditions with three replicates each"
+        )
     options.output.parent.mkdir(parents=True, exist_ok=True)
     totals = Counter(status for statuses in outcomes.values() for status in statuses)
     positions = {grid_position(condition): statuses for condition, statuses in outcomes.items()}
@@ -231,14 +236,14 @@ def main(args=None) -> int:
         render_svg(
             positions,
             slots_per_cell=3,
-            title="TE accumulation outcomes for corrected -Z experiments",
+            title=f"TE accumulation outcomes for corrected -{options.suffix} experiments",
             subtitle="Excision rate fixed Low; three replicate slots per parameter combination",
             description=(
                 "Original-paper parameter grid with excision rate fixed Low. "
                 "High-excision columns and incomplete simulations are grey."
             ),
             note=(
-                "128 -Z configurations; 3 runs each; 384 total runs; "
+                f"128 -{options.suffix} configurations; 3 runs each; 384 total runs; "
                 f"{totals['incomplete']} incomplete"
             ),
         ),

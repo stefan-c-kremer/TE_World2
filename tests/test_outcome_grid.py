@@ -16,6 +16,8 @@ class OutcomeGridTests(unittest.TestCase):
         self.assertEqual(outcome_grid.grid_position("HLLHHHH-Z"), (7, 0))
         self.assertEqual(outcome_grid.grid_position("LHHLLLL-Z"), (12, 15))
         self.assertEqual(outcome_grid.grid_position("LLLLLLL-Z"), (15, 15))
+        self.assertEqual(outcome_grid.grid_position("HHHHHHH-LL"), (4, 0))
+        self.assertEqual(outcome_grid.grid_position("LLLLLLL-HH"), (15, 15))
 
     def test_every_corrected_condition_maps_to_a_unique_low_excision_cell(self):
         import itertools
