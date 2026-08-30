@@ -125,19 +125,36 @@ def classify_failure(stderr: str, scheduler_state: str, scientific_status: str) 
 def accounting(job_ids: list[str]) -> dict[tuple[str, str], dict[str, str]]:
     if not job_ids:
         return {}
-    fields = (
+    extended_fields = (
         "JobID", "ArrayJobID", "ArrayTaskID", "State", "ExitCode",
         "ElapsedRaw", "MaxRSS", "MaxVMSize", "ReqMem", "TimelimitRaw",
         "Partition", "NodeList",
     )
-    command = [
-        "sacct", "-j", ",".join(job_ids), "-n", "-P",
-        "--format=" + ",".join(fields),
-    ]
-    try:
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
-    except (OSError, subprocess.CalledProcessError) as error:
-        print(f"Warning: sacct unavailable; collecting file-based data only: {error}")
+    legacy_fields = tuple(
+        field for field in extended_fields
+        if field not in {"ArrayJobID", "ArrayTaskID"}
+    )
+    result = None
+    fields = extended_fields
+    last_error = None
+    for candidate_fields in (extended_fields, legacy_fields):
+        command = [
+            "sacct", "-j", ",".join(job_ids), "-n", "-P",
+            "--format=" + ",".join(candidate_fields),
+        ]
+        try:
+            result = subprocess.run(
+                command, check=True, capture_output=True, text=True
+            )
+            fields = candidate_fields
+            break
+        except (OSError, subprocess.CalledProcessError) as error:
+            last_error = error
+    if result is None:
+        print(
+            "Warning: sacct unavailable; collecting file-based data only: "
+            f"{last_error}"
+        )
         return {}
 
     records: dict[tuple[str, str], dict[str, str]] = {}
@@ -146,8 +163,12 @@ def accounting(job_ids: list[str]) -> dict[tuple[str, str], dict[str, str]]:
         if len(values) != len(fields):
             continue
         row = dict(zip(fields, values))
-        array_job = row["ArrayJobID"]
-        task = row["ArrayTaskID"]
+        array_job = row.get("ArrayJobID", "")
+        task = row.get("ArrayTaskID", "")
+        if not array_job or not task:
+            match = re.fullmatch(r"(\d+)_(\d+)(?:\..+)?", row["JobID"])
+            if match:
+                array_job, task = match.groups()
         if not array_job or not task or task in {"4294967294", "N/A"}:
             continue
         key = (array_job, task)
