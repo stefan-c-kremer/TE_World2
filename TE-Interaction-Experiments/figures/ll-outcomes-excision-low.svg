@@ -1035,8 +1035,8 @@
 <rect x="470.25" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="6" data-row="9">
-<rect class="slot" x="520.00" y="654.25" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="520.00" y="669.50" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="520.00" y="654.25" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="520.00" y="669.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="520.00" y="684.75" width="45.75" height="15.25" fill="#fde725"/>
 <rect x="520.00" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
@@ -1071,9 +1071,9 @@
 <rect x="768.75" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="12" data-row="9">
-<rect class="slot" x="818.50" y="654.25" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="669.50" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="684.75" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="818.50" y="654.25" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="818.50" y="669.50" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="818.50" y="684.75" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="818.50" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="13" data-row="9">
@@ -1263,9 +1263,9 @@
 <rect x="768.75" y="753.75" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="12" data-row="11">
-<rect class="slot" x="818.50" y="753.75" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="769.00" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="784.25" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="818.50" y="753.75" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="818.50" y="769.00" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="818.50" y="784.25" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="818.50" y="753.75" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="13" data-row="11">
@@ -1275,9 +1275,9 @@
 <rect x="868.25" y="753.75" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="14" data-row="11">
-<rect class="slot" x="918.00" y="753.75" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="918.00" y="753.75" width="45.75" height="15.25" fill="#440154"/>
 <rect class="slot" x="918.00" y="769.00" width="45.75" height="15.25" fill="#440154"/>
-<rect class="slot" x="918.00" y="784.25" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="918.00" y="784.25" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="918.00" y="753.75" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="15" data-row="11">
@@ -1678,5 +1678,5 @@
 <text class="legend" x="692" y="1068">TE extinction</text>
 <rect x="880" y="1055" width="24" height="16" fill="#bdbdbd" stroke="#777" stroke-width=".6"/>
 <text class="legend" x="912" y="1068">Not conducted or incomplete</text>
-<text class="note" x="620" y="1098" text-anchor="middle">128 -LL configurations; 3 runs each; 384 total runs; 19 incomplete</text>
+<text class="note" x="620" y="1098" text-anchor="middle">128 -LL configurations; 3 runs each; 384 total runs; 13 incomplete</text>
 </svg>

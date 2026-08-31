@@ -939,9 +939,9 @@
 <rect x="470.25" y="604.50" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="6" data-row="8">
-<rect class="slot" x="520.00" y="604.50" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="520.00" y="619.75" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="520.00" y="635.00" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="520.00" y="604.50" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="520.00" y="619.75" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="520.00" y="635.00" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="520.00" y="604.50" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="7" data-row="8">
@@ -988,12 +988,12 @@
 </g>
 <g data-column="14" data-row="8">
 <rect class="slot" x="918.00" y="604.50" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="918.00" y="619.75" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="918.00" y="635.00" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="918.00" y="619.75" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="918.00" y="635.00" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="918.00" y="604.50" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="15" data-row="8">
-<rect class="slot" x="967.75" y="604.50" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="967.75" y="604.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="967.75" y="619.75" width="45.75" height="15.25" fill="#fde725"/>
 <rect class="slot" x="967.75" y="635.00" width="45.75" height="15.25" fill="#fde725"/>
 <rect x="967.75" y="604.50" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
@@ -1023,9 +1023,9 @@
 <rect x="370.75" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="4" data-row="9">
-<rect class="slot" x="420.50" y="654.25" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="420.50" y="669.50" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="420.50" y="684.75" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="420.50" y="654.25" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="420.50" y="669.50" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="420.50" y="684.75" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="420.50" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="5" data-row="9">
@@ -1035,7 +1035,7 @@
 <rect x="470.25" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="6" data-row="9">
-<rect class="slot" x="520.00" y="654.25" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="520.00" y="654.25" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="520.00" y="669.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="520.00" y="684.75" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="520.00" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
@@ -1071,14 +1071,14 @@
 <rect x="768.75" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="12" data-row="9">
-<rect class="slot" x="818.50" y="654.25" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="669.50" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="684.75" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="818.50" y="654.25" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="818.50" y="669.50" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="818.50" y="684.75" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="818.50" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="13" data-row="9">
-<rect class="slot" x="868.25" y="654.25" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="868.25" y="669.50" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="868.25" y="654.25" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="868.25" y="669.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="868.25" y="684.75" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="868.25" y="654.25" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
@@ -1125,13 +1125,13 @@
 <rect x="420.50" y="704.00" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="5" data-row="10">
-<rect class="slot" x="470.25" y="704.00" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="470.25" y="719.25" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="470.25" y="734.50" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="470.25" y="704.00" width="45.75" height="15.25" fill="#440154"/>
+<rect class="slot" x="470.25" y="719.25" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="470.25" y="734.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="470.25" y="704.00" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="6" data-row="10">
-<rect class="slot" x="520.00" y="704.00" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="520.00" y="704.00" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="520.00" y="719.25" width="45.75" height="15.25" fill="#fde725"/>
 <rect class="slot" x="520.00" y="734.50" width="45.75" height="15.25" fill="#fde725"/>
 <rect x="520.00" y="704.00" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
@@ -1168,19 +1168,19 @@
 </g>
 <g data-column="12" data-row="10">
 <rect class="slot" x="818.50" y="704.00" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="719.25" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="734.50" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="818.50" y="719.25" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="818.50" y="734.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="818.50" y="704.00" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="13" data-row="10">
-<rect class="slot" x="868.25" y="704.00" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="868.25" y="719.25" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="868.25" y="734.50" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="868.25" y="704.00" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="868.25" y="719.25" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="868.25" y="734.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="868.25" y="704.00" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="14" data-row="10">
-<rect class="slot" x="918.00" y="704.00" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="918.00" y="719.25" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="918.00" y="704.00" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="918.00" y="719.25" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="918.00" y="734.50" width="45.75" height="15.25" fill="#fde725"/>
 <rect x="918.00" y="704.00" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
@@ -1215,9 +1215,9 @@
 <rect x="370.75" y="753.75" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="4" data-row="11">
-<rect class="slot" x="420.50" y="753.75" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="420.50" y="769.00" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="420.50" y="784.25" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="420.50" y="753.75" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="420.50" y="769.00" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="420.50" y="784.25" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="420.50" y="753.75" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="5" data-row="11">
@@ -1263,9 +1263,9 @@
 <rect x="768.75" y="753.75" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="12" data-row="11">
-<rect class="slot" x="818.50" y="753.75" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="769.00" width="45.75" height="15.25" fill="#bdbdbd"/>
-<rect class="slot" x="818.50" y="784.25" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="818.50" y="753.75" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="818.50" y="769.00" width="45.75" height="15.25" fill="#21918c"/>
+<rect class="slot" x="818.50" y="784.25" width="45.75" height="15.25" fill="#21918c"/>
 <rect x="818.50" y="753.75" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="13" data-row="11">
@@ -1359,7 +1359,7 @@
 <rect x="768.75" y="803.50" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="12" data-row="12">
-<rect class="slot" x="818.50" y="803.50" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="818.50" y="803.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="818.50" y="818.75" width="45.75" height="15.25" fill="#fde725"/>
 <rect class="slot" x="818.50" y="834.00" width="45.75" height="15.25" fill="#fde725"/>
 <rect x="818.50" y="803.50" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
@@ -1371,7 +1371,7 @@
 <rect x="868.25" y="803.50" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
 </g>
 <g data-column="14" data-row="12">
-<rect class="slot" x="918.00" y="803.50" width="45.75" height="15.25" fill="#bdbdbd"/>
+<rect class="slot" x="918.00" y="803.50" width="45.75" height="15.25" fill="#21918c"/>
 <rect class="slot" x="918.00" y="818.75" width="45.75" height="15.25" fill="#fde725"/>
 <rect class="slot" x="918.00" y="834.00" width="45.75" height="15.25" fill="#fde725"/>
 <rect x="918.00" y="803.50" width="45.75" height="45.75" fill="none" stroke="#f5f5f5" stroke-width="1"/>
@@ -1678,5 +1678,5 @@
 <text class="legend" x="692" y="1068">TE extinction</text>
 <rect x="880" y="1055" width="24" height="16" fill="#bdbdbd" stroke="#777" stroke-width=".6"/>
 <text class="legend" x="912" y="1068">Not conducted or incomplete</text>
-<text class="note" x="620" y="1098" text-anchor="middle">128 -HL configurations; 3 runs each; 384 total runs; 47 incomplete</text>
+<text class="note" x="620" y="1098" text-anchor="middle">128 -HL configurations; 3 runs each; 384 total runs; 14 incomplete</text>
 </svg>
